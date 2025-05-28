@@ -42,6 +42,10 @@ cdef class NodeCy:
     def ninputs(self):
         return self._node.ninputs
 
+    @ninputs.setter
+    def ninputs(self, value: int):
+        self._node.ninputs = value
+
     @property
     def nparams(self):
         return self._node.nparams

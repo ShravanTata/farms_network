@@ -22,6 +22,19 @@ class Node(ABC):
             raise NotImplementedError("Must define CY_NODE_CLASS")
         return self.CY_NODE_CLASS(**kwargs)
 
+    # General node properties
+    @property
+    def nstates(self):
+        return self._node_cy.nstates
+
+    @property
+    def nparams(self):
+        return self._node_cy.nparams
+
+    @property
+    def ninputs(self):
+        return self._node_cy.ninputs
+
     def print_parameters(self):
         return self._node_cy.parameters
 
@@ -34,7 +47,6 @@ class Node(ABC):
 
     def to_options(self):
         """ To node options """
-        print(self)
         name: str = node_options.name
         parameters = node_options.parameters
         return cls(name, **parameters)

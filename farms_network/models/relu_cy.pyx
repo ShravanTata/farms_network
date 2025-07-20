@@ -11,31 +11,46 @@ cpdef enum STATE:
     nstates = NSTATES
 
 
-cdef double output(
+cdef double relu_input_tf(
     double time,
-    double* states,
-    double external_input,
-    double* network_outputs,
-    unsigned int* inputs,
-    double* weights,
-    node_t* c_node,
-    edge_t** c_edges,
+    const node_inputs_t inputs,
+    const node_t* node,
+    const edge_t** edges,
 ) noexcept:
-    """ Node output. """
-    cdef relu_params_t params = (<relu_params_t*> c_node[0].params)[0]
+    cdef relu_params_t params = (<relu_params_t*> node[0].params)[0]
 
     cdef:
         double _sum = 0.0
         unsigned int j
         double _input, _weight
-    cdef unsigned int ninputs = c_node.ninputs
-    _sum += external_input
-    for j in range(ninputs):
-        _input = network_outputs[inputs[j]]
-        _weight = weights[j]
-        _sum += _weight*_input
 
-    cdef double res = max(0.0, params.gain*(params.sign*_sum + params.offset))
+    for j in range(inputs.ninputs):
+        _input = inputs.network_outputs[inputs.source_indices[j]]
+        _weight = inputs.weights[j]
+        _sum += _weight*_input
+    return _sum
+
+
+cdef void relu_ode(
+    double time,
+    const double* states,
+    double* derivatives,
+    double input_val,
+    double noise,
+    const node_t* node,
+) noexcept:
+    raise NotImplementedError("ode must be implemented by node type")
+
+
+cdef double relu_output_tf(
+    double time,
+    const double* states,
+    double input_val,
+    double noise,
+    const node_t* node,
+) noexcept:
+    cdef relu_params_t params = (<relu_params_t*> node[0].params)[0]
+    cdef double res = max(0.0, params.gain*(params.sign*input_val + params.offset))
     return res
 
 
@@ -48,7 +63,8 @@ cdef class ReLUNodeCy(NodeCy):
         self._node.nparams = 3
 
         self._node.is_statefull = False
-        # self._node.output = output
+        self._node.input_tf = relu_input_tf
+        self._node.output_tf = relu_output_tf
         # parameters
         self.params = relu_params_t()
         self._node.params = <void*>&self.params
@@ -57,6 +73,8 @@ cdef class ReLUNodeCy(NodeCy):
 
     def __init__(self, **kwargs):
         super().__init__()
+
+        printf("Node %p\n", self._node)
 
         # Set node parameters
         self.params.gain = kwargs.pop("gain")

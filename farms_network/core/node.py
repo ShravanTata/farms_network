@@ -35,8 +35,27 @@ class Node(ABC):
     def ninputs(self):
         return self._node_cy.ninputs
 
+    @property
+    def is_statefull(self):
+        return self._node_cy.is_statefull
+
     def print_parameters(self):
         return self._node_cy.parameters
+
+    def input_tf(self):
+        """ Input transfer function """
+        pass
+
+    def ode(self, time, states, derivatives, external_input, network_outputs, inputs, weights, noise):
+        """ ODE computation """
+        return self._node_cy.ode(
+            time, states, derivatives, external_input,
+            network_outputs, inputs, weights, noise
+        )
+
+    def output_tf(self, time, states, input_val, noise):
+        """ ODE computation """
+        return self._node_cy.output_tf(time, states, input_val, noise)
 
     @classmethod
     def from_options(cls, node_options: NodeOptions):
@@ -50,3 +69,20 @@ class Node(ABC):
         name: str = node_options.name
         parameters = node_options.parameters
         return cls(name, **parameters)
+
+    def debug_info(self):
+        """ Get debug information about the node """
+        return {
+            'class': self.__class__.__name__,
+            'model': self.model,
+            'name': self.name,
+            'nstates': self.nstates,
+            'ninputs': self.ninputs,
+            'nparams': self.nparams,
+            'is_statefull': self.is_statefull,
+            'initialized': self._initialized,
+            'has_ode_func': self._node.ode_func is not NULL,
+            'has_output_func': self._node.output_func is not NULL,
+            'has_params': self._node.params is not NULL,
+            'parameters': self.parameters
+        }

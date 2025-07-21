@@ -18,6 +18,7 @@ cdef packed struct relu_params_t:
 
 cdef double relu_input_tf(
     double time,
+    const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,

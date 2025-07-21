@@ -14,6 +14,7 @@ from farms_network.models import Models
 # Receives n-inputs and produces one output to be fed into ode/output_tf
 cdef double base_input_tf(
     double time,
+    const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,

@@ -8,6 +8,7 @@ cdef enum:
     EXCITATORY = 1
     INHIBITORY = 2
     CHOLINERGIC = 3
+    PHASE_COUPLING = 4
 
 
 cdef struct edge_t:

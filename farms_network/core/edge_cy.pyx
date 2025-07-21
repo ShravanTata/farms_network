@@ -14,6 +14,7 @@ cpdef enum types:
     excitatory = EXCITATORY
     inhibitory = INHIBITORY
     cholinergic = CHOLINERGIC
+    phase_coupling = PHASE_COUPLING
 
 
 cdef class EdgeCy:

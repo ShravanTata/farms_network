@@ -4,70 +4,135 @@ import numpy as np
 
 from .data import NetworkData
 from .network_cy import NetworkCy
-from .options import NetworkOptions
+from .options import (EdgeOptions, IntegrationOptions, NetworkOptions,
+                      NodeOptions)
+from ..models.factory import NodeFactory
+from .edge import Edge
+from .node import Node
+from typing import Optional
 
 
-class Network(NetworkCy):
-    """ Network class """
+class Network:
+    """ Network class using composition with NetworkCy """
 
     def __init__(self, network_options: NetworkOptions):
-        """ Initialize """
+        """ Initialize network with composition approach """
+        self.options = network_options
 
-        super().__init__(network_options)
+        # Core network data and Cython implementation
         self.data = NetworkData.from_options(network_options)
 
-        self.nodes: list = []
-        self.edges = []
-        self.nodes_output_data = []
-        self.__tmp_node_outputs = np.zeros((self.c_network.nnodes,))
-        self.setup_network(network_options, self.data)
+        self._network_cy = NetworkCy(
+            nnodes=len(network_options.nodes),
+            nedges=len(network_options.edges),
+            data=self.data
+        )
 
-        # Integration options
+
+        # Python-level collections
+        self.nodes: List[Node] = []
+        self.edges: List[Edge] = []
+
+        # Setup the network
+        self._setup_network()
+        # self._setup_integrator()
+
+        # Simulation parameters
         self.n_iterations: int = network_options.integration.n_iterations
-        self.timestep: int = network_options.integration.timestep
+        self.timestep: float = network_options.integration.timestep
         self.iteration: int = 0
         self.buffer_size: int = network_options.logs.buffer_size
 
-        # Set the seed for random number generation
-        random_seed = network_options.random_seed
-        # np.random.seed(random_seed)
+    def _setup_network(self):
+        """ Setup network nodes and edges """
+        # Create Python nodes
+        nstates = 0
+        for index, node_options in enumerate(self.options.nodes):
+            python_node = self._generate_node(node_options)
+            python_node._node_cy.ninputs = len(
+                self.data.connectivity.sources[
+                    self.data.connectivity.indices[index]:self.data.connectivity.indices[index+1]
+                ]
+            ) if self.data.connectivity.indices else 0
+            nstates += python_node.nstates
+            self.nodes.append(python_node)
 
+        # Create Python edges
+        for edge_options in self.options.edges:
+            python_edge = self._generate_edge(edge_options)
+            self.edges.append(python_edge)
+
+        self._network_cy.nstates = nstates
+
+        # Pass Python nodes/edges to Cython layer for C struct setup
+        self._network_cy.setup_network(self.options, self.data, self.nodes, self.edges)
+
+        # Initialize states
+        self._initialize_states()
+
+    def _setup_integrator(self):
+        """ Setup numerical integrators """
+        self._network_cy.setup_integrator(self.options)
+
+    def _initialize_states(self):
+        """ Initialize node states from options """
+        for j, node_opts in enumerate(self.options.nodes):
+            if node_opts.state:
+                for state_index, index in enumerate(
+                    range(self.data.states.indices[j], self.data.states.indices[j+1])
+                ):
+                    self.data.states.array[index] = node_opts.state.initial[state_index]
+
+    @staticmethod
+    def _generate_node(node_options: NodeOptions) -> Node:
+        """ Generate a node from options """
+        NodeClass = NodeFactory.create(node_options.model)
+        return NodeClass.from_options(node_options)
+
+    @staticmethod
+    def _generate_edge(edge_options: EdgeOptions) -> Edge:
+        """ Generate an edge from options """
+        return Edge.from_options(edge_options)
+
+    # Delegate properties to Cython implementation
+    @property
+    def nnodes(self) -> int:
+        return self._network_cy.nnodes
+
+    @property
+    def nedges(self) -> int:
+        return self._network_cy.nedges
+
+    @property
+    def nstates(self) -> int:
+        return self._network_cy.nstates
+
+    # Delegate methods to Cython implementation
+    def evaluate(self, time, states):
+        """ Evaluate the ODE """
+        derivatives =  np.zeros(np.size(states))
+        self._network_cy.evaluate(time, states, derivatives)
+        return derivatives
+
+    def step(self):
+        """ Step the network simulation """
+        self._network_cy.step()
+        self.iteration += 1
+
+    def run(self, n_iterations: Optional[int] = None):
+        """ Run the network for n_iterations """
+        if n_iterations is None:
+            n_iterations = self.n_iterations
+
+        for _ in range(n_iterations):
+            self.step()
+
+    # Factory methods
     @classmethod
     def from_options(cls, options: NetworkOptions):
         """ Initialize network from NetworkOptions """
         return cls(options)
 
-    def to_options(self):
+    def to_options(self) -> NetworkOptions:
         """ Return NetworkOptions from network """
         return self.options
-
-    def setup_integrator(self, network_options: NetworkOptions):
-        """ Setup integrator for neural network """
-        # Setup ODE numerical integrator
-        integration_options = network_options.integration
-        timestep = integration_options.timestep
-        self.ode_integrator = RK4Solver(self.c_network.nstates, timestep)
-        # Setup SDE numerical integrator for noise models if any
-        noise_options = []
-        for node in network_options.nodes:
-            if node.noise is not None:
-                if node.noise.is_stochastic:
-                    noise_options.append(node.noise)
-
-        self.sde_system = OrnsteinUhlenbeck(noise_options)
-        self.sde_integrator = EulerMaruyamaSolver(len(noise_options), timestep)
-
-    @staticmethod
-    def generate_node(node_options: NodeOptions):
-        """ Generate a node from options """
-        Node = NodeFactory.create(node_options.model)
-        node = Node.from_options(node_options)
-        return node
-
-    @staticmethod
-    def generate_edge(edge_options: EdgeOptions, nodes_options):
-        """ Generate a edge from options """
-        target = nodes_options[nodes_options.index(edge_options.target)]
-        Edge = EdgeFactory.create(target.model)
-        edge = Edge.from_options(edge_options)
-        return edge

@@ -144,6 +144,8 @@ class NodeVisualOptions(Options):
 class EdgeOptions(Options):
     """ Base class for defining edge options between nodes """
 
+    MODEL = Models.BASE
+
     def __init__(self, **kwargs):
         """ Initialize """
         super().__init__()
@@ -151,9 +153,8 @@ class EdgeOptions(Options):
         self.target: str = kwargs.pop("target")
         self.weight: float = kwargs.pop("weight")
         self.type = EdgeTypes.to_str(kwargs.pop("type"))
-        self.parameters: EdgeParameterOptions = kwargs.pop(
-            "parameters", EdgeParameterOptions()
-        )
+        self.model = kwargs.pop("model", EdgeOptions.MODEL)
+        self.parameters: EdgeParameterOptions = kwargs.pop("parameters", EdgeParameterOptions())
 
         self.visual: EdgeVisualOptions = kwargs.pop("visual")
         if kwargs:
@@ -197,7 +198,6 @@ class EdgeParameterOptions(Options):
 
     def __init__(self, **kwargs):
         super().__init__()
-        self.model: str = kwargs.pop("model", None)
 
     @classmethod
     def from_options(cls, kwargs: Dict):
@@ -461,12 +461,14 @@ class ReLUParameterOptions(NodeParameterOptions):
 class OscillatorNodeOptions(NodeOptions):
     """ Class to define the properties of Oscillator node model """
 
+    MODEL = Models.OSCILLATOR
+
     def __init__(self, **kwargs):
         """ Initialize """
-        model = "oscillator"
+
         super().__init__(
             name=kwargs.pop("name"),
-            model=model,
+            model=OscillatorNodeOptions.MODEL,
             parameters=kwargs.pop("parameters"),
             visual=kwargs.pop("visual"),
             state=kwargs.pop("state"),
@@ -537,13 +539,47 @@ class OscillatorStateOptions(NodeStateOptions):
         assert len(self.initial) == 3, f"Number of initial states {len(self.initial)} should be 3"
 
 
-class OscillatorEdgeParameterOptions(EdgeParameterOptions):
-    """ Oscillator edge parameter options """
-
+class OscillatorEdgeOptions(EdgeOptions):
+    """ Oscillator Edge Options """
     MODEL = Models.OSCILLATOR
 
     def __init__(self, **kwargs):
-        super().__init__(model=OscillatorEdgeParameterOptions.MODEL)
+        parameters = kwargs.pop("parameters")
+        assert isinstance(parameters, OscillatorEdgeParameterOptions)
+        super().__init__(
+            model=OscillatorEdgeOptions.MODEL,
+            source=kwargs.pop("source"),
+            target=kwargs.pop("target"),
+            weight=kwargs.pop("weight"),
+            type=kwargs.pop("type"),
+            parameters=parameters,
+            visual=kwargs.pop("visual"),
+        )
+        self._nparameters = 1
+
+        if kwargs:
+            raise Exception(f'Unknown kwargs: {kwargs}')
+
+    @classmethod
+    def from_options(cls, kwargs: Dict):
+        """ Load from options """
+        options = {}
+        options["source"] = kwargs["source"]
+        options["target"] = kwargs["target"]
+        options["weight"] = kwargs["weight"]
+        options["type"] = kwargs["type"]
+        options["parameters"] = OscillatorEdgeParameterOptions.from_options(
+            kwargs["parameters"]
+        )
+        options["visual"] = EdgeVisualOptions.from_options(kwargs["visual"])
+        return cls(**options)
+
+
+class OscillatorEdgeParameterOptions(EdgeParameterOptions):
+    """ Oscillator edge parameter options """
+
+    def __init__(self, **kwargs):
+        super().__init__()
         self.phase_difference = kwargs.pop("phase_difference")   # radians
 
         if kwargs:

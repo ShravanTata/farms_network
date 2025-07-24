@@ -11,7 +11,7 @@ cpdef enum STATE:
     nstates = NSTATES
 
 
-cdef double relu_input_tf(
+cdef processed_inputs_t relu_input_tf(
     double time,
     const double* states,
     const node_inputs_t inputs,
@@ -19,24 +19,33 @@ cdef double relu_input_tf(
     const edge_t** edges,
 ) noexcept:
     cdef relu_params_t params = (<relu_params_t*> node[0].params)[0]
+    cdef processed_inputs_t processed_inputs = {
+        'generic': 0.0,
+        'excitatory': 0.0,
+        'inhibitory': 0.0,
+        'cholinergic': 0.0,
+        'phase_coupling': 0.0
+    }
 
     cdef:
         double _sum = 0.0
-        unsigned int j
+        unsigned int j, ninputs
         double _input, _weight
 
-    for j in range(inputs.ninputs):
+    ninputs = inputs.ninputs
+
+    for j in range(ninputs):
         _input = inputs.network_outputs[inputs.source_indices[j]]
         _weight = inputs.weights[j]
-        _sum += _weight*_input
-    return _sum
+        processed_inputs.generic += _weight*_input
+    return processed_inputs
 
 
 cdef void relu_ode(
     double time,
     const double* states,
     double* derivatives,
-    double input_val,
+    processed_inputs_t input_vals,
     double noise,
     const node_t* node,
 ) noexcept:
@@ -46,11 +55,12 @@ cdef void relu_ode(
 cdef double relu_output_tf(
     double time,
     const double* states,
-    double input_val,
+    processed_inputs_t input_vals,
     double noise,
     const node_t* node,
 ) noexcept:
     cdef relu_params_t params = (<relu_params_t*> node[0].params)[0]
+    cdef double input_val = input_vals.generic
     cdef double res = max(0.0, params.gain*(params.sign*input_val + params.offset))
     return res
 
@@ -74,8 +84,6 @@ cdef class ReLUNodeCy(NodeCy):
 
     def __init__(self, **kwargs):
         super().__init__()
-
-        printf("Node %p\n", self._node)
 
         # Set node parameters
         self.params.gain = kwargs.pop("gain")

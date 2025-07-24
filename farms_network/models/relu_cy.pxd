@@ -1,7 +1,7 @@
 """ Rectified Linear Unit """
 
 
-from ..core.node_cy cimport node_t, node_inputs_t, NodeCy
+from ..core.node_cy cimport node_t, node_inputs_t, processed_inputs_t, NodeCy
 from ..core.edge_cy cimport edge_t
 
 
@@ -16,7 +16,7 @@ cdef packed struct relu_params_t:
     double offset
 
 
-cdef double relu_input_tf(
+cdef processed_inputs_t relu_input_tf(
     double time,
     const double* states,
     const node_inputs_t inputs,
@@ -29,7 +29,7 @@ cdef void relu_ode(
     double time,
     const double* states,
     double* derivatives,
-    double input_val,
+    processed_inputs_t input_val,
     double noise,
     const node_t* node,
 ) noexcept
@@ -38,7 +38,7 @@ cdef void relu_ode(
 cdef double relu_output_tf(
     double time,
     const double* states,
-    double input_val,
+    processed_inputs_t input_val,
     double noise,
     const node_t* node,
 ) noexcept

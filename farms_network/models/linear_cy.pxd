@@ -10,7 +10,7 @@ cdef enum:
     NSTATES = 0
 
 
-cdef packed struct linear_node_params_t:
+cdef packed struct linear_params_t:
     double slope
     double bias
 
@@ -47,4 +47,4 @@ cdef class LinearNodeCy(NodeCy):
     """ Python interface to Linear Node C-Structure """
 
     cdef:
-        linear_node_params_t params
+        linear_params_t params

@@ -94,7 +94,7 @@ cdef class LinearNodeCy(NodeCy):
         """ Slope property """
         return (<linear_params_t*> self._node.params)[0].slope
 
-    @gain.setter
+    @slope.setter
     def slope(self, value):
         """ Set slope """
         (<linear_params_t*> self._node.params)[0].slope = value
@@ -104,7 +104,7 @@ cdef class LinearNodeCy(NodeCy):
         """ Bias property """
         return (<linear_params_t*> self._node.params)[0].bias
 
-    @gain.setter
+    @bias.setter
     def bias(self, value):
         """ Set bias """
         (<linear_params_t*> self._node.params)[0].bias = value

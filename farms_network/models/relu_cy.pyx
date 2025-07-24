@@ -2,7 +2,7 @@
 
 
 from libc.stdio cimport printf
-from libc.stdlib cimport free, malloc
+from libc.stdlib cimport free
 
 
 cpdef enum STATE:

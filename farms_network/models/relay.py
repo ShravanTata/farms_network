@@ -14,9 +14,3 @@ class RelayNode(Node):
 
     def __init__(self, name: str, **kwargs):
         super().__init__(name=name, model=Models.RELAY, **kwargs)
-
-    @classmethod
-    def from_options(cls, node_options: RelayNodeOptions):
-        """ Instantiate relay node from options """
-        name: str = node_options.name
-        return cls(name)

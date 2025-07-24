@@ -4,7 +4,7 @@
 cdef enum:
 
     #EDGE TYPES
-    OPEN = 0
+    GENERIC = 0
     EXCITATORY = 1
     INHIBITORY = 2
     CHOLINERGIC = 3

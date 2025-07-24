@@ -12,7 +12,7 @@ from farms_network.models import Models
 
 # Input transfer function
 # Receives n-inputs and produces one output to be fed into ode/output_tf
-cdef double base_input_tf(
+cdef processed_inputs_t base_input_tf(
     double time,
     const double* states,
     const node_inputs_t inputs,
@@ -26,7 +26,7 @@ cdef void base_ode(
     double time,
     const double* states,
     double* derivatives,
-    double input,
+    processed_inputs_t input_vals,
     double noise,
     const node_t* node,
 ) noexcept:
@@ -37,7 +37,7 @@ cdef void base_ode(
 cdef double base_output_tf(
     double time,
     const double* states,
-    double input,
+    processed_inputs_t input_vals,
     double noise,
     const node_t* node,
 ) noexcept:

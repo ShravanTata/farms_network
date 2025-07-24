@@ -7,13 +7,22 @@ cdef struct node_inputs_t:
     double* network_outputs      # Network level outputs
     double* weights              # Network connection weights
     unsigned int* source_indices # Which nodes provide input
+    double external_input        # external input
     int ninputs                  # Number of inputs
     unsigned int node_index      # This node's index (for self-reference)
 
 
+cdef struct processed_inputs_t:
+    double generic
+    double excitatory
+    double inhibitory
+    double cholinergic
+    double phase_coupling
+
+
 # Input transfer function
 # Receives n-inputs and produces one output to be fed into ode/output_tf
-cdef double base_input_tf(
+cdef processed_inputs_t base_input_tf(
     double time,
     const double* states,
     const node_inputs_t inputs,
@@ -27,7 +36,7 @@ cdef void base_ode(
     double time,
     const double* states,
     double* derivatives,
-    double input_val,
+    processed_inputs_t input_vals,
     double noise,
     const node_t* node,
 )
@@ -37,7 +46,7 @@ cdef void base_ode(
 cdef double base_output_tf(
     double time,
     const double* states,
-    double input_val,
+    processed_inputs_t input_vals,
     double noise,
     const node_t* node,
 )
@@ -58,28 +67,28 @@ cdef struct node_t:
     void* params                # Pointer to the parameters of the node.
 
     # Functions
-    double input_tf(
+    processed_inputs_t input_tf(
         double time,
         const double* states,
         const node_inputs_t inputs,
         const node_t* node,
         const edge_t** edges,
-    )
+    ) noexcept
     void ode(
         double time,
         const double* states,
         double* derivatives,
-        double input,
+        processed_inputs_t input_vals,
         double noise,
         const node_t* node,
-    )
+    ) noexcept
     double output_tf(
         double time,
         const double* states,
-        double input,
+        processed_inputs_t input_vals,
         double noise,
         const node_t* node,
-    )
+    ) noexcept
 
 
 cdef class NodeCy:

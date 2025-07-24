@@ -37,7 +37,8 @@ class Models(str, BaseTypes):
 
 @unique
 class EdgeTypes(str, BaseTypes):
-    OPEN = "open"
+    GENERIC = "generic"
     EXCITATORY = "excitatory"
     INHIBITORY = "inhibitory"
     CHOLINERGIC = "cholinergic"
+    PHASE_COUPLING = "phase_coupling"

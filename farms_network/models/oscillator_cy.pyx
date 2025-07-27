@@ -122,6 +122,12 @@ cdef class OscillatorNodeCy(NodeCy):
             raise Exception(f'Unknown kwargs: {kwargs}')
 
 
+    def parameters(self):
+        """ Parameters in the network """
+        cdef oscillator_params_t params = (<oscillator_params_t*> self._node.params)[0]
+        return params
+
+
 cdef class OscillatorEdgeCy(EdgeCy):
     """ Python interface to Oscillator Edge C-Structure """
 

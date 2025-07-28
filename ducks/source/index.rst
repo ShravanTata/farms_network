@@ -9,9 +9,7 @@
 
 .. warning:: Farmers are currently busy! Documentation is work in progress!!
 
-farms network provides commonly used neural models for locomotion circuits.
-
-A neural network simulation library designed for simulating sparse neural networks with models such as leaky integrators with efficient computing through Cython and future GPU integration.
+A neural network simulation library designed for simulating sparse neural networks written primrarily in python with efficient computing handled through Cython. Farms network provides commonly used neural models for locomotion circuits.
 
 =============
  Introduction

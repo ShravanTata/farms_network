@@ -58,6 +58,5 @@ cdef class NetworkCy(ODESystem):
 
         list nodes_output_data
 
-    # cpdef void step(self)
     cpdef void evaluate(self, double time, double[:] states, double[:] derivatives) noexcept
     cpdef void step(self)

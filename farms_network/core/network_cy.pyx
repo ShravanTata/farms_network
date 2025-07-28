@@ -11,6 +11,7 @@ from libc.string cimport strdup
 from ..models.factory import NodeFactory
 from ..noise.ornstein_uhlenbeck import OrnsteinUhlenbeck
 from .data import NetworkData, NetworkStates
+from .node_cy cimport processed_inputs_t
 
 from .data_cy cimport (NetworkConnectivityCy, NetworkDataCy, NetworkNoiseCy,
                        NetworkStatesCy)
@@ -24,7 +25,6 @@ from .options import (EdgeOptions, IntegrationOptions, NetworkOptions,
 cdef inline void ode(
     double time,
     double[:] states_arr,
-    NetworkDataCy data,
     network_t* c_network,
     double[:] node_outputs_tmp,
 ) noexcept:
@@ -36,13 +36,14 @@ cdef inline void ode(
     cdef edge_t** c_edges = c_network.edges
     nnodes = c_network.nnodes
 
-    # It is important to use the states passed to the function and not from the data.states
     cdef double* node_outputs_tmp_ptr = &node_outputs_tmp[0]
 
     cdef node_inputs_t node_inputs
     node_inputs.network_outputs = c_network.outputs
-    cdef total_input_val = 0.0
+    # It is important to use the states passed to the function and not from the data.states
+    c_network.states = &states_arr[0]
 
+    cdef processed_inputs_t processed_inputs
 
     for j in range(nnodes):
         total_input_val = 0.0
@@ -56,7 +57,7 @@ cdef inline void ode(
         node_inputs.node_index = j
         if __node.is_statefull:
             # Compute the inputs from all nodes
-            total_input_val = __node.input_tf(
+            processed_inputs = __node.input_tf(
                 time,
                 c_network.states + c_network.states_indices[j],
                 node_inputs,
@@ -68,7 +69,7 @@ cdef inline void ode(
                 time,
                 c_network.states + c_network.states_indices[j],
                 c_network.derivatives + c_network.derivatives_indices[j],
-                total_input_val,
+                processed_inputs,
                 0.0,
                 c_nodes[j]
             )
@@ -76,12 +77,12 @@ cdef inline void ode(
             node_outputs_tmp_ptr[j] = __node.output_tf(
                 time,
                 c_network.states + c_network.states_indices[j],
-                total_input_val,
+                processed_inputs,
                 0.0,
                 c_nodes[j],
             )
         else:
-            total_input_val = __node.input_tf(
+            processed_inputs = __node.input_tf(
                 time,
                 NULL,
                 node_inputs,
@@ -92,7 +93,7 @@ cdef inline void ode(
             node_outputs_tmp_ptr[j] = __node.output_tf(
                 time,
                 NULL,
-                total_input_val,
+                processed_inputs,
                 0.0,
                 c_nodes[j],
             )
@@ -163,7 +164,7 @@ cdef class NetworkCy(ODESystem):
         # Initialize network context
         self.data = <NetworkDataCy> data
         if self.data.states.array.size > 0:
-            self._network.states = &self.data.states.array[0]
+            self._network.states = &self.data.states.array[0][0]
         else:
             self._network.states = NULL  # No stateful
 
@@ -173,7 +174,7 @@ cdef class NetworkCy(ODESystem):
             self._network.states_indices = NULL
 
         if self.data.derivatives.array.size > 0:
-            self._network.derivatives = &self.data.derivatives.array[0]
+            self._network.derivatives = &self.data.derivatives.array[0][0]
         else:
             self._network.derivatives = NULL
 
@@ -183,12 +184,12 @@ cdef class NetworkCy(ODESystem):
             self._network.derivatives_indices = NULL
 
         if self.data.external_inputs.array.size > 0:
-            self._network.external_inputs = &self.data.external_inputs.array[0]
+            self._network.external_inputs = &self.data.external_inputs.array[0][0]
         else:
             self._network.external_inputs = NULL
 
         if self.data.outputs.array.size > 0:
-            self._network.outputs = &self.data.outputs.array[0]
+            self._network.outputs = &self.data.outputs.array[0][0]
         else:
             self._network.outputs = NULL
 
@@ -218,6 +219,7 @@ cdef class NetworkCy(ODESystem):
     def __init__(self, nnodes, nedges, data: NetworkDataCy):
         """ Initialize """
         super().__init__()
+        self.iteration = 0
 
 
     def __dealloc__(self):
@@ -263,9 +265,10 @@ cdef class NetworkCy(ODESystem):
         # Update noise model
         cdef NetworkDataCy data = <NetworkDataCy> self.data
 
-        ode(time, states, data, self._network, self.__tmp_node_outputs)
-        # data.outputs.array[:] = self.__tmp_node_outputs
-        # derivatives[:] = data.derivatives.array
+        ode(time, states, self._network, self.__tmp_node_outputs)
+        data.states.array[self.iteration, :] = states
+        data.outputs.array[self.iteration, :] = self.__tmp_node_outputs
+        derivatives[:] = data.derivatives.array[self.iteration, :]
 
     cpdef void step(self):
         """ Step the network state """

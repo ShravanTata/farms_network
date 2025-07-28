@@ -29,15 +29,15 @@ cdef class NetworkDataCy:
     cdef:
         public NetworkStatesCy states
         public NetworkStatesCy derivatives
-        public DoubleArray1D external_inputs
-        public DoubleArray1D outputs
+        public DoubleArray2D external_inputs
+        public DoubleArray2D outputs
         public NetworkConnectivityCy connectivity
         public NetworkNoiseCy noise
 
         public NodeDataCy[:] nodes
 
 
-cdef class NetworkStatesCy(DoubleArray1D):
+cdef class NetworkStatesCy(DoubleArray2D):
     """ State array """
 
     cdef public UITYPEv1 indices

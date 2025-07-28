@@ -1,20 +1,4 @@
 """
------------------------------------------------------------------------
-Copyright 2018-2020 Jonathan Arreguit, Shravan Tata Ramalingasetty
-Copyright 2018 BioRobotics Laboratory, École polytechnique fédérale de Lausanne
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
------------------------------------------------------------------------
 
 Main data structure for the network
 
@@ -84,20 +68,24 @@ class NetworkData(NetworkDataCy):
         derivatives = NetworkStates.from_options(network_options)
         connectivity = NetworkConnectivity.from_options(network_options)
         noise = NetworkNoise.from_options(network_options)
-        outputs = DoubleArray1D(
+        outputs = DoubleArray2D(
             array=np.full(
-                shape=len(network_options.nodes),
+                shape=(buffer_size, len(network_options.nodes)),
                 fill_value=0,
                 dtype=NPDTYPE,
             )
         )
-        external_inputs = DoubleArray1D(
+        external_inputs = DoubleArray2D(
             array=np.full(
-                shape=len(network_options.nodes),
+                shape=(buffer_size, len(network_options.nodes)),
                 fill_value=0,
                 dtype=NPDTYPE,
             )
         )
+        # nodes = [
+        #     NodeStates(states, node_index)
+        #     for node_index, node_options in enumerate(network_options.nodes)
+        # ]
         nodes = np.array(
             [
                 NodeData.from_options(
@@ -156,7 +144,7 @@ class NetworkStates(NetworkStatesCy):
             nstates += node._nstates
             indices.append(nstates)
         return cls(
-            array=np.array(np.zeros((nstates,)), dtype=NPDTYPE),
+            array=np.array(np.zeros((network_options.logs.buffer_size, nstates)), dtype=NPDTYPE),
             indices=np.array(indices)
         )
 
@@ -283,6 +271,19 @@ class NetworkNoise(NetworkNoiseCy):
             'diffusion': to_array(self.diffusion),
             'outputs': to_array(self.outputs),
         }
+
+class NodeStates:
+    def __init__(self, network_states, node_index):
+        self._network_states = network_states
+        self._node_index = node_index
+
+    @property
+    def array(self):
+        start = self._network_states.indices[self._node_index]
+        end = self._network_states.indices[self._node_index + 1]
+        if start == end:
+            return None
+        return self._network_states.array[start:end]
 
 
 class NodeData(NodeDataCy):

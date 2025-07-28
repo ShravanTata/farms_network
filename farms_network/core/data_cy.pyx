@@ -36,12 +36,12 @@ cdef class NetworkDataCy:
         super().__init__()
 
 
-cdef class NetworkStatesCy(DoubleArray1D):
+cdef class NetworkStatesCy(DoubleArray2D):
     """ State array """
 
     def __init__(
             self,
-            array: NDArray[(Any,), np.double],
+            array: NDArray[(Any, Any), np.double],
             indices: NDArray[(Any,), np.uintc],
     ):
         super().__init__(array)

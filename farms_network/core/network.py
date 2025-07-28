@@ -6,7 +6,7 @@ from .data import NetworkData
 from .network_cy import NetworkCy
 from .options import (EdgeOptions, IntegrationOptions, NetworkOptions,
                       NodeOptions)
-from ..models.factory import NodeFactory
+from ..models.factory import NodeFactory, EdgeFactory
 from .edge import Edge
 from .node import Node
 from typing import Optional
@@ -92,7 +92,8 @@ class Network:
     @staticmethod
     def _generate_edge(edge_options: EdgeOptions) -> Edge:
         """ Generate an edge from options """
-        return Edge.from_options(edge_options)
+        EdgeClass = EdgeFactory.create(edge_options.model)
+        return EdgeClass.from_options(edge_options)
 
     # Delegate properties to Cython implementation
     @property

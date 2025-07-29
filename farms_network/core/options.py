@@ -153,7 +153,14 @@ class EdgeOptions(Options):
         self.target: str = kwargs.pop("target")
         self.weight: float = kwargs.pop("weight")
         self.type = EdgeTypes.to_str(kwargs.pop("type"))
-        self.model = kwargs.pop("model", EdgeOptions.MODEL)
+        model = kwargs.pop("model", Models.BASE)
+        if isinstance(model, Models):
+            model = Models.to_str(model)
+        elif not isinstance(model, str):
+            raise TypeError(
+                f"{model} is of {type(model)}. Needs to {type(Models)} or {type(str)}"
+            )
+        self.model: str = model
         self.parameters: EdgeParameterOptions = kwargs.pop("parameters", EdgeParameterOptions())
 
         self.visual: EdgeVisualOptions = kwargs.pop("visual")
@@ -547,9 +554,9 @@ class OscillatorEdgeOptions(EdgeOptions):
         parameters = kwargs.pop("parameters")
         assert isinstance(parameters, OscillatorEdgeParameterOptions)
         super().__init__(
-            model=OscillatorEdgeOptions.MODEL,
             source=kwargs.pop("source"),
             target=kwargs.pop("target"),
+            model=OscillatorEdgeOptions.MODEL,
             weight=kwargs.pop("weight"),
             type=kwargs.pop("type"),
             parameters=parameters,
@@ -876,39 +883,6 @@ class LIDannerStateOptions(NodeStateOptions):
         # assert len(self.initial) == 2, f"Number of initial states {len(self.initial)} should be 2"
 
 
-class LIDannerEdgeOptions(EdgeOptions):
-    """ LIDanner edge options """
-
-    MODEL = Models.LI_DANNER
-
-    def __init__(self, **kwargs):
-        """ Initialize """
-        super().__init__(
-            model=LIDannerEdgeOptions.MODEL,
-            source=kwargs.pop("source"),
-            target=kwargs.pop("target"),
-            weight=kwargs.pop("weight"),
-            type=kwargs.pop("type"),
-            parameters=kwargs.pop("parameters"),
-            visual=kwargs.pop("visual"),
-        )
-        if kwargs:
-            raise Exception(f'Unknown kwargs: {kwargs}')
-
-    @classmethod
-    def from_options(cls, kwargs: Dict):
-        """ From options """
-
-        options = {}
-        options["source"] = kwargs["source"]
-        options["target"] = kwargs["target"]
-        options["weight"] = kwargs["weight"]
-        options["type"] = kwargs["type"]
-        options["parameters"] = None
-        options["visual"] = EdgeVisualOptions.from_options(kwargs["visual"])
-        return cls(**options)
-
-
 ##################################################
 # Leaky Integrator With NaP Danner Model Options #
 ##################################################
@@ -1109,6 +1083,11 @@ class NetworkOptions(Options):
         # Models.HH_DAUN: HHDaunNodeOptions,
     }
 
+    EDGE_TYPES: Dict[Models, Type] = {
+        Models.BASE: EdgeOptions,
+        Models.OSCILLATOR: OscillatorEdgeOptions,
+    }
+
     def __init__(self, **kwargs):
         super().__init__()
 
@@ -1150,7 +1129,7 @@ class NetworkOptions(Options):
         ]
         # Edges
         options["edges"] = [
-            EdgeOptions.from_options(edge)
+            cls.EDGE_TYPES[edge["model"]].from_options(edge)
             for edge in kwargs["edges"]
         ]
         return cls(**options)

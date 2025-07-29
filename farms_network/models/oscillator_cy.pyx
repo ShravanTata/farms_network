@@ -63,6 +63,7 @@ cdef void oscillator_ode(
     double noise,
     const node_t* node,
 ) noexcept:
+
     # Parameters
     cdef oscillator_params_t params = (<oscillator_params_t*> node[0].params)[0]
     cdef oscillator_edge_params_t edge_params
@@ -121,7 +122,7 @@ cdef class OscillatorNodeCy(NodeCy):
         if kwargs:
             raise Exception(f'Unknown kwargs: {kwargs}')
 
-
+    @property
     def parameters(self):
         """ Parameters in the network """
         cdef oscillator_params_t params = (<oscillator_params_t*> self._node.params)[0]

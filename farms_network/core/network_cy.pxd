@@ -1,7 +1,7 @@
 cimport numpy as cnp
 
 from ..numeric.integrators_cy cimport EulerMaruyamaSolver, RK4Solver
-from ..numeric.system cimport ODESystem, SDESystem
+from ..numeric.system_cy cimport ODESystem, SDESystem
 from .data_cy cimport NetworkDataCy, NodeDataCy
 from .edge_cy cimport EdgeCy, edge_t
 from .node_cy cimport NodeCy, node_t, node_inputs_t
@@ -44,20 +44,12 @@ cdef class NetworkCy(ODESystem):
         network_t *_network
         public list nodes
         public list edges
-        public NetworkDataCy data
-        double[:] __tmp_node_outputs
+        NetworkDataCy data
 
         unsigned int iteration
-        unsigned int n_iterations
-        unsigned int buffer_size
-        double timestep
-
-        public RK4Solver ode_integrator
-        public EulerMaruyamaSolver sde_integrator
-
-        SDESystem sde_system
-
-        list nodes_output_data
+        const unsigned int n_iterations
+        const unsigned int buffer_size
+        const double timestep
 
     cpdef void evaluate(self, double time, double[:] states, double[:] derivatives) noexcept
     cpdef void step(self)

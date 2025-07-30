@@ -25,23 +25,21 @@ from .options import (EdgeOptions, IntegrationOptions, NetworkOptions,
 cdef inline void ode(
     double time,
     double[:] states_arr,
+    double[:] derivatives_arr,
     network_t* c_network,
-    double[:] node_outputs_tmp,
 ) noexcept:
     """ C Implementation to compute full network state """
-    cdef unsigned int j, nnodes
 
     cdef node_t __node
     cdef node_t** c_nodes = c_network.nodes
     cdef edge_t** c_edges = c_network.edges
-    nnodes = c_network.nnodes
-
-    cdef double* node_outputs_tmp_ptr = &node_outputs_tmp[0]
+    cdef unsigned int nnodes = c_network.nnodes
 
     cdef node_inputs_t node_inputs
     node_inputs.network_outputs = c_network.outputs
     # It is important to use the states passed to the function and not from the data.states
     c_network.states = &states_arr[0]
+    c_network.derivatives = &derivatives_arr[0]
 
     cdef processed_inputs_t processed_inputs
 
@@ -119,7 +117,6 @@ cdef class NetworkCy(ODESystem):
 
         self._network.nnodes = nnodes
         self._network.nedges = nedges
-        self.__tmp_node_outputs = np.zeros((nnodes,))
 
         # Allocate C arrays
         self._network.nodes = <node_t**>malloc(self.nnodes * sizeof(node_t*))
@@ -233,12 +230,8 @@ cdef class NetworkCy(ODESystem):
     cpdef void evaluate(self, double time, double[:] states, double[:] derivatives) noexcept:
         """ Evaluate the ODE """
         # Update noise model
-        cdef NetworkDataCy data = <NetworkDataCy> self.data
-
-        ode(time, states, self._network, self.__tmp_node_outputs)
-        data.states.array[self.iteration, :] = states
-        data.outputs.array[self.iteration, :] = self.__tmp_node_outputs
-        derivatives[:] = data.derivatives.array[self.iteration, :]
+        ode(time, states, derivatives, self._network)
+        self.data.derivatives.array[self.iteration, :] = derivatives[:]
 
     cpdef void step(self):
         """ Step the network state """

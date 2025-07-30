@@ -53,14 +53,16 @@ cdef class NetworkConnectivityCy:
 
     def __init__(
             self,
-            sources: NDArray[(Any,), np.uintc],
+            node_indices: NDArray[(Any,), np.uintc],
+            edge_indices: NDArray[(Any,), np.uintc],
             weights: NDArray[(Any,), np.double],
-            indices: NDArray[(Any,), np.uintc],
+            index_offsets: NDArray[(Any,), np.uintc],
     ):
         super().__init__()
-        self.sources = np.array(sources, dtype=np.uintc)
+        self.node_indices = np.array(node_indices, dtype=np.uintc)
+        self.edge_indices = np.array(edge_indices, dtype=np.uintc)
         self.weights = np.array(weights, dtype=np.double)
-        self.indices = np.array(indices, dtype=np.uintc)
+        self.index_offsets = np.array(index_offsets, dtype=np.uintc)
 
 
 cdef class NetworkNoiseCy:

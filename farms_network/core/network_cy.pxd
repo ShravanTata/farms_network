@@ -20,20 +20,21 @@ cdef struct network_t:
 
     # ODE
     double* states
-    unsigned int* states_indices
+    const unsigned int* states_indices
 
     double* derivatives
-    unsigned int* derivatives_indices
+    const unsigned int* derivatives_indices
 
     double* outputs
 
-    double* external_inputs
+    const double* external_inputs
 
     double* noise
 
-    unsigned int* input_neurons
-    double* weights
-    unsigned int* input_neurons_indices
+    const unsigned int* node_indices
+    const unsigned int* edge_indices
+    const double* weights
+    const unsigned int* index_offsets
 
 
 cdef class NetworkCy(ODESystem):

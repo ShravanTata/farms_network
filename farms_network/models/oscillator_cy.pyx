@@ -47,9 +47,9 @@ cdef processed_inputs_t oscillator_input_tf(
         double _input, _weight
 
     for j in range(inputs.ninputs):
-        _input = inputs.network_outputs[inputs.source_indices[j]]
+        _input = inputs.network_outputs[inputs.node_indices[j]]
         _weight = inputs.weights[j]
-        edge_params = (<oscillator_edge_params_t*> edges[j].params)[0]
+        edge_params = (<oscillator_edge_params_t*> edges[inputs.edge_indices[j]].params)[0]
         processed_inputs.generic += _weight*state_amplitude*csin(_input - state_phase - edge_params.phase_difference)
 
     return processed_inputs

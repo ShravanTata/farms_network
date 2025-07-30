@@ -158,8 +158,8 @@ class NetworkStates(NetworkStatesCy):
 
 class NetworkConnectivity(NetworkConnectivityCy):
 
-    def __init__(self, sources, weights, indices):
-        super().__init__(sources, weights, indices)
+    def __init__(self, node_indices, edge_indices, weights, index_offsets):
+        super().__init__(node_indices, edge_indices, weights, index_offsets)
 
     @classmethod
     def from_options(cls, network_options: NetworkOptions):
@@ -168,7 +168,7 @@ class NetworkConnectivity(NetworkConnectivityCy):
         edges = network_options.edges
 
         connectivity = np.full(
-            shape=(len(edges), 3),
+            shape=(len(edges), 4),
             fill_value=0,
             dtype=NPDTYPE,
         )
@@ -178,9 +178,10 @@ class NetworkConnectivity(NetworkConnectivityCy):
             connectivity[index][0] = int(node_names.index(edge.source))
             connectivity[index][1] = int(node_names.index(edge.target))
             connectivity[index][2] = edge.weight
+            connectivity[index][3] = index
         connectivity = np.array(sorted(connectivity, key=lambda col: col[1]))
 
-        sources = np.full(
+        node_indices = np.full(
             shape=len(edges),
             fill_value=0,
             dtype=NPDTYPE,
@@ -190,29 +191,38 @@ class NetworkConnectivity(NetworkConnectivityCy):
             fill_value=0,
             dtype=NPDTYPE,
         )
+        edge_indices = np.full(
+            shape=len(edges),
+            fill_value=0,
+            dtype=NPDTYPE,
+        )
         nedges = 0
-        indices = []
+        index_offsets = []
         if len(edges) > 0:
-            indices.append(0)
+            index_offsets.append(0)
             for index, node in enumerate(nodes):
-                node_sources = connectivity[connectivity[:, 1] == index][:, 0].tolist()
-                node_weights = connectivity[connectivity[:, 1] == index][:, 2].tolist()
-                nedges += len(node_sources)
-                indices.append(nedges)
-                sources[indices[index]:indices[index+1]] = node_sources
-                weights[indices[index]:indices[index+1]] = node_weights
+                _node_indices = connectivity[connectivity[:, 1] == index][:, 0].tolist()
+                _weights = connectivity[connectivity[:, 1] == index][:, 2].tolist()
+                _edge_indices = connectivity[connectivity[:, 1] == index][:, 3].tolist()
+                nedges += len(_node_indices)
+                index_offsets.append(nedges)
+                node_indices[index_offsets[index]:index_offsets[index+1]] = _node_indices
+                edge_indices[index_offsets[index]:index_offsets[index+1]] = _edge_indices
+                weights[index_offsets[index]:index_offsets[index+1]] = _weights
         return cls(
-            sources=np.array(sources, dtype=NPUITYPE),
+            node_indices=np.array(node_indices, dtype=NPUITYPE),
+            edge_indices=np.array(edge_indices, dtype=NPUITYPE),
             weights=np.array(weights, dtype=NPDTYPE),
-            indices=np.array(indices, dtype=NPUITYPE)
+            index_offsets=np.array(index_offsets, dtype=NPUITYPE)
         )
 
     def to_dict(self, iteration: int = None) -> Dict:
         """Convert data to dictionary"""
         return {
-            'sources': to_array(self.sources),
+            'node_indices': to_array(self.node_indices),
+            'edge_indices': to_array(self.edge_indices),
             'weights': to_array(self.weights),
-            'indices': to_array(self.indices),
+            'index_offsets': to_array(self.index_offsets),
         }
 
 
@@ -230,10 +240,10 @@ class NetworkNoise(NetworkNoiseCy):
         n_nodes = len(nodes)
 
         indices = []
-        for index, node in enumerate(nodes):
-            if node.noise and node.noise.is_stochastic:
-                n_noise_states += 1
-                indices.append(index)
+        # for index, node in enumerate(nodes):
+        #     if node.noise and node.noise.is_stochastic:
+        #         n_noise_states += 1
+        #         indices.append(index)
 
         return cls(
             states=np.full(

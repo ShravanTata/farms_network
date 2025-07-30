@@ -6,7 +6,8 @@ from farms_network.core.edge_cy cimport edge_t
 cdef struct node_inputs_t:
     double* network_outputs      # Network level outputs
     double* weights              # Network connection weights
-    unsigned int* source_indices # Which nodes provide input
+    unsigned int* node_indices   # Which nodes provide input
+    unsigned int* edge_indices   # Which edges provide input
     double external_input        # external input
     int ninputs                  # Number of inputs
     unsigned int node_index      # This node's index (for self-reference)

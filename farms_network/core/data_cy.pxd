@@ -48,8 +48,9 @@ cdef class NetworkConnectivityCy:
 
     cdef:
         public DTYPEv1 weights
-        public UITYPEv1 sources
-        public UITYPEv1 indices
+        public UITYPEv1 node_indices
+        public UITYPEv1 edge_indices
+        public UITYPEv1 index_offsets
 
 
 cdef class NetworkNoiseCy:

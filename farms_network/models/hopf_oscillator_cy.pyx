@@ -41,7 +41,7 @@ cdef processed_inputs_t hopf_oscillator_input_tf(
     }
 
     for j in range(inputs.ninputs):
-        _input = inputs.network_outputs[inputs.source_indices[j]]
+        _input = inputs.network_outputs[inputs.node_indices[j]]
         _weight = inputs.weights[j]
         processed_inputs.generic += (_weight*_input)
 

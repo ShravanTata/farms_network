@@ -33,7 +33,7 @@ cdef processed_inputs_t linear_input_tf(
     ninputs = inputs.ninputs
 
     for j in range(ninputs):
-        _input = inputs.network_outputs[inputs.source_indices[j]]
+        _input = inputs.network_outputs[inputs.node_indices[j]]
         _weight = inputs.weights[j]
         processed_inputs.generic += _weight*_input
     return processed_inputs

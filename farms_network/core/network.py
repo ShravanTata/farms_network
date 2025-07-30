@@ -28,7 +28,6 @@ class Network:
             data=self.data
         )
 
-
         # Python-level collections
         self.nodes: List[Node] = []
         self.edges: List[Edge] = []
@@ -50,10 +49,10 @@ class Network:
         for index, node_options in enumerate(self.options.nodes):
             python_node = self._generate_node(node_options)
             python_node._node_cy.ninputs = len(
-                self.data.connectivity.sources[
-                    self.data.connectivity.indices[index]:self.data.connectivity.indices[index+1]
+                self.data.connectivity.node_indices[
+                    self.data.connectivity.index_offsets[index]:self.data.connectivity.index_offsets[index+1]
                 ]
-            ) if self.data.connectivity.indices else 0
+            ) if self.data.connectivity.index_offsets else 0
             nstates += python_node.nstates
             self.nodes.append(python_node)
 

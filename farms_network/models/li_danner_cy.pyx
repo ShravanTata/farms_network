@@ -8,7 +8,6 @@ from farms_network.models import Models
 
 
 cpdef enum STATE:
-
     #STATES
     nstates = NSTATES
     v = STATE_V
@@ -43,18 +42,20 @@ cdef processed_inputs_t li_danner_input_tf(
         double _cholinergic_sum = 0.0
         unsigned int j
         double _node_out, res, _input, _weight
+        edge_t* _edge
 
     cdef unsigned int ninputs = inputs.ninputs
     for j in range(ninputs):
-        _input = inputs.network_outputs[inputs.source_indices[j]]
+        _input = inputs.network_outputs[inputs.node_indices[j]]
         _weight = inputs.weights[j]
-        if edges[j].type == EXCITATORY:
+        _edge = edges[inputs.edge_indices[j]]
+        if _edge.type == EXCITATORY:
             # Excitatory Synapse
             processed_inputs.excitatory += params.g_syn_e*cfabs(_weight)*_input*(state_v - params.e_syn_e)
-        elif edges[j].type == INHIBITORY:
+        elif _edge.type == INHIBITORY:
             # Inhibitory Synapse
             processed_inputs.inhibitory += params.g_syn_i*cfabs(_weight)*_input*(state_v - params.e_syn_i)
-        elif edges[j].type == CHOLINERGIC:
+        elif _edge.type == CHOLINERGIC:
             processed_inputs.cholinergic += cfabs(_weight)*_input
     return processed_inputs
 

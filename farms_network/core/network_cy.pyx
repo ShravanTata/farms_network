@@ -45,25 +45,29 @@ cdef inline void ode(
 
     cdef processed_inputs_t processed_inputs
 
+    cdef unsigned int j
+
     for j in range(nnodes):
-        total_input_val = 0.0
         __node = c_nodes[j][0]
         # Prepare node context
-        node_inputs.source_indices = c_network.input_neurons + c_network.input_neurons_indices[j]
-        node_inputs.weights = c_network.weights + c_network.input_neurons_indices[j]
+        node_inputs.node_indices = c_network.node_indices + c_network.index_offsets[j]
+        node_inputs.edge_indices = c_network.edge_indices + c_network.index_offsets[j]
+        node_inputs.weights = c_network.weights + c_network.index_offsets[j]
         node_inputs.external_input = c_network.external_inputs[j]
 
         node_inputs.ninputs = __node.ninputs
         node_inputs.node_index = j
+
+        # Compute the inputs from all nodes
+        processed_inputs = __node.input_tf(
+            time,
+            c_network.states + c_network.states_indices[j],
+            node_inputs,
+            c_nodes[j],
+            c_edges,
+        )
+
         if __node.is_statefull:
-            # Compute the inputs from all nodes
-            processed_inputs = __node.input_tf(
-                time,
-                c_network.states + c_network.states_indices[j],
-                node_inputs,
-                c_nodes[j],
-                c_edges + c_network.input_neurons_indices[j],
-            )
             # Compute the ode
             __node.ode(
                 time,
@@ -73,60 +77,24 @@ cdef inline void ode(
                 0.0,
                 c_nodes[j]
             )
-            # Compute all the node outputs based on the current state
-            node_outputs_tmp_ptr[j] = __node.output_tf(
-                time,
-                c_network.states + c_network.states_indices[j],
-                processed_inputs,
-                0.0,
-                c_nodes[j],
-            )
-        else:
-            processed_inputs = __node.input_tf(
-                time,
-                NULL,
-                node_inputs,
-                c_nodes[j],
-                c_edges + c_network.input_neurons_indices[j],
-            )
-            # Compute all the node outputs based on the current state
-            node_outputs_tmp_ptr[j] = __node.output_tf(
-                time,
-                NULL,
-                processed_inputs,
-                0.0,
-                c_nodes[j],
-            )
 
+    for j in range(nnodes):
+        __node = c_nodes[j][0]
+        # Prepare node context
+        node_inputs.node_indices = c_network.node_indices + c_network.index_offsets[j]
+        node_inputs.edge_indices = c_network.edge_indices + c_network.index_offsets[j]
+        node_inputs.weights = c_network.weights + c_network.index_offsets[j]
+        node_inputs.external_input = c_network.external_inputs[j]
 
-# cdef inline void logger(
-#     int iteration,
-#     NetworkDataCy data,
-#     network_t* c_network
-# ) noexcept:
-#     cdef unsigned int nnodes = c_network.nnodes
-#     cdef unsigned int j
-#     cdef double* states_ptr = &data.states.array[0]
-#     cdef unsigned int[:] state_indices = data.states.indices
-#     cdef double[:] outputs = data.outputs.array
-#     cdef double* outputs_ptr = &data.outputs.array[0]
-#     cdef double[:] external_inputs = data.external_inputs.array
-#     cdef NodeDataCy node_data
-#     cdef double[:] node_states
-#     cdef int state_idx, start_idx, end_idx, state_iteration
-#     cdef NodeDataCy[:] nodes_data = data.nodes
-#     for j in range(nnodes):
-#         # Log states
-#         start_idx = state_indices[j]
-#         end_idx = state_indices[j+1]
-#         state_iteration = 0
-#         node_states = nodes_data[j].states.array[iteration]
-#         for state_idx in range(start_idx, end_idx):
-#             node_states[state_iteration] = states_ptr[state_idx]
-#             state_iteration += 1
-#         nodes_data[j].output.array[iteration] = outputs_ptr[j]
-#         nodes_data[j].external_input.array[iteration] = external_inputs[j]
-
+        node_inputs.ninputs = __node.ninputs
+        node_inputs.node_index = j
+        c_network.outputs[j] = __node.output_tf(
+            time,
+            c_network.states + c_network.states_indices[j],
+            processed_inputs,
+            0.0,
+            c_nodes[j],
+        )
 
 # cdef inline void _noise_states_to_output(
 #     double[:] states,
@@ -198,29 +166,31 @@ cdef class NetworkCy(ODESystem):
         else:
             self._network.noise = NULL
 
-        if self.data.connectivity.sources.size > 0:
-            self._network.input_neurons = &self.data.connectivity.sources[0]
+        if self.data.connectivity.node_indices.size > 0:
+            self._network.node_indices = &self.data.connectivity.node_indices[0]
         else:
-            self._network.input_neurons = NULL
+            self._network.node_indices = NULL
+
+        if self.data.connectivity.edge_indices.size > 0:
+            self._network.edge_indices = &self.data.connectivity.edge_indices[0]
+        else:
+            self._network.edge_indices = NULL
 
         if self.data.connectivity.weights.size > 0:
             self._network.weights = &self.data.connectivity.weights[0]
         else:
             self._network.weights = NULL
 
-        if self.data.connectivity.indices.size > 0:
-            self._network.input_neurons_indices = &self.data.connectivity.indices[0]
-            print("indices size", self.data.connectivity.indices.size)
+        if self.data.connectivity.index_offsets.size > 0:
+            self._network.index_offsets = &self.data.connectivity.index_offsets[0]
         else:
-            self._network.input_neurons_indices = NULL
+            self._network.index_offsets = NULL
 
-        # cdef double* node_outputs_tmp_ptr = &node_outputs_tmp[0]
 
     def __init__(self, nnodes, nedges, data: NetworkDataCy):
         """ Initialize """
         super().__init__()
         self.iteration = 0
-
 
     def __dealloc__(self):
         """ Deallocate any manual memory as part of clean up """

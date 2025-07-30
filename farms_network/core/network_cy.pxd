@@ -2,7 +2,7 @@ cimport numpy as cnp
 
 from ..numeric.integrators_cy cimport EulerMaruyamaSolver, RK4Solver
 from ..numeric.system_cy cimport ODESystem, SDESystem
-from .data_cy cimport NetworkDataCy, NodeDataCy
+from .data_cy cimport NetworkDataCy
 from .edge_cy cimport EdgeCy, edge_t
 from .node_cy cimport NodeCy, node_t, node_inputs_t
 

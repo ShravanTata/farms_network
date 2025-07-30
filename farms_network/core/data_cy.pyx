@@ -87,10 +87,10 @@ cdef class NetworkNoiseCy:
 #############
 # Node Data #
 #############
-cdef class NodeDataCy:
-    """ Node data """
+# cdef class NodeDataCy:
+#     """ Node data """
 
-    def __init__(self):
-        """ nodes data initialization """
+#     def __init__(self):
+#         """ nodes data initialization """
 
-        super().__init__()
+#         super().__init__()

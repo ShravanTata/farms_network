@@ -17,7 +17,7 @@ from farms_core.array.types import (NDARRAY_V1, NDARRAY_V1_D, NDARRAY_V2_D,
 from farms_core.io.hdf5 import dict_to_hdf5, hdf5_to_dict
 
 from .data_cy import (NetworkConnectivityCy, NetworkDataCy, NetworkNoiseCy,
-                      NetworkStatesCy, NodeDataCy)
+                      NetworkStatesCy)
 from .options import NetworkOptions, NodeOptions, NodeStateOptions
 
 NPDTYPE = np.float64
@@ -82,20 +82,25 @@ class NetworkData(NetworkDataCy):
                 dtype=NPDTYPE,
             )
         )
-        # nodes = [
-        #     NodeStates(states, node_index)
-        #     for node_index, node_options in enumerate(network_options.nodes)
-        # ]
-        nodes = np.array(
-            [
-                NodeData.from_options(
-                    node_options,
-                    buffer_size=network_options.logs.buffer_size
-                )
-                for node_options in network_options.nodes
-            ],
-            dtype=NodeDataCy
-        )
+        nodes = [
+            NodeData(
+                node_options.name,
+                NodeStates(states, node_index,),
+                NodeOutput(outputs, node_index,),
+                NodeExternalInput(external_inputs, node_index,),
+            )
+            for node_index, node_options in enumerate(network_options.nodes)
+        ]
+        # nodes = np.array(
+        #     [
+        #         NodeData.from_options(
+        #             node_options,
+        #             buffer_size=network_options.logs.buffer_size
+        #         )
+        #         for node_options in network_options.nodes
+        #     ],
+        #     dtype=NodeDataCy
+        # )
         return cls(
             times=times,
             states=states,
@@ -293,113 +298,149 @@ class NodeStates:
         end = self._network_states.indices[self._node_index + 1]
         if start == end:
             return None
-        return self._network_states.array[start:end]
+        return self._network_states.array[:, start:end]
 
 
-class NodeData(NodeDataCy):
-    """ Base class for representing an arbitrary node data """
+class NodeOutput:
+    def __init__(self, network_outputs, node_index):
+        self._network_outputs = network_outputs
+        self._node_index = node_index
 
+    @property
+    def array(self):
+        return self._network_outputs.array[:, self._node_index]
+
+
+class NodeExternalInput:
+    def __init__(self, network_external_inputs, node_index):
+        self._network_external_inputs = network_external_inputs
+        self._node_index = node_index
+
+    @property
+    def array(self):
+        return self._network_external_inputs.array[:, self._node_index]
+
+
+class NodeData:
+    """ Accesssor for Node Data """
     def __init__(
             self,
             name: str,
-            states: "NodeStatesArray",
-            output: "NodeOutputArray",
-            external_input: "NodeExternalInputArray",
+            states: "NodeStates",
+            output: "NodeOutput",
+            external_input: "NodeExternalInput",
     ):
-        """ Node data initialization """
-
         super().__init__()
         self.name = name
         self.states = states
         self.output = output
         self.external_input = external_input
 
-    @classmethod
-    def from_options(cls, options: NodeOptions, buffer_size: int):
-        """ Node data from class """
-        return cls(
-            name=options.name,
-            states=NodeStatesArray.from_options(options, buffer_size),
-            output=NodeOutputArray.from_options(options, buffer_size),
-            external_input=NodeExternalInputArray.from_options(options, buffer_size),
-        )
 
-    def to_dict(self, iteration: int = None) -> Dict:
-        """ Concert data to dictionary """
-        return {
-            'states': self.states.to_dict(iteration),
-            'output': to_array(self.output.array),
-            'external_input': to_array(self.output.array),
-        }
+# class NodeData(NodeDataCy):
+#     """ Base class for representing an arbitrary node data """
 
+#     def __init__(
+#             self,
+#             name: str,
+#             states: "NodeStatesArray",
+#             output: "NodeOutputArray",
+#             external_input: "NodeExternalInputArray",
+#     ):
+#         """ Node data initialization """
 
-class NodeStatesArray(DoubleArray2D):
-    """ State array data """
+#         super().__init__()
+#         self.name = name
+#         self.states = states
+#         self.output = output
+#         self.external_input = external_input
 
-    def __init__(self, array: NDARRAY_V2_D, names: List):
-        super().__init__(array)
-        self.names = names
+#     @classmethod
+#     def from_options(cls, options: NodeOptions, buffer_size: int):
+#         """ Node data from class """
+#         return cls(
+#             name=options.name,
+#             states=NodeStatesArray.from_options(options, buffer_size),
+#             output=NodeOutputArray.from_options(options, buffer_size),
+#             external_input=NodeExternalInputArray.from_options(options, buffer_size),
+#         )
 
-    @classmethod
-    def from_options(cls, options: NodeOptions, buffer_size: int):
-        """ State options """
-        nstates = options._nstates
-        if nstates > 0:
-            names = options.state.names
-            array = np.full(
-                shape=[buffer_size, nstates],
-                fill_value=0,
-                dtype=NPDTYPE,
-            )
-        else:
-            names = []
-            array = np.full(
-                shape=[buffer_size, 0],
-                fill_value=0,
-                dtype=NPDTYPE,
-            )
-        return cls(array=array, names=names)
-
-    def to_dict(self, iteration: int = None) -> Dict:
-        """ Concert data to dictionary """
-        return {
-            'names': self.names,
-            'array': to_array(self.array)
-        }
+#     def to_dict(self, iteration: int = None) -> Dict:
+#         """ Concert data to dictionary """
+#         return {
+#             'states': self.states.to_dict(iteration),
+#             'output': to_array(self.output.array),
+#             'external_input': to_array(self.output.array),
+#         }
 
 
-class NodeOutputArray(DoubleArray1D):
-    """ Output array data """
+# class NodeStatesArray(DoubleArray2D):
+#     """ State array data """
 
-    def __init__(self, array: NDARRAY_V1_D):
-        super().__init__(array)
+#     def __init__(self, array: NDARRAY_V2_D, names: List):
+#         super().__init__(array)
+#         self.names = names
 
-    @classmethod
-    def from_options(cls, options: NodeOptions, buffer_size: int):
-        """ State options """
-        array = np.full(
-            shape=buffer_size,
-            fill_value=0,
-            dtype=NPDTYPE,
-        )
-        return cls(array=array)
+#     @classmethod
+#     def from_options(cls, options: NodeOptions, buffer_size: int):
+#         """ State options """
+#         nstates = options._nstates
+#         if nstates > 0:
+#             names = options.state.names
+#             array = np.full(
+#                 shape=[buffer_size, nstates],
+#                 fill_value=0,
+#                 dtype=NPDTYPE,
+#             )
+#         else:
+#             names = []
+#             array = np.full(
+#                 shape=[buffer_size, 0],
+#                 fill_value=0,
+#                 dtype=NPDTYPE,
+#             )
+#         return cls(array=array, names=names)
+
+#     def to_dict(self, iteration: int = None) -> Dict:
+#         """ Concert data to dictionary """
+#         return {
+#             'names': self.names,
+#             'array': to_array(self.array)
+#         }
 
 
-class NodeExternalInputArray(DoubleArray1D):
-    """ ExternalInput array data """
+# class NodeOutputArray(DoubleArray1D):
+#     """ Output array data """
 
-    def __init__(self, array: NDARRAY_V1_D):
-        super().__init__(array)
+#     def __init__(self, array: NDARRAY_V1_D):
+#         super().__init__(array)
 
-    @classmethod
-    def from_options(cls, options: NodeOptions, buffer_size: int):
-        """ State options """
-        array = np.full(
-            shape=buffer_size,
-            fill_value=0,
-            dtype=NPDTYPE,
-        )
-        return cls(array=array)
+#     @classmethod
+#     def from_options(cls, options: NodeOptions, buffer_size: int):
+#         """ State options """
+#         array = np.full(
+#             shape=buffer_size,
+#             fill_value=0,
+#             dtype=NPDTYPE,
+#         )
+#         return cls(array=array)
+
+
+# class NodeExternalInputArray(DoubleArray1D):
+#     """ ExternalInput array data """
+
+#     def __init__(self, array: NDARRAY_V1_D):
+#         super().__init__(array)
+
+#     @classmethod
+#     def from_options(cls, options: NodeOptions, buffer_size: int):
+#         """ State options """
+#         array = np.full(
+#             shape=buffer_size,
+#             fill_value=0,
+#             dtype=NPDTYPE,
+#         )
+#         return cls(array=array)
 
 
 def main():

@@ -3,7 +3,7 @@
 from libc.math cimport sqrt as csqrt
 from libc.stdint cimport uint_fast32_t, uint_fast64_t
 
-from ..numeric.system cimport SDESystem
+from ..numeric.system_cy cimport SDESystem
 
 
 cdef extern from "<random>" namespace "std" nogil:

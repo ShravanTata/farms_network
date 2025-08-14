@@ -1,7 +1,7 @@
 from farms_core.array.array_cy cimport DoubleArray1D
 from libc.math cimport sqrt as csqrt
 
-from .system cimport ODESystem, SDESystem
+from .system_cy cimport ODESystem, SDESystem
 
 include 'types.pxd'
 
@@ -17,7 +17,7 @@ cdef class RK4Solver:
         unsigned int dim
         double dt
 
-    cdef void step(self, ODESystem sys, double time, double[:] state) noexcept
+    cdef void _step(self, ODESystem sys, double time, double[:] state) noexcept
 
 
 cdef class EulerMaruyamaSolver:

@@ -30,7 +30,7 @@ cdef class RK4Solver:
             array=np.full(shape=dim, fill_value=0.0, dtype=NPDTYPE,)
         )
 
-    cdef void step(self, ODESystem sys, double time, double[:] states) noexcept:
+    cdef void _step(self, ODESystem sys, double time, double[:] states) noexcept:
         cdef unsigned int i
         cdef double dt2 = self.dt / 2.0
         cdef double dt6 = self.dt / 6.0
@@ -60,9 +60,10 @@ cdef class RK4Solver:
 
         # Update y: y = y + (k1 + 2*k2 + 2*k3 + k4) / 6
         for i in range(self.dim):
-            states[i] = states[i] + dt6 * (
-                k1[i] + 2.0 * k2[i] + 2.0 * k3[i] + k4[i]
-            )
+            states[i] = states[i] + dt6 * (k1[i] + 2.0 * k2[i] + 2.0 * k3[i] + k4[i])
+
+    def step(self, ODESystem sys, double time, double[:] states):
+        self._step(sys, time, states)
 
 
 cdef class EulerMaruyamaSolver:

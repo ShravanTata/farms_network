@@ -1,27 +1,30 @@
-"""
------------------------------------------------------------------------
-Copyright 2018-2020 Jonathan Arreguit, Shravan Tata Ramalingasetty
-Copyright 2018 BioRobotics Laboratory, École polytechnique fédérale de Lausanne
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
------------------------------------------------------------------------
-"""
+""" Network Data """
 
 
-from farms_core.array.array_cy cimport (DoubleArray1D, DoubleArray2D,
-                                        IntegerArray1D)
+from farms_core.array.array_cy cimport (DoubleArray1D, DoubleArray2D, IntegerArray1D)
 
 include 'types.pxd'
+
+
+# cdef class NetworkComputeData:
+
+#     cdef:
+#         # States
+#         public DoubleArray1D curr_states
+#         public DoubleArray1D tmp_states
+#         public UITYPEv1 state_indices
+#         # Derivatives
+#         public DoubleArray1D curr_derivatives
+#         public DoubleArray1D tmp_derivatives
+#         # Outputs
+#         public DoubleArray1D curr_outputs
+#         public DoubleArray1D tmp_outputs
+#         # External inputs
+#         public DoubleArray2D external_inputs
+#         # Network connectivity
+#         public NetworkConnectivityCy connectivity
+#         # Noise
+#         public NetworkNoiseCy noise
 
 
 cdef class NetworkDataCy:
@@ -31,9 +34,9 @@ cdef class NetworkDataCy:
         public NetworkStatesCy derivatives
         public DoubleArray2D external_inputs
         public DoubleArray2D outputs
+        public DoubleArray1D curr_outputs
         public NetworkConnectivityCy connectivity
         public NetworkNoiseCy noise
-
         # public NodeDataCy[:] nodes
 
 
@@ -41,6 +44,7 @@ cdef class NetworkStatesCy(DoubleArray2D):
     """ State array """
 
     cdef public UITYPEv1 indices
+    cdef public DTYPEv1 current
 
 
 cdef class NetworkConnectivityCy:

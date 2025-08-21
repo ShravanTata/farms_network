@@ -1,21 +1,4 @@
-"""
------------------------------------------------------------------------
-Copyright 2018-2020 Jonathan Arreguit, Shravan Tata Ramalingasetty
-Copyright 2018 BioRobotics Laboratory, École polytechnique fédérale de Lausanne
-
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
------------------------------------------------------------------------
-"""
+""" Core Data """
 
 from typing import Dict, Iterable, List
 
@@ -42,10 +25,15 @@ cdef class NetworkStatesCy(DoubleArray2D):
     def __init__(
             self,
             array: NDArray[(Any, Any), np.double],
+            current: NDArray[(Any,), np.double],
             indices: NDArray[(Any,), np.uintc],
     ):
         super().__init__(array)
+        assert self.array.is_c_contig()
         self.indices = np.array(indices, dtype=np.uintc)
+        assert self.indices.is_c_contig()
+        self.current = np.array(current, dtype=np.double)
+        assert self.current.is_c_contig()
 
 
 cdef class NetworkConnectivityCy:
@@ -60,9 +48,13 @@ cdef class NetworkConnectivityCy:
     ):
         super().__init__()
         self.node_indices = np.array(node_indices, dtype=np.uintc)
+        assert self.node_indices.is_c_contig()
         self.edge_indices = np.array(edge_indices, dtype=np.uintc)
+        assert self.edge_indices.is_c_contig()
         self.weights = np.array(weights, dtype=np.double)
+        assert self.weights.is_c_contig()
         self.index_offsets = np.array(index_offsets, dtype=np.uintc)
+        assert self.index_offsets.is_c_contig()
 
 
 cdef class NetworkNoiseCy:
@@ -82,15 +74,3 @@ cdef class NetworkNoiseCy:
         self.drift = np.array(drift, dtype=np.double)
         self.diffusion = np.array(diffusion, dtype=np.double)
         self.outputs = np.array(outputs, dtype=np.double)
-
-
-#############
-# Node Data #
-#############
-# cdef class NodeDataCy:
-#     """ Node data """
-
-#     def __init__(self):
-#         """ nodes data initialization """
-
-#         super().__init__()

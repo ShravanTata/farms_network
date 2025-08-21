@@ -20,6 +20,7 @@ from .data_cy import (NetworkConnectivityCy, NetworkDataCy, NetworkNoiseCy,
                       NetworkStatesCy)
 from .options import NetworkOptions, NodeOptions, NodeStateOptions
 
+
 NPDTYPE = np.float64
 NPUITYPE = np.uintc
 
@@ -34,6 +35,7 @@ class NetworkData(NetworkDataCy):
             derivatives,
             connectivity,
             outputs,
+            curr_outputs,
             external_inputs,
             noise,
             nodes,
@@ -42,15 +44,23 @@ class NetworkData(NetworkDataCy):
         """ Network data structure """
 
         super().__init__()
+
         self.times = times
         self.states = states
         self.derivatives = derivatives
         self.connectivity = connectivity
         self.outputs = outputs
+        self.curr_outputs = curr_outputs
         self.external_inputs = external_inputs
         self.noise = noise
 
-        self.nodes: np.ndarray[NodeDataCy] = nodes
+        self.nodes: List[NodeData] = nodes
+
+        # assert that the data created is c-contiguous
+        assert self.states.array.is_c_contig()
+        assert self.derivatives.array.is_c_contig()
+        assert self.outputs.array.is_c_contig()
+        assert self.external_inputs.array.is_c_contig()
 
     @classmethod
     def from_options(cls, network_options: NetworkOptions):
@@ -71,6 +81,13 @@ class NetworkData(NetworkDataCy):
         outputs = DoubleArray2D(
             array=np.full(
                 shape=(buffer_size, len(network_options.nodes)),
+                fill_value=0,
+                dtype=NPDTYPE,
+            )
+        )
+        curr_outputs = DoubleArray1D(
+            array=np.full(
+                shape=(len(network_options.nodes),),
                 fill_value=0,
                 dtype=NPDTYPE,
             )
@@ -107,6 +124,7 @@ class NetworkData(NetworkDataCy):
             derivatives=derivatives,
             connectivity=connectivity,
             outputs=outputs,
+            curr_outputs=curr_outputs,
             external_inputs=external_inputs,
             noise=noise,
             nodes=nodes,
@@ -120,6 +138,7 @@ class NetworkData(NetworkDataCy):
             'derivatives': self.derivatives.to_dict(),
             'connectivity': self.connectivity.to_dict(),
             'outputs': to_array(self.outputs.array),
+            'curr_outputs': to_array(self.curr_outputs.array),
             'external_inputs': to_array(self.external_inputs.array),
             'noise': self.noise.to_dict(),
             'nodes': {node.name: node.to_dict() for node in self.nodes},
@@ -136,8 +155,8 @@ class NetworkData(NetworkDataCy):
 
 class NetworkStates(NetworkStatesCy):
 
-    def __init__(self, array, indices):
-        super().__init__(array, indices)
+    def __init__(self, array, current, indices):
+        super().__init__(array, current, indices)
 
     @classmethod
     def from_options(cls, network_options: NetworkOptions):
@@ -150,6 +169,7 @@ class NetworkStates(NetworkStatesCy):
             indices.append(nstates)
         return cls(
             array=np.array(np.zeros((network_options.logs.buffer_size, nstates)), dtype=NPDTYPE),
+            current=np.array(np.zeros((nstates,)), dtype=NPDTYPE),
             indices=np.array(indices)
         )
 
@@ -157,6 +177,7 @@ class NetworkStates(NetworkStatesCy):
         """Convert data to dictionary"""
         return {
             'array': to_array(self.array),
+            'current': to_array(self.current.array),
             'indices': to_array(self.indices),
         }
 

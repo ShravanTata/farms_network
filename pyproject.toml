@@ -11,10 +11,10 @@ dynamic = ["version"]
 name = "farms_network"
 description = "Module to generate, develop and visualize neural networks"
 readme = "README.md"
-license = "Apache-2.0"
-license-files = ["LICENSE"]
+license = {file = "LICENSE"}
 dependencies = [
     "tqdm",
+    "farms_core",
 ]
 classifiers = [
   "Development Status :: 3 - Beta",

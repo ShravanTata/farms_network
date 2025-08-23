@@ -62,6 +62,8 @@ class Node(ABC):
         """ From node options """
         name: str = node_options.name
         parameters = node_options.parameters
+        if parameters is None:
+            parameters = {}
         return cls(name, **parameters)
 
     def to_options(self):

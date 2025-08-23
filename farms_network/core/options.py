@@ -880,7 +880,7 @@ class LIDannerStateOptions(NodeStateOptions):
             initial=kwargs.pop("initial", [-60.0, 0.0]),
             names=LIDannerStateOptions.STATE_NAMES
         )
-        # assert len(self.initial) == 2, f"Number of initial states {len(self.initial)} should be 2"
+        assert len(self.initial) == 2, f"Number of initial states {len(self.initial)} should be 2"
 
 
 ##################################################

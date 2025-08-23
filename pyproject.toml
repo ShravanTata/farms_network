@@ -3,23 +3,19 @@ requires = [
      "setuptools",
      "Cython >= 0.15.1",
      "numpy",
-     "farms_core @ git+https://github.com/ShravanTata/farms_core.git@pyproject-toml-setup",
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
+dynamic = ["version"]
 name = "farms_network"
-version = "0.1"
 description = "Module to generate, develop and visualize neural networks"
-license = {file = "LICENSE"}
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 dependencies = [
     "tqdm",
-    "farms_core @ git+https://github.com/ShravanTata/farms_core.git@pyproject-toml-setup",
 ]
-# authors = [
-#   {name = "Jonathan Arreguit", email = ""},
-#   {name = "Shravan Tata Ramalingasetty", email = ""},
-# ]
 classifiers = [
   "Development Status :: 3 - Beta",
   # Indicate who your project is intended for
@@ -28,11 +24,7 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Artificial Intelligence",
   "Topic :: Scientific/Engineering :: Artificial Life",
   # Specify the Python versions you support here.
-  "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.6",
-  "Programming Language :: Python :: 3.7",
-  "Programming Language :: Python :: 3.8",
-  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.11",
 ]
 
 [project.urls]
@@ -50,8 +42,18 @@ gui = [
     "PyQt5",
     "networkx",
     "pydot",
+    "farms_core",
 ]
 cli = ["rich",]
 
 [project.scripts]
 farms_network = "farms_network.utils.run:main"
+
+[tool.setuptools.package-data]
+farms_muscle = [
+    "*.pxd",
+    "core/*.pxd",
+    "models/*.pxd",
+    "numeric/*.pxd",
+    "noise/*.pxd"
+]

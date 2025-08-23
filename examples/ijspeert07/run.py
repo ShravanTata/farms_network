@@ -8,9 +8,12 @@ import numpy as np
 import seaborn as sns
 from farms_core.utils import profile
 from farms_network.core import options
+from farms_core.io.yaml import read_yaml
 from farms_network.core.data import NetworkData
 from farms_network.core.network import Network
 from tqdm import tqdm
+from farms_network.numeric.integrators_cy import RK4Solver
+from scipy.integrate import ode
 
 plt.rcParams['text.usetex'] = False
 
@@ -28,7 +31,7 @@ def oscillator_chain(network_options, n_oscillators, name_prefix, **kwargs):
         for n in range(n_oscillators)
     ]
     # Oscillators
-    intrinsic_frequency = kwargs.get('intrinsic_frequency', 0.2)
+    intrinsic_frequency = kwargs.get('intrinsic_frequency', 1.0)
     nominal_amplitude = kwargs.get('nominal_amplitude', 1.0)
     amplitude_rate = kwargs.get('amplitude_rate', 20.0)
 
@@ -54,7 +57,7 @@ def oscillator_chain(network_options, n_oscillators, name_prefix, **kwargs):
             )
         )
     # Connect
-    phase_diff = kwargs.get('axial_phi', 2*np.pi/8)
+    phase_diff = kwargs.get('axial_phi', -np.pi/2)
     weight = kwargs.get('axial_w', 5)
     connections = np.vstack(
         (np.arange(n_oscillators),
@@ -97,7 +100,7 @@ def oscillator_double_chain(network_options, n_oscillators, **kwargs):
 
     # Connect double chain
     phase_diff = kwargs.get('anti_phi', np.pi)
-    weight = kwargs.get('anti_w', 50)
+    weight = kwargs.get('anti_w', 5)
     for n in range(n_oscillators):
         network_options.add_edge(
             options.OscillatorEdgeOptions(
@@ -153,7 +156,7 @@ class RhythmDrive:
         return nodes
 
 
-def generate_network(iterations=2000):
+def generate_network(iterations=30000):
     """ Generate network """
 
     # Main network
@@ -172,51 +175,85 @@ def generate_network(iterations=2000):
     )
 
     # Generate rhythm centers
-    n_oscillators = 6
+    n_oscillators = 10
     network_options = oscillator_double_chain(network_options, n_oscillators)
+    graph = nx.node_link_graph(
+        network_options,
+        directed=True,
+        multigraph=False,
+        link="edges",
+        name="name",
+        source="source",
+        target="target"
+    )
+    node_positions = nx.spring_layout(graph)
+    for index, node in enumerate(network_options.nodes):
+        node.visual.position[:2] = node_positions[node.name]
+    network_options.save("/tmp/network_options.yaml")
+    # network_options = options.NetworkOptions.from_options(
+    #     read_yaml("/tmp/rhythm.yaml")
+    # )
 
     data = NetworkData.from_options(network_options)
 
     network = Network.from_options(network_options)
-    network.setup_integrator(network_options)
 
-    # nnodes = len(network_options.nodes)
-    # integrator.set_initial_value(np.zeros(len(data.states.array),), 0.0)
+    # network.setup_integrator(network_options)
+    rk4solver = RK4Solver(network.nstates, 1e-3)
+
+    integrator = ode(network.get_ode_func()).set_integrator(
+        u'dopri5',
+        method=u'adams',
+        max_step=0.0,
+        # nsteps=0
+    )
+    nnodes = len(network_options.nodes)
+    integrator.set_initial_value(np.zeros(len(data.states.array[:]),), 0.0)
 
     # print("Data ------------", np.array(network.data.states.array))
 
     # data.to_file("/tmp/sim.hdf5")
 
-    # integrator.integrate(integrator.t + 1e-3)
-
     # # Integrate
-    states = np.ones((iterations+1, len(data.states.array)))*0.0
-    outputs = np.ones((iterations, len(data.outputs.array)))*1.0
+    states = np.ones((iterations+1, len(data.states.array[:])))*1.0
+    outputs = np.ones((iterations, len(data.outputs.array[:])))*1.0
     # states[0, 2] = -1.0
 
     # for index, node in enumerate(network_options.nodes):
     #     print(index, node.name)
     # network.data.external_inputs.array[:] = np.ones((1,))*(iteration/iterations)*1.0
     for iteration in tqdm(range(0, iterations), colour='green', ascii=' >='):
+        time = iteration*1e-3
+        network.data.times.array[iteration] = time
         # network.step(network.ode, iteration*1e-3, network.data.states.array)
         # network.step()
         # states[iteration+1, :] = network.data.states.array
-        network.step()
-        network.data.times.array[iteration] = iteration*1e-3
+        # network.step()
+        # network.evaluate(iteration*1e-3, states[iteration, :])
+
+        # integrator.set_initial_value(integrator.y, integrator.t)
+        # integrator.integrate(integrator.t+1e-3)
+
+        rk4solver.step(network._network_cy, time, network.data.states.array)
+        outputs[iteration, :] = network.data.outputs.array
+        states[iteration, :] = network.data.states.array
+
+        outputs[iteration, :] = network.data.outputs.array[:]
+        states[iteration, :] = network.data.states.array[:]
 
     # network.data.to_file("/tmp/network.h5")
     plt.figure()
-    for j in range(int(n_oscillators/2)+1):
+    for j in range(int(n_oscillators/2)):
         plt.fill_between(
             np.array(network.data.times.array),
-            2*j + (1 + np.sin(network.data.nodes[j].output.array)),
+            2*j + (1 + np.sin(outputs[:, j])),
             2*j,
             alpha=0.2,
             lw=1.0,
         )
         plt.plot(
             np.array(network.data.times.array),
-            2*j + (1 + np.sin(network.data.nodes[j].output.array)),
+            2*j + (1 + np.sin(outputs[:, j])),
             label=f"{j}"
         )
     plt.legend()
@@ -232,11 +269,9 @@ def generate_network(iterations=2000):
     )
     plt.figure()
     node_positions = nx.circular_layout(graph)
-    node_positions = nx.spring_layout(graph)
+    node_positions = nx.forceatlas2_layout(graph)
     for index, node in enumerate(network_options.nodes):
         node.visual.position[:2] = node_positions[node.name]
-
-    network_options.save("/tmp/network_options.yaml")
 
     _ = nx.draw_networkx_nodes(
         graph,

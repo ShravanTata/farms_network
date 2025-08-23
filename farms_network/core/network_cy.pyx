@@ -24,8 +24,8 @@ from .options import (EdgeOptions, IntegrationOptions, NetworkOptions,
 
 cdef inline void ode(
     double time,
-    double[:] states_arr,
-    double[:] derivatives_arr,
+    double[:] states,
+    double[:] derivatives,
     network_t* c_network,
 ) noexcept:
     """ C Implementation to compute full network state """
@@ -34,16 +34,14 @@ cdef inline void ode(
     cdef node_t** c_nodes = c_network.nodes
     cdef edge_t** c_edges = c_network.edges
     cdef unsigned int nnodes = c_network.nnodes
-
+    cdef unsigned int j
+    cdef processed_inputs_t processed_inputs
     cdef node_inputs_t node_inputs
+
     node_inputs.network_outputs = c_network.outputs
     # It is important to use the states passed to the function and not from the data.states
-    c_network.states = &states_arr[0]
-    c_network.derivatives = &derivatives_arr[0]
-
-    cdef processed_inputs_t processed_inputs
-
-    cdef unsigned int j
+    cdef double* states_ptr = &states[0]
+    cdef double* derivatives_ptr = &derivatives[0]
 
     for j in range(nnodes):
         __node = c_nodes[j][0]
@@ -59,7 +57,7 @@ cdef inline void ode(
         # Compute the inputs from all nodes
         processed_inputs = __node.input_tf(
             time,
-            c_network.states + c_network.states_indices[j],
+            states_ptr + c_network.states_indices[j],
             node_inputs,
             c_nodes[j],
             c_edges,
@@ -69,30 +67,23 @@ cdef inline void ode(
             # Compute the ode
             __node.ode(
                 time,
-                c_network.states + c_network.states_indices[j],
-                c_network.derivatives + c_network.derivatives_indices[j],
+                states_ptr + c_network.states_indices[j],
+                derivatives_ptr + c_network.states_indices[j],
                 processed_inputs,
                 0.0,
                 c_nodes[j]
             )
-
-    for j in range(nnodes):
-        __node = c_nodes[j][0]
-        # Prepare node context
-        node_inputs.node_indices = c_network.node_indices + c_network.index_offsets[j]
-        node_inputs.edge_indices = c_network.edge_indices + c_network.index_offsets[j]
-        node_inputs.weights = c_network.weights + c_network.index_offsets[j]
-        node_inputs.external_input = c_network.external_inputs[j]
-
-        node_inputs.ninputs = __node.ninputs
-        node_inputs.node_index = j
-        c_network.outputs[j] = __node.output_tf(
+        # Check for writing to proper outputs array
+        c_network.tmp_outputs[j] = __node.output_tf(
             time,
-            c_network.states + c_network.states_indices[j],
+            states_ptr + c_network.states_indices[j],
             processed_inputs,
             0.0,
             c_nodes[j],
         )
+    # # Swap pointers for the outputs (Maybe!)
+    # c_network.outputs, c_network.tmp_outputs = c_network.tmp_outputs, c_network.outputs
+
 
 # cdef inline void _noise_states_to_output(
 #     double[:] states,
@@ -109,7 +100,7 @@ cdef inline void ode(
 cdef class NetworkCy(ODESystem):
     """ Python interface to Network ODE """
 
-    def __cinit__(self, nnodes: int, nedges: int, data: NetworkDataCy):
+    def __cinit__(self, nnodes: int, nedges: int, data: NetworkDataCy, log: NetworkLogCy):
         # Memory allocation only
         self._network = <network_t*>malloc(sizeof(network_t))
         if self._network is NULL:
@@ -129,34 +120,42 @@ cdef class NetworkCy(ODESystem):
         # Initialize network context
         self.data = <NetworkDataCy> data
         if self.data.states.array.size > 0:
-            self._network.states = &self.data.states.array[0][0]
+            self._network.states = &self.data.states.array[0]
         else:
             self._network.states = NULL  # No stateful
 
         if self.data.states.indices.size > 0:
             self._network.states_indices = &self.data.states.indices[0]
         else:
+            assert self._network.states == NULL
             self._network.states_indices = NULL
 
-        if self.data.derivatives.array.size > 0:
-            self._network.derivatives = &self.data.derivatives.array[0][0]
-        else:
-            self._network.derivatives = NULL
+        # if self.data.derivatives.array.size > 0:
+        #     self._network.derivatives = &self.data.derivatives.array[0]
+        # else:
+        #     assert self._network.states == NULL
+        self._network.derivatives = NULL
 
-        if self.data.derivatives.indices.size > 0:
-            self._network.derivatives_indices = &self.data.derivatives.indices[0]
-        else:
-            self._network.derivatives_indices = NULL
+        # if self.data.derivatives.indices.size > 0:
+        #     self._network.derivatives_indices = &self.data.derivatives.indices[0]
+        # else:
+        #     assert self._network.derivatives == NULL
+        self._network.derivatives_indices = NULL
 
         if self.data.external_inputs.array.size > 0:
-            self._network.external_inputs = &self.data.external_inputs.array[0][0]
+            self._network.external_inputs = &self.data.external_inputs.array[0]
         else:
-            self._network.external_inputs = NULL
+            raise ValueError("External inputs array cannot be of size 0")
 
         if self.data.outputs.array.size > 0:
-            self._network.outputs = &self.data.outputs.array[0][0]
+            self._network.outputs = &self.data.outputs.array[0]
         else:
-            self._network.outputs = NULL
+            raise ValueError("Outputs array cannot be of size 0")
+
+        if self.data.tmp_outputs.array.size > 0:
+            self._network.tmp_outputs = &self.data.tmp_outputs.array[0]
+        else:
+            raise ValueError("Temp Outputs array cannot be of size 0")
 
         if self.data.noise.outputs.size > 0:
             self._network.noise = &self.data.noise.outputs[0]
@@ -166,37 +165,41 @@ cdef class NetworkCy(ODESystem):
         if self.data.connectivity.node_indices.size > 0:
             self._network.node_indices = &self.data.connectivity.node_indices[0]
         else:
-            self._network.node_indices = NULL
+            raise ValueError("Connectivity array cannot be of size 0")
 
         if self.data.connectivity.edge_indices.size > 0:
             self._network.edge_indices = &self.data.connectivity.edge_indices[0]
         else:
-            self._network.edge_indices = NULL
+            raise ValueError("Connectivity array cannot be of size 0")
 
         if self.data.connectivity.weights.size > 0:
             self._network.weights = &self.data.connectivity.weights[0]
         else:
-            self._network.weights = NULL
+            raise ValueError("Connectivity array cannot be of size 0")
 
         if self.data.connectivity.index_offsets.size > 0:
             self._network.index_offsets = &self.data.connectivity.index_offsets[0]
         else:
-            self._network.index_offsets = NULL
+            raise ValueError("Connectivity array cannot be of size 0")
 
 
-    def __init__(self, nnodes, nedges, data: NetworkDataCy):
+    def __init__(self, nnodes, nedges, data: NetworkDataCy, log: NetworkLogCy):
         """ Initialize """
         super().__init__()
+        self.log = <NetworkLogCy>log
         self.iteration = 0
 
     def __dealloc__(self):
         """ Deallocate any manual memory as part of clean up """
         if self._network.nodes is not NULL:
             free(self._network.nodes)
+            self._network.nodes = NULL
         if self._network.edges is not NULL:
             free(self._network.edges)
+            self._network.edges = NULL
         if self._network is not NULL:
             free(self._network)
+            self._network = NULL
 
     def setup_network(self, options: NetworkOptions, data: NetworkData, nodes: List[NodeCy], edges: List[EdgeCy]):
         """ Setup network """
@@ -206,6 +209,23 @@ cdef class NetworkCy(ODESystem):
 
         for index, edge in enumerate(edges):
             self._network.edges[index] = <edge_t*>((<EdgeCy>edge._edge_cy)._edge)
+
+    cdef void evaluate(self, double time, double[:] states, double[:] derivatives) noexcept:
+        """ Evaluate the ODE """
+        ode(time, states, derivatives, self._network)
+        # Swap the temporary outputs
+        self.data.outputs.array[:] = self.data.tmp_outputs.array[:]
+
+    def ode_func(self, double time, double[:] states):
+        """ Evaluate the ODE """
+        self.evaluate(time, states, self.data.derivatives.array)
+        return self.data.derivatives.array
+
+    def update_logs(self, iteration: int):
+        """ Updated logs to copy current iteration data into logs """
+        self.log.states.array[iteration, :] = self.data.states.array[:]
+        self.log.external_inputs.array[iteration, :] = self.data.external_inputs.array[:]
+        self.log.outputs.array[iteration, :] = self.data.outputs.array[:]
 
     @property
     def nnodes(self):
@@ -226,51 +246,3 @@ cdef class NetworkCy(ODESystem):
     def nstates(self, value: int):
         """ Number of network states """
         self._network.nstates = value
-
-    cpdef void evaluate(self, double time, double[:] states, double[:] derivatives) noexcept:
-        """ Evaluate the ODE """
-        # Update noise model
-        ode(time, states, derivatives, self._network)
-        self.data.derivatives.array[self.iteration, :] = derivatives[:]
-
-    cpdef void step(self):
-        """ Step the network state """
-        cdef NetworkDataCy data = self.data
-        cdef SDESystem sde_system = self.sde_system
-        cdef EulerMaruyamaSolver sde_integrator = self.sde_integrator
-
-        # sde_integrator.step(
-        #     sde_system,
-        #     (self.iteration%self.buffer_size)*self.timestep,
-        #     self.data.noise.states
-        # )
-        # _noise_states_to_output(
-        #     self.data.noise.states,
-        #     self.data.noise.indices,
-        #     self.data.noise.outputs
-        # )
-        # self.ode_integrator.step(
-        #     self,
-        #     (self.iteration%self.buffer_size)*self.timestep,
-        #     self.data.states.array
-        # )
-        # Logging
-        # TODO: Use network options to check global logging flag
-        # logger((self.iteration%self.buffer_size), self.data, self._network)
-        self.iteration += 1
-
-    def setup_integrator(self, network_options: NetworkOptions):
-        """ Setup integrator for neural network """
-        # Setup ODE numerical integrator
-        integration_options = network_options.integration
-        timestep = integration_options.timestep
-        self.ode_integrator = RK4Solver(self._network.nstates, timestep)
-        # Setup SDE numerical integrator for noise models if any
-        noise_options = []
-        for node in network_options.nodes:
-            if node.noise is not None:
-                if node.noise.is_stochastic:
-                    noise_options.append(node.noise)
-
-        self.sde_system = OrnsteinUhlenbeck(noise_options)
-        self.sde_integrator = EulerMaruyamaSolver(len(noise_options), timestep)

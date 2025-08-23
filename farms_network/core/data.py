@@ -16,8 +16,8 @@ from farms_core.array.types import (NDARRAY_V1, NDARRAY_V1_D, NDARRAY_V2_D,
                                     NDARRAY_V3_D)
 from farms_core.io.hdf5 import dict_to_hdf5, hdf5_to_dict
 
-from .data_cy import (NetworkConnectivityCy, NetworkDataCy, NetworkNoiseCy,
-                      NetworkStatesCy)
+from .data_cy import (NetworkConnectivityCy, NetworkDataCy, NetworkLogCy, NetworkNoiseCy,
+                      NetworkStatesCy, NetworkLogStatesCy)
 from .options import NetworkOptions, NodeOptions, NodeStateOptions
 
 
@@ -35,7 +35,7 @@ class NetworkData(NetworkDataCy):
             derivatives,
             connectivity,
             outputs,
-            curr_outputs,
+            tmp_outputs,
             external_inputs,
             noise,
             nodes,
@@ -50,7 +50,7 @@ class NetworkData(NetworkDataCy):
         self.derivatives = derivatives
         self.connectivity = connectivity
         self.outputs = outputs
-        self.curr_outputs = curr_outputs
+        self.tmp_outputs = tmp_outputs
         self.external_inputs = external_inputs
         self.noise = noise
 
@@ -60,6 +60,7 @@ class NetworkData(NetworkDataCy):
         assert self.states.array.is_c_contig()
         assert self.derivatives.array.is_c_contig()
         assert self.outputs.array.is_c_contig()
+        assert self.tmp_outputs.array.is_c_contig()
         assert self.external_inputs.array.is_c_contig()
 
     @classmethod
@@ -78,23 +79,26 @@ class NetworkData(NetworkDataCy):
         derivatives = NetworkStates.from_options(network_options)
         connectivity = NetworkConnectivity.from_options(network_options)
         noise = NetworkNoise.from_options(network_options)
-        outputs = DoubleArray2D(
-            array=np.full(
-                shape=(buffer_size, len(network_options.nodes)),
-                fill_value=0,
-                dtype=NPDTYPE,
-            )
-        )
-        curr_outputs = DoubleArray1D(
+
+        outputs = DoubleArray1D(
             array=np.full(
                 shape=(len(network_options.nodes),),
                 fill_value=0,
                 dtype=NPDTYPE,
             )
         )
-        external_inputs = DoubleArray2D(
+
+        tmp_outputs = DoubleArray1D(
             array=np.full(
-                shape=(buffer_size, len(network_options.nodes)),
+                shape=(len(network_options.nodes),),
+                fill_value=0,
+                dtype=NPDTYPE,
+            )
+        )
+
+        external_inputs = DoubleArray1D(
+            array=np.full(
+                shape=len(network_options.nodes),
                 fill_value=0,
                 dtype=NPDTYPE,
             )
@@ -124,7 +128,7 @@ class NetworkData(NetworkDataCy):
             derivatives=derivatives,
             connectivity=connectivity,
             outputs=outputs,
-            curr_outputs=curr_outputs,
+            tmp_outputs=tmp_outputs,
             external_inputs=external_inputs,
             noise=noise,
             nodes=nodes,
@@ -138,7 +142,7 @@ class NetworkData(NetworkDataCy):
             'derivatives': self.derivatives.to_dict(),
             'connectivity': self.connectivity.to_dict(),
             'outputs': to_array(self.outputs.array),
-            'curr_outputs': to_array(self.curr_outputs.array),
+            'tmp_outputs': to_array(self.tmp_outputs.array),
             'external_inputs': to_array(self.external_inputs.array),
             'noise': self.noise.to_dict(),
             'nodes': {node.name: node.to_dict() for node in self.nodes},
@@ -155,8 +159,8 @@ class NetworkData(NetworkDataCy):
 
 class NetworkStates(NetworkStatesCy):
 
-    def __init__(self, array, current, indices):
-        super().__init__(array, current, indices)
+    def __init__(self, array, indices):
+        super().__init__(array, indices)
 
     @classmethod
     def from_options(cls, network_options: NetworkOptions):
@@ -168,8 +172,7 @@ class NetworkStates(NetworkStatesCy):
             nstates += node._nstates
             indices.append(nstates)
         return cls(
-            array=np.array(np.zeros((network_options.logs.buffer_size, nstates)), dtype=NPDTYPE),
-            current=np.array(np.zeros((nstates,)), dtype=NPDTYPE),
+            array=np.array(np.zeros((nstates,)), dtype=NPDTYPE),
             indices=np.array(indices)
         )
 
@@ -177,7 +180,6 @@ class NetworkStates(NetworkStatesCy):
         """Convert data to dictionary"""
         return {
             'array': to_array(self.array),
-            'current': to_array(self.current.array),
             'indices': to_array(self.indices),
         }
 
@@ -307,6 +309,140 @@ class NetworkNoise(NetworkNoiseCy):
             'diffusion': to_array(self.diffusion),
             'outputs': to_array(self.outputs),
         }
+
+
+class NetworkLogStates(NetworkLogStatesCy):
+
+    def __init__(self, array, indices):
+        super().__init__(array, indices)
+
+    @classmethod
+    def from_options(cls, network_options: NetworkOptions):
+
+        nodes = network_options.nodes
+        nstates = 0
+        indices = [0,]
+        buffer_size = network_options.logs.buffer_size
+        for index, node in enumerate(nodes):
+            nstates += node._nstates
+            indices.append(nstates)
+        return cls(
+            array=np.array(np.zeros((buffer_size, nstates)), dtype=NPDTYPE),
+            indices=np.array(indices)
+        )
+
+    def to_dict(self, iteration: int = None) -> Dict:
+        """Convert data to dictionary"""
+        return {
+            'array': to_array(self.array),
+            'indices': to_array(self.indices),
+        }
+
+
+
+class NetworkLog(NetworkLogCy):
+    """ Network Logs """
+
+    def __init__(
+            self,
+            times,
+            states,
+            connectivity,
+            outputs,
+            external_inputs,
+            noise,
+            nodes,
+            **kwargs,
+    ):
+        """ Network data structure """
+
+        super().__init__()
+
+        self.times = times
+        self.states = states
+        self.connectivity = connectivity
+        self.outputs = outputs
+        self.external_inputs = external_inputs
+        self.noise = noise
+
+        self.nodes: List[NodeData] = nodes
+
+        # assert that the data created is c-contiguous
+        assert self.states.array.is_c_contig()
+        assert self.outputs.array.is_c_contig()
+        assert self.external_inputs.array.is_c_contig()
+
+    @classmethod
+    def from_options(cls, network_options: NetworkOptions):
+        """ From options """
+
+        buffer_size = network_options.logs.buffer_size
+        times = DoubleArray1D(
+            array=np.full(
+                shape=buffer_size,
+                fill_value=0,
+                dtype=NPDTYPE,
+            )
+        )
+        states = NetworkLogStates.from_options(network_options)
+        connectivity = NetworkConnectivity.from_options(network_options)
+        noise = NetworkNoise.from_options(network_options)
+
+        outputs = DoubleArray2D(
+            array=np.full(
+                shape=(buffer_size, len(network_options.nodes)),
+                fill_value=0,
+                dtype=NPDTYPE,
+            )
+        )
+
+        external_inputs = DoubleArray2D(
+            array=np.full(
+                shape=(buffer_size, len(network_options.nodes)),
+                fill_value=0,
+                dtype=NPDTYPE,
+            )
+        )
+        nodes = [
+            NodeData(
+                node_options.name,
+                NodeStates(states, node_index,),
+                NodeOutput(outputs, node_index,),
+                NodeExternalInput(external_inputs, node_index,),
+            )
+            for node_index, node_options in enumerate(network_options.nodes)
+        ]
+
+        return cls(
+            times=times,
+            states=states,
+            connectivity=connectivity,
+            outputs=outputs,
+            external_inputs=external_inputs,
+            noise=noise,
+            nodes=nodes,
+        )
+
+    def to_dict(self, iteration: int = None) -> Dict:
+        """Convert data to dictionary"""
+        return {
+            'times': to_array(self.times.array),
+            'states': self.states.to_dict(),
+            'connectivity': self.connectivity.to_dict(),
+            'outputs': to_array(self.outputs.array),
+            'external_inputs': to_array(self.external_inputs.array),
+            'noise': self.noise.to_dict(),
+            'nodes': {node.name: node.to_dict() for node in self.nodes},
+        }
+
+    def to_file(self, filename: str, iteration: int = None):
+        """Save data to file"""
+        pylog.info('Exporting to dictionary')
+        data_dict = self.to_dict(iteration)
+        pylog.info('Saving data to %s', filename)
+        dict_to_hdf5(filename=filename, data=data_dict)
+        pylog.info('Saved data to %s', filename)
+
 
 class NodeStates:
     def __init__(self, network_states, node_index):

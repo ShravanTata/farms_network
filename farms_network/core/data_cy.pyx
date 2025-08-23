@@ -19,21 +19,41 @@ cdef class NetworkDataCy:
         super().__init__()
 
 
-cdef class NetworkStatesCy(DoubleArray2D):
+cdef class NetworkLogCy:
+    """ Network Log """
+
+    def __init__(self):
+        """ Network Logs initialization """
+
+        super().__init__()
+
+
+cdef class NetworkStatesCy(DoubleArray1D):
     """ State array """
 
     def __init__(
             self,
-            array: NDArray[(Any, Any), np.double],
-            current: NDArray[(Any,), np.double],
+            array: NDArray[(Any,), np.double],
             indices: NDArray[(Any,), np.uintc],
     ):
         super().__init__(array)
         assert self.array.is_c_contig()
         self.indices = np.array(indices, dtype=np.uintc)
         assert self.indices.is_c_contig()
-        self.current = np.array(current, dtype=np.double)
-        assert self.current.is_c_contig()
+
+
+cdef class NetworkLogStatesCy(DoubleArray2D):
+    """ State array """
+
+    def __init__(
+            self,
+            array: NDArray[(Any, Any), np.double],
+            indices: NDArray[(Any,), np.uintc],
+    ):
+        super().__init__(array)
+        assert self.array.is_c_contig()
+        self.indices = np.array(indices, dtype=np.uintc)
+        assert self.indices.is_c_contig()
 
 
 cdef class NetworkConnectivityCy:

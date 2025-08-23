@@ -1,15 +1,16 @@
 """ Network """
 
+from typing import List, Optional
+
 import numpy as np
 
-from .data import NetworkData
+from ..models.factory import EdgeFactory, NodeFactory
+from .data import NetworkData, NetworkLog
+from .edge import Edge
 from .network_cy import NetworkCy
+from .node import Node
 from .options import (EdgeOptions, IntegrationOptions, NetworkOptions,
                       NodeOptions)
-from ..models.factory import NodeFactory, EdgeFactory
-from .edge import Edge
-from .node import Node
-from typing import Optional
 
 
 class Network:
@@ -21,11 +22,13 @@ class Network:
 
         # Core network data and Cython implementation
         self.data = NetworkData.from_options(network_options)
+        self.log = NetworkLog.from_options(network_options)
 
         self._network_cy = NetworkCy(
             nnodes=len(network_options.nodes),
             nedges=len(network_options.edges),
-            data=self.data
+            data=self.data,
+            log=self.log
         )
 
         # Python-level collections
@@ -36,11 +39,14 @@ class Network:
         self._setup_network()
         # self._setup_integrator()
 
-        # Simulation parameters
-        self.n_iterations: int = network_options.integration.n_iterations
-        self.timestep: float = network_options.integration.timestep
-        self.iteration: int = 0
+        # Logs
         self.buffer_size: int = network_options.logs.buffer_size
+
+        # Iteration
+        if network_options.integration:
+            self.timestep: float = network_options.integration.timestep
+            self.iteration: int = 0
+            self.n_iterations: int = network_options.integration.n_iterations
 
     def _setup_network(self):
         """ Setup network nodes and edges """
@@ -94,6 +100,10 @@ class Network:
         EdgeClass = EdgeFactory.create(edge_options.model)
         return EdgeClass.from_options(edge_options)
 
+    def get_ode_func(self):
+        """ Get ODE function for external integration """
+        return self._network_cy.ode_func
+
     # Delegate properties to Cython implementation
     @property
     def nnodes(self) -> int:
@@ -106,13 +116,6 @@ class Network:
     @property
     def nstates(self) -> int:
         return self._network_cy.nstates
-
-    # Delegate methods to Cython implementation
-    def evaluate(self, time, states):
-        """ Evaluate the ODE """
-        derivatives =  np.zeros(np.size(states))
-        self._network_cy.evaluate(time, states, derivatives)
-        return derivatives
 
     def step(self):
         """ Step the network simulation """

@@ -23,12 +23,13 @@ cdef struct processed_inputs_t:
 
 # Input transfer function
 # Receives n-inputs and produces one output to be fed into ode/output_tf
-cdef processed_inputs_t base_input_tf(
+cdef void base_input_tf(
     double time,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
+    processed_inputs_t* out
 )
 
 
@@ -68,12 +69,13 @@ cdef struct node_t:
     void* params                # Pointer to the parameters of the node.
 
     # Functions
-    processed_inputs_t input_tf(
+    void input_tf(
         double time,
         const double* states,
         const node_inputs_t inputs,
         const node_t* node,
         const edge_t** edges,
+        processed_inputs_t* out
     ) noexcept
     void ode(
         double time,

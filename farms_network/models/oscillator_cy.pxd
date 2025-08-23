@@ -25,12 +25,13 @@ cdef packed struct oscillator_edge_params_t:
     double phase_difference        # radians
 
 
-cdef processed_inputs_t oscillator_input_tf(
+cdef void oscillator_input_tf(
     double time,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
+    processed_inputs_t* out
 ) noexcept
 
 

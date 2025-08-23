@@ -37,12 +37,13 @@ cdef packed struct li_nap_danner_params_t:
     double e_syn_i                 # mV
 
 
-cdef processed_inputs_t li_nap_danner_input_tf(
+cdef void li_nap_danner_input_tf(
     double time,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
+    processed_inputs_t* out
 ) noexcept
 
 

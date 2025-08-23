@@ -20,12 +20,13 @@ cdef packed struct hopf_oscillator_params_t:
     double beta
 
 
-cdef processed_inputs_t hopf_oscillator_input_tf(
+cdef void hopf_oscillator_input_tf(
     double time,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
+    processed_inputs_t* out
 ) noexcept
 
 

@@ -8,22 +8,16 @@ cpdef enum STATE:
     nstates = NSTATES
 
 
-cdef processed_inputs_t relay_input_tf(
+cdef void relay_input_tf(
     double time,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
+    processed_inputs_t* out
 ) noexcept:
-    cdef processed_inputs_t processed_inputs = {
-        'generic': 0.0,
-        'excitatory': 0.0,
-        'inhibitory': 0.0,
-        'cholinergic': 0.0,
-        'phase_coupling': 0.0
-    }
-    processed_inputs.generic = inputs.external_input
-    return processed_inputs
+
+    out.generic = inputs.external_input
 
 
 cdef void relay_ode(

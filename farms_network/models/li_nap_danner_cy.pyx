@@ -15,27 +15,20 @@ cpdef enum STATE:
     h = STATE_H
 
 
-cdef processed_inputs_t li_nap_danner_input_tf(
+cdef void li_nap_danner_input_tf(
     double time,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
+    processed_inputs_t* out
 ) noexcept:
 
-    cdef li_nap_danner_params_t params = (<li_nap_danner_params_t*> node[0].params)[0]
+    cdef li_nap_danner_params_t* params = (<li_nap_danner_params_t*> node[0].params)
 
     # States
     cdef double state_v = states[<int>STATE.v]
     cdef double state_h = states[<int>STATE.h]
-
-    cdef processed_inputs_t processed_inputs = {
-        'generic': 0.0,
-        'excitatory': 0.0,
-        'inhibitory': 0.0,
-        'cholinergic': 0.0,
-        'phase_coupling': 0.0
-    }
 
     # Neuron inputs
     cdef:
@@ -51,12 +44,11 @@ cdef processed_inputs_t li_nap_danner_input_tf(
         _edge = edges[inputs.edge_indices[j]]
         if _edge.type == EXCITATORY:
             # Excitatory Synapse
-            processed_inputs.excitatory += params.g_syn_e*cfabs(_weight)*_input*(state_v - params.e_syn_e)
+            out.excitatory += params.g_syn_e*cfabs(_weight)*_input*(state_v - params.e_syn_e)
         elif _edge.type == INHIBITORY:
             # print(_input, _weight, inputs.source_indices[j], edges[j].type)
             # Inhibitory Synapse
-            processed_inputs.inhibitory += params.g_syn_i*cfabs(_weight)*_input*(state_v - params.e_syn_i)
-    return processed_inputs
+            out.inhibitory += params.g_syn_i*cfabs(_weight)*_input*(state_v - params.e_syn_i)
 
 
 cdef void li_nap_danner_ode(
@@ -67,7 +59,7 @@ cdef void li_nap_danner_ode(
     double noise,
     const node_t* node,
 ) noexcept:
-    cdef li_nap_danner_params_t params = (<li_nap_danner_params_t*> node[0].params)[0]
+    cdef li_nap_danner_params_t* params = (<li_nap_danner_params_t*> node[0].params)
 
     # States
     cdef double state_v = states[<int>STATE.v]
@@ -109,7 +101,7 @@ cdef double li_nap_danner_output_tf(
     double noise,
     const node_t* node,
 ) noexcept:
-    cdef li_nap_danner_params_t params = (<li_nap_danner_params_t*> node[0].params)[0]
+    cdef li_nap_danner_params_t* params = (<li_nap_danner_params_t*> node[0].params)
 
     cdef double _n_out = 0.0
     cdef double state_v = states[<int>STATE.v]

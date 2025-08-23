@@ -15,12 +15,13 @@ cdef packed struct linear_params_t:
     double bias
 
 
-cdef processed_inputs_t linear_input_tf(
+cdef void linear_input_tf(
     double time,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
+    processed_inputs_t* out
 ) noexcept
 
 

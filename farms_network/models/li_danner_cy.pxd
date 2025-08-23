@@ -26,12 +26,13 @@ cdef packed struct li_danner_params_t:
     double tau_ch                  # ms
 
 
-cdef processed_inputs_t li_danner_input_tf(
+cdef void li_danner_input_tf(
     double time,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
+    processed_inputs_t* out
 ) noexcept
 
 

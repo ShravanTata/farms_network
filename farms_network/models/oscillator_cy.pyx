@@ -17,29 +17,22 @@ cpdef enum STATE:
     amplitude_0 = STATE_AMPLITUDE_0
 
 
-cdef processed_inputs_t oscillator_input_tf(
+cdef void oscillator_input_tf(
     double time,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
+    processed_inputs_t* out
 ) noexcept:
 
     # Parameters
-    cdef oscillator_params_t params = (<oscillator_params_t*> node[0].params)[0]
+    cdef oscillator_params_t* params = (<oscillator_params_t*> node[0].params)
     cdef oscillator_edge_params_t edge_params
 
     # States
     cdef double state_phase = states[<int>STATE.phase]
     cdef double state_amplitude = states[<int>STATE.amplitude]
-
-    cdef processed_inputs_t processed_inputs = {
-        'generic': 0.0,
-        'excitatory': 0.0,
-        'inhibitory': 0.0,
-        'cholinergic': 0.0,
-        'phase_coupling': 0.0
-    }
 
     cdef:
         double _sum = 0.0
@@ -50,9 +43,7 @@ cdef processed_inputs_t oscillator_input_tf(
         _input = inputs.network_outputs[inputs.node_indices[j]]
         _weight = inputs.weights[j]
         edge_params = (<oscillator_edge_params_t*> edges[inputs.edge_indices[j]].params)[0]
-        processed_inputs.generic += _weight*state_amplitude*csin(_input - state_phase - edge_params.phase_difference)
-
-    return processed_inputs
+        out.generic += _weight*state_amplitude*csin(_input - state_phase - edge_params.phase_difference)
 
 
 cdef void oscillator_ode(
@@ -65,7 +56,7 @@ cdef void oscillator_ode(
 ) noexcept:
 
     # Parameters
-    cdef oscillator_params_t params = (<oscillator_params_t*> node[0].params)[0]
+    cdef oscillator_params_t* params = (<oscillator_params_t*> node[0].params)
     cdef oscillator_edge_params_t edge_params
 
     # States

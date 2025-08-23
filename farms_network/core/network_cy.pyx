@@ -30,12 +30,18 @@ cdef inline void ode(
 ) noexcept:
     """ C Implementation to compute full network state """
 
-    cdef node_t __node
+    cdef node_t* __node
     cdef node_t** c_nodes = c_network.nodes
     cdef edge_t** c_edges = c_network.edges
     cdef unsigned int nnodes = c_network.nnodes
     cdef unsigned int j
-    cdef processed_inputs_t processed_inputs
+    cdef processed_inputs_t processed_inputs = {
+        'generic': 0.0,
+        'excitatory': 0.0,
+        'inhibitory': 0.0,
+        'cholinergic': 0.0,
+        'phase_coupling': 0.0
+    }
     cdef node_inputs_t node_inputs
 
     node_inputs.network_outputs = c_network.outputs
@@ -44,7 +50,8 @@ cdef inline void ode(
     cdef double* derivatives_ptr = &derivatives[0]
 
     for j in range(nnodes):
-        __node = c_nodes[j][0]
+        __node = c_nodes[j]
+
         # Prepare node context
         node_inputs.node_indices = c_network.node_indices + c_network.index_offsets[j]
         node_inputs.edge_indices = c_network.edge_indices + c_network.index_offsets[j]
@@ -55,12 +62,19 @@ cdef inline void ode(
         node_inputs.node_index = j
 
         # Compute the inputs from all nodes
-        processed_inputs = __node.input_tf(
+        processed_inputs.generic = 0.0
+        processed_inputs.excitatory = 0.0
+        processed_inputs.inhibitory = 0.0
+        processed_inputs.cholinergic = 0.0
+        processed_inputs.phase_coupling = 0.0
+
+        __node.input_tf(
             time,
             states_ptr + c_network.states_indices[j],
             node_inputs,
             c_nodes[j],
             c_edges,
+            &processed_inputs
         )
 
         if __node.is_statefull:

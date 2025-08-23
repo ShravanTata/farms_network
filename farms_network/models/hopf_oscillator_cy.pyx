@@ -17,35 +17,26 @@ cpdef enum STATE:
     y = STATE_Y
 
 
-cdef processed_inputs_t hopf_oscillator_input_tf(
+cdef void hopf_oscillator_input_tf(
     double time,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
+    processed_inputs_t* out
 ) noexcept:
 
     # Parameters
-    cdef hopf_oscillator_params_t params = (<hopf_oscillator_params_t*> node[0].params)[0]
+    cdef hopf_oscillator_params_t* params = (<hopf_oscillator_params_t*> node[0].params)
 
     # States
     cdef double state_x = states[<int>STATE.x]
     cdef double state_y = states[<int>STATE.y]
 
-    cdef processed_inputs_t processed_inputs = {
-        'generic': 0.0,
-        'excitatory': 0.0,
-        'inhibitory': 0.0,
-        'cholinergic': 0.0,
-        'phase_coupling': 0.0
-    }
-
     for j in range(inputs.ninputs):
         _input = inputs.network_outputs[inputs.node_indices[j]]
         _weight = inputs.weights[j]
-        processed_inputs.generic += (_weight*_input)
-
-    return processed_inputs
+        out.generic += (_weight*_input)
 
 
 cdef void hopf_oscillator_ode(
@@ -57,7 +48,7 @@ cdef void hopf_oscillator_ode(
     const node_t* node,
 ) noexcept:
     # Parameters
-    cdef hopf_oscillator_params_t params = (<hopf_oscillator_params_t*> node[0].params)[0]
+    cdef hopf_oscillator_params_t* params = (<hopf_oscillator_params_t*> node[0].params)
 
     # States
     cdef double state_x = states[<int>STATE.x]

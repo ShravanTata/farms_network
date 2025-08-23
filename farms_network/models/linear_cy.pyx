@@ -9,21 +9,15 @@ cpdef enum STATE:
     nstates = NSTATES
 
 
-cdef processed_inputs_t linear_input_tf(
+cdef void linear_input_tf(
     double time,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
+    processed_inputs_t* out
 ) noexcept:
-    cdef linear_params_t params = (<linear_params_t*> node[0].params)[0]
-    cdef processed_inputs_t processed_inputs = {
-        'generic': 0.0,
-        'excitatory': 0.0,
-        'inhibitory': 0.0,
-        'cholinergic': 0.0,
-        'phase_coupling': 0.0
-    }
+    cdef linear_params_t* params = (<linear_params_t*> node[0].params)
 
     cdef:
         double _sum = 0.0
@@ -35,8 +29,7 @@ cdef processed_inputs_t linear_input_tf(
     for j in range(ninputs):
         _input = inputs.network_outputs[inputs.node_indices[j]]
         _weight = inputs.weights[j]
-        processed_inputs.generic += _weight*_input
-    return processed_inputs
+        out.generic += _weight*_input
 
 
 cdef void linear_ode(
@@ -57,7 +50,7 @@ cdef double linear_output_tf(
     double noise,
     const node_t* node,
 ) noexcept:
-    cdef linear_params_t params = (<linear_params_t*> node[0].params)[0]
+    cdef linear_params_t* params = (<linear_params_t*> node[0].params)
     cdef double input_val = input_vals.generic
     cdef double res = params.slope*input_val + params.bias
     return res

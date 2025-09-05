@@ -4,14 +4,14 @@ import os
 from pprint import pprint
 from typing import Iterable, List
 
-import farms_pylog as pylog
+from farms_core import pylog
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 from farms_core.io.yaml import read_yaml
 from farms_network.core import options
 from farms_network.core.data import NetworkData
-from farms_network.core.network import PyNetwork
+from farms_network.core.network import Network
 from jinja2 import Environment, FileSystemLoader
 from tqdm import tqdm
 
@@ -171,12 +171,12 @@ def create_node(
     )
     if node_type == "LINaPDanner":
         state_options = options.LINaPDannerStateOptions.from_kwargs(**states)
-        parameters = options.LINaPDannerParameterOptions.defaults(**parameters)
+        parameters = options.LINaPDannerNodeParameterOptions.defaults(**parameters)
         noise = options.OrnsteinUhlenbeckOptions.defaults()
         node_options_class = options.LINaPDannerNodeOptions
     elif node_type == "LIDanner":
         state_options = options.LIDannerStateOptions.from_kwargs(**states)
-        parameters = options.LIDannerParameterOptions.defaults(**parameters)
+        parameters = options.LIDannerNodeParameterOptions.defaults(**parameters)
         noise = options.OrnsteinUhlenbeckOptions.defaults()
         node_options_class = options.LIDannerNodeOptions
     elif node_type == "Linear":
@@ -189,12 +189,12 @@ def create_node(
         parameters = options.ReLUParameterOptions.defaults(**parameters)
         noise = None
         node_options_class = options.ReLUNodeOptions
-    elif node_type == "ExternalRelay":
+    elif node_type == "Relay":
         state_options = None
-        parameters = options.NodeParameterOptions()
+        parameters = None
         noise = None
         visual_options.radius = 0.0
-        node_options_class = options.ExternalRelayNodeOptions
+        node_options_class = options.RelayNodeOptions
     else:
         raise ValueError(f"Unknown node type: {node_type}")
 
@@ -202,7 +202,7 @@ def create_node(
     return node_options_class(
         name=full_name,
         parameters=parameters,
-        visual=visual_options,
+        visual=None,
         state=state_options,
         noise=noise,
     )
@@ -212,7 +212,7 @@ def create_nodes(
     node_specs: Iterable,
     base_name: str,
     transform_mat: np.ndarray,
-) -> options.NodeOptions:
+) -> dict[str, options.NodeOptions]:
     """Create node using create_method"""
     nodes = {}
     for (
@@ -242,9 +242,10 @@ def create_edges(
     edge_specs: Iterable,
     base_name: str,
     visual_options: options.EdgeVisualOptions = options.EdgeVisualOptions(),
-) -> options.EdgeOptions:
+) -> dict[str, options.EdgeOptions]:
     """Create edges from specs"""
     edges = {}
+    visual_options = options.EdgeVisualOptions(**visual_options)
     for source_tuple, target_tuple, weight, edge_type in edge_specs:
         source = join_str((base_name, *source_tuple))
         target = join_str((base_name, *target_tuple))
@@ -253,7 +254,7 @@ def create_edges(
             target=target,
             weight=weight,
             type=edge_type,
-            visual=options.EdgeVisualOptions(**visual_options),
+            visual=visual_options,
         )
     return edges
 
@@ -272,7 +273,7 @@ class BrainStemDrive:
         node_specs = [
             (
                 join_str(("BS", "input")),
-                "ExternalRelay",
+                "Relay",
                 np.array((3.0, 0.0)),
                 "A",
                 [0.0, 0.0, 0.0],
@@ -343,7 +344,7 @@ class RhythmGenerator:
                 np.array((1.0, -1.5)),
                 "In",
                 [0.2, 0.2, 0.2],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -352,7 +353,7 @@ class RhythmGenerator:
                 np.array((-1.0, 1.5)),
                 "In",
                 [0.2, 0.2, 0.2],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -361,7 +362,7 @@ class RhythmGenerator:
                 np.array((-5.0, 1.0)),
                 "In",
                 [0.2, 0.2, 0.2],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -445,7 +446,7 @@ class PatternFormation:
                 np.array((-5.0, -1.5)),
                 "In\\textsubscript{A}",
                 [0.2, 0.2, 0.2],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -454,7 +455,7 @@ class PatternFormation:
                 np.array((-7.0, 1.5)),
                 "In\\textsubscript{A}",
                 [0.2, 0.2, 0.2],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -481,7 +482,7 @@ class PatternFormation:
                 np.array((7.0, -1.5)),
                 "In\\textsubscript{B}",
                 [0.2, 0.2, 0.2],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -490,7 +491,7 @@ class PatternFormation:
                 np.array((5.0, 1.5)),
                 "In\\textsubscript{B}",
                 [0.2, 0.2, 0.2],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -499,7 +500,7 @@ class PatternFormation:
                 np.array((9.0, -3.0)),
                 "In\\textsubscript{2F}",
                 [0.2, 0.2, 0.2],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {"g_leak": 5.0},
             ),
             (
@@ -508,7 +509,7 @@ class PatternFormation:
                 np.array((3.0, -3.0)),
                 "In\\textsubscript{2E}",
                 [0.2, 0.2, 0.2],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {"g_leak": 5.0},
             ),
             (
@@ -611,7 +612,7 @@ class Commissural:
                 np.array((0.0, 2.0, 1.0)),
                 "V2\\textsubscript{a}",
                 [0.0, 1.0, 0.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -620,7 +621,7 @@ class Commissural:
                 np.array((0.0, 0.0, 1.0)),
                 "In\\textsubscript{i}",
                 [1.0, 0.0, 1.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -629,7 +630,7 @@ class Commissural:
                 np.array((2.0, 0.5, 1.0)),
                 "V0\\textsubscript{V}",
                 [0.0, 1.0, 0.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -638,7 +639,7 @@ class Commissural:
                 np.array((2.0, -2.0, 1.0)),
                 "V0\\textsubscript{D}",
                 [1.0, 0.0, 1.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -647,7 +648,7 @@ class Commissural:
                 np.array((2.0, 3.0, 1.0)),
                 "V3\\textsubscript{E}",
                 [0.0, 1.0, 0.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -656,7 +657,7 @@ class Commissural:
                 np.array((2.0, -4.0, 1.0)),
                 "V3\\textsubscript{F}",
                 [0.0, 1.0, 0.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -718,7 +719,7 @@ class LPSN:
                 np.array((0.0, 0.0, 1.0)),
                 "V0\\textsubscript{D}",
                 [0.5, 0.0, 0.5],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -727,7 +728,7 @@ class LPSN:
                 np.array((0.0, -1.25, 1.0)),
                 "V0\\textsubscript{V}",
                 [0.0, 1.0, 0.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -736,7 +737,7 @@ class LPSN:
                 np.array((0.0, -4.0, 1.0)),
                 "V3\\textsubscript{a}",
                 [0.0, 1.0, 0.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -745,7 +746,7 @@ class LPSN:
                 np.array((-4.0, 0.0, 1.0)),
                 "LPN\\textsubscript{i}",
                 [0.0, 1.0, 0.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -754,7 +755,7 @@ class LPSN:
                 np.array((-8.0, 0.0, 1.0)),
                 "Sh\\textsubscript{2}",
                 [0.0, 1.0, 0.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -763,7 +764,7 @@ class LPSN:
                 np.array((-8.0, -4.0, 1.0)),
                 "Sh\\textsubscript{2}",
                 [0.0, 1.0, 0.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -837,7 +838,7 @@ class MotorLayer:
                 np.array((IaIn_x_positions[0], y_off, 1.0)),
                 "Ia\\textsubscript{ea}",
                 [0.0, 0.0, 1.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -846,7 +847,7 @@ class MotorLayer:
                 np.array((IaIn_x_positions[1], y_off, 1.0)),
                 "Ia\\textsubscript{eb}",
                 [0.0, 0.0, 1.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -855,7 +856,7 @@ class MotorLayer:
                 np.array((IaIn_x_positions[2], y_off, 1.0)),
                 "Ia\\textsubscript{fa}",
                 [0.0, 0.0, 1.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -864,7 +865,7 @@ class MotorLayer:
                 np.array((IaIn_x_positions[3], y_off, 1.0)),
                 "Ia\\textsubscript{fb}",
                 [0.0, 0.0, 1.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -873,7 +874,7 @@ class MotorLayer:
                 np.array((np.mean(IaIn_x_positions), y_off - spacing, 1.0)),
                 "Ib\\textsubscript{rg}",
                 [0.0, 0.0, 1.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
         ]
@@ -914,12 +915,12 @@ class MotorLayer:
                 np.array((x_off, y_off, 1.0)),
                 "Mn",
                 [1.0, 0.0, 1.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {"e_leak": -52.5, "g_leak": 1.0},
             ),
             (
                 join_str((muscle["name"], "Ia")),
-                "ExternalRelay",
+                "Relay",
                 np.array((x_off - 0.5, y_off + 0.75 * mirror_y_sign, 1.0)),
                 "Ia",
                 [1.0, 0.0, 0.0],
@@ -928,7 +929,7 @@ class MotorLayer:
             ),
             (
                 join_str((muscle["name"], "II")),
-                "ExternalRelay",
+                "Relay",
                 np.array((x_off, y_off + 0.75 * mirror_y_sign, 1.0)),
                 "II",
                 [1.0, 0.0, 0.0],
@@ -937,7 +938,7 @@ class MotorLayer:
             ),
             (
                 join_str((muscle["name"], "Ib")),
-                "ExternalRelay",
+                "Relay",
                 np.array((x_off + 0.5, y_off + 0.75 * mirror_y_sign, 1.0)),
                 "Ib",
                 [1.0, 0.0, 0.0],
@@ -950,7 +951,7 @@ class MotorLayer:
                 np.array((x_off + 0.5, y_off - 1.0 * mirror_y_sign, 1.0)),
                 "Rn",
                 [1.0, 0.0, 1.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -959,7 +960,7 @@ class MotorLayer:
                 np.array((x_off + 1.0, y_off, 1.0)),
                 "Ib\\textsubscript{i}",
                 [0.0, 0.0, 1.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -968,7 +969,7 @@ class MotorLayer:
                 np.array((x_off + 1.0, y_off + 1.5 * mirror_y_sign, 1.0)),
                 "Ib\\textsubscript{e}",
                 [0.0, 0.0, 1.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
             (
@@ -977,7 +978,7 @@ class MotorLayer:
                 np.array((x_off - 1.0, y_off, 1.0)),
                 "II\\textsubscript{RG}",
                 [0.0, 0.0, 1.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {},
             ),
         ]
@@ -1030,7 +1031,7 @@ class VestibularSystem:
         node_specs = [
             (
                 join_str((self.side, self.rate, self.axis, "Vn")),
-                "ExternalRelay",
+                "Relay",
                 np.array((0.0, 0.0)),
                 "Vn",
                 [1.0, 1.0, 0.0],  # Yellow for sensory neuron
@@ -1060,7 +1061,7 @@ class VestibularSystem:
                     np.array((0.0 - x_offset, 2.0)),
                     "In",
                     [0.5, 0.5, 0.5],  # Gray for inhibitory interneurons
-                    {"v": -60.0},
+                    {"v": -60.0, "a": 0.0},
                     {},
                 )
             )
@@ -1117,7 +1118,7 @@ class SomatoSensory:
             node_specs.append(
                 (
                     join_str((contact, "cut")),
-                    "ExternalRelay",
+                    "Relay",
                     np.array((0.0, y_pos)),
                     "C",
                     [1.0, 0.0, 0.0],
@@ -1133,7 +1134,7 @@ class SomatoSensory:
                 np.array((-1.0, np.mean(node_y_pos))),
                 "In\\textsubscript{C}",
                 [1.0, 0.0, 0.0],
-                {"v": -60.0},
+                {"v": -60.0, "a": 0.0},
                 {}
             )
         )
@@ -1475,7 +1476,7 @@ def define_muscle_patterns() -> dict:
             "tbo": ["EA", "EB"],
             "bbs": ["FA", "FB"],
             "bra": ["FA", "FB"],
-            "eip": ["FA", "FB"],
+            "ecu": ["FA", "FB"],
             "fcu": ["EA", "EB"],
         }
     }
@@ -1611,13 +1612,13 @@ def limb_circuit(
         },
         "fore": {
             "spd": muscles_patterns["fore"]["spd"],
-            "eip": muscles_patterns["fore"]["eip"],
+            "ecu": muscles_patterns["fore"]["ecu"],
         }
     }
 
     II_feedback_to_rg = {
         "hind": ["ip", "ta",],
-        "fore": ["ssp", "bra", "eip"]
+        "fore": ["ssp", "bra", "ecu"]
     }
 
     Ia_reciprocal_inhibition_extensor2flexor = {
@@ -1627,7 +1628,7 @@ def limb_circuit(
         },
         "fore": {
             "extensors": ["ssp", "tbl", "tbo", "fcu"],
-            "flexors": ["spd", "bra", "bbs", "eip"],
+            "flexors": ["spd", "bra", "bbs", "ecu"],
         }
     }
 
@@ -1638,7 +1639,7 @@ def limb_circuit(
         },
         "fore": {
             "extensors": ["ssp", "tbl", "tbo", "fcu"],
-            "flexors": ["spd", "bra", "bbs", "eip"],
+            "flexors": ["spd", "bra", "bbs", "ecu"],
         }
     }
 
@@ -1649,7 +1650,7 @@ def limb_circuit(
         },
         "fore": {
             "extensors": ["ssp", "tbl", "tbo", "fcu"],
-            "flexors": ["spd", "bra", "bbs", "eip"],
+            "flexors": ["spd", "bra", "bbs", "ecu"],
         }
     }
 
@@ -1660,7 +1661,7 @@ def limb_circuit(
         },
         "fore": {
             "extensors": ["ssp", "tbl", "tbo", "fcu"],
-            "flexors": ["spd", "bra", "bbs", "eip"],
+            "flexors": ["spd", "bra", "bbs", "ecu"],
         }
     }
     # Type II connections
@@ -1838,6 +1839,7 @@ def brain_stem_circuit(
                     "excitatory",
                 )
             )
+    print(edge_specs)
     edges = create_edges(edge_specs, base_name="")
     return edges
 

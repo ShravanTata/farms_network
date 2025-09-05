@@ -2,7 +2,7 @@
 
 
 import time
-from typing import Any, Dict, Iterable, List, Self, Type
+from typing import Any, Dict, Iterable, List, Self, Type, Union
 
 from farms_core import pylog
 from farms_core.options import Options
@@ -16,11 +16,18 @@ class NodeOptions(Options):
     """ Base class for defining node options """
     MODEL = Models.BASE
 
-    def __init__(self, **kwargs: Any):
+    def __init__(
+            self,
+            name: str,
+            model: Union[str, Models] = MODEL,
+            parameters: "NodeParameterOptions" = None,
+            visual: "NodeVisualOptions" = None,
+            state: "NodeStateOptions" = None,
+            noise: "NoiseOptions" = None,
+    ):
         """ Initialize """
         super().__init__()
-        self.name: str = kwargs.pop("name")
-        model = kwargs.pop("model", NodeOptions.MODEL)
+        self.name = name
         if isinstance(model, Models):
             model = Models.to_str(model)
         elif not isinstance(model, str):
@@ -28,23 +35,23 @@ class NodeOptions(Options):
                 f"{model} is of {type(model)}. Needs to {type(Models)} or {type(str)}"
             )
         self.model: str = model
-        self.parameters: NodeParameterOptions = kwargs.pop("parameters", None)
-        self.visual: NodeVisualOptions = NodeVisualOptions.from_options(
-            kwargs.pop("visual")
-        )
-        self.state: NodeStateOptions = kwargs.pop("state", None)
-        self.noise: NoiseOptions = kwargs.pop("noise", None)
+        self.parameters = parameters
+        self.visual = visual
+        self.state = state
+        self.noise = noise
 
     @classmethod
-    def from_options(cls, kwargs: Dict):
+    def from_options(cls, options: Dict):
         """ Load from options """
-        options = {}
-        options["name"] = kwargs.pop("name")
-        options["parameters"] = kwargs.pop("parameters")
-        options["visual"] = kwargs.pop("visual")
-        options["state"] = kwargs.pop("state")
-        options["noise"] = kwargs.pop("noise")
-        return cls(**options)
+        visual = options.get("visual")
+        return cls(
+            name=options["name"],
+            model=options.get("model", cls.MODEL),
+            parameters=options.get("parameters"),
+            state=options.get("state"),
+            noise=options.get("noise"),
+            visual=NodeVisualOptions.from_options(visual) if visual else None,
+        )
 
     def __eq__(self, other):
         if isinstance(other, NodeOptions):
@@ -163,7 +170,7 @@ class EdgeOptions(Options):
         self.model: str = model
         self.parameters: EdgeParameterOptions = kwargs.pop("parameters", EdgeParameterOptions())
 
-        self.visual: EdgeVisualOptions = kwargs.pop("visual")
+        self.visual: EdgeVisualOptions = kwargs.pop("visual", None)
         if kwargs:
             raise Exception(f'Unknown kwargs: {kwargs}')
 
@@ -187,9 +194,10 @@ class EdgeOptions(Options):
         options["parameters"] = EdgeParameterOptions.from_options(
             kwargs["parameters"]
         )
-        options["visual"] = EdgeVisualOptions.from_options(
-            kwargs["visual"]
-        )
+        if visual := kwargs.get("visual"):
+            options["visual"] = EdgeVisualOptions.from_options(visual)
+        else:
+            options["visual"] = None
         return cls(**options)
 
     def __str__(self) -> str:
@@ -331,7 +339,7 @@ class RelayNodeOptions(NodeOptions):
         options = {}
         options["name"] = kwargs.pop("name")
         options["parameters"] = None
-        options["visual"] = NodeVisualOptions.from_options(kwargs["visual"])
+        options["visual"] = kwargs.get("visual", None)
         options["noise"] = kwargs.pop("noise", None)
         return cls(**options)
 
@@ -370,9 +378,7 @@ class LinearNodeOptions(NodeOptions):
         options["parameters"] = LinearParameterOptions.from_options(
             kwargs["parameters"]
         )
-        options["visual"] = NodeVisualOptions.from_options(
-            kwargs["visual"]
-        )
+        options["visual"] = kwargs.get("visual", None)
         options["noise"] = kwargs.pop("noise", None)
         return cls(**options)
 
@@ -432,9 +438,7 @@ class ReLUNodeOptions(NodeOptions):
         options["parameters"] = ReLUParameterOptions.from_options(
             kwargs["parameters"]
         )
-        options["visual"] = NodeVisualOptions.from_options(
-            kwargs["visual"]
-        )
+        options["visual"] = kwargs.get("visual", None)
         options["state"] = None
         options["noise"] = kwargs.pop("noise", None)
         return cls(**options)
@@ -806,9 +810,7 @@ class LIDannerNodeOptions(NodeOptions):
         options["parameters"] = LIDannerNodeParameterOptions.from_options(
             kwargs["parameters"]
         )
-        options["visual"] = NodeVisualOptions.from_options(
-            kwargs["visual"]
-        )
+        options["visual"] = kwargs.get("visual", None)
         options["state"] = LIDannerStateOptions.from_options(
             kwargs["state"]
         )
@@ -914,9 +916,7 @@ class LINaPDannerNodeOptions(NodeOptions):
         options["parameters"] = LINaPDannerNodeParameterOptions.from_options(
             kwargs["parameters"]
         )
-        options["visual"] = NodeVisualOptions.from_options(
-            kwargs["visual"]
-        )
+        options["visual"] = kwargs.get("visual", None)
         options["state"] = LINaPDannerStateOptions.from_options(
             kwargs["state"]
         )

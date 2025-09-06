@@ -18,7 +18,7 @@ cdef processed_inputs_t matsuoka_input_tf(
     const edge_t** edges,
 ) noexcept:
     # Parameters
-    cdef oscillator_params_t params = (<oscillator_params_t*> node[0].params)[0]
+    cdef matsuoka_params_t params = (<matsuoka_params_t*> node[0].params)[0]
 
     # States
     cdef double state_v = states[<int>STATE.v]
@@ -38,7 +38,7 @@ cdef processed_inputs_t matsuoka_input_tf(
         double _input, _weight
 
     for j in range(inputs.ninputs):
-        _input = inputs.network_outputs[inputs.source_indices[j]]
+        _input = inputs.network_outputs[inputs.node_indices[j]]
         _weight = inputs.weights[j]
 
 

@@ -11,7 +11,7 @@ Options.embed_pos_in_docstring = False
 Options.generate_cleanup_code = False
 Options.clear_to_none = True
 Options.annotate = True
-Options.fast_fail = False
+Options.fast_fail = True
 Options.warning_errors = False
 Options.error_on_unknown_names = True
 Options.error_on_uninitialized = True
@@ -32,20 +32,15 @@ extensions = [
         [f"farms_network/{subpackage}/*.pyx"],
         include_dirs=[numpy.get_include(),],
         # libraries=["c", "stdc++"],
-        extra_compile_args=['-O3'],
+        extra_compile_args=['-O3',],
         extra_link_args=['-O3'],
     )
-    for subpackage in ('core', 'models', 'numeric', 'noise')
+    for subpackage in ('core', 'models', 'noise', 'numeric')
 ]
 
 setup(
     name='farms_network',
     version='0.1',
-    description='Module to generate, develop and visualize neural networks',
-    url='https://gitlab.com/FARMSIM/farms_network.git',
-    author="Jonathan Arreguit  & Shravan Tata Ramalingasetty",
-    author_email='biorob-farms@groupes.epfl.ch',
-    license='Apache-2.0',
     packages=find_packages(exclude=['tests*']),
     package_dir={'farms_network': 'farms_network'},
     package_data={'farms_network': [

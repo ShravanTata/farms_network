@@ -99,16 +99,16 @@ cdef inline void ode(
     # c_network.outputs, c_network.tmp_outputs = c_network.tmp_outputs, c_network.outputs
 
 
-# cdef inline void _noise_states_to_output(
-#     double[:] states,
-#     unsigned int[:] indices,
-#     double[:] outputs,
-# ) noexcept:
-#     """ Copy noise states data to noise outputs """
-#     cdef int n_indices = indices.shape[0]
-#     cdef int index
-#     for index in range(n_indices):
-#         outputs[indices[index]] = states[index]
+cdef inline void _noise_states_to_output(
+    double[:] states,
+    unsigned int[:] indices,
+    double[:] outputs,
+) noexcept:
+    """ Copy noise states data to noise outputs """
+    cdef int n_indices = indices.shape[0]
+    cdef int index
+    for index in range(n_indices):
+        outputs[indices[index]] = states[index]
 
 
 cdef class NetworkCy(ODESystem):

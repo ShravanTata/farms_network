@@ -81,33 +81,30 @@ class NodeParameterOptions(Options):
 
 
 class NodeStateOptions(Options):
-    """ Base class for node specific state options """
+    """Base class for node-specific state options."""
 
     STATE_NAMES: List[str] = []  # Override in subclasses
 
-    def __init__(self, **kwargs):
+    def __init__(self, initial: List[float]):
         super().__init__()
-        self.initial: List[float] = kwargs.pop("initial")
-        self.names: List[str] = kwargs.pop("names")
+        self.initial = list(initial)
 
-        if kwargs:
-            raise ValueError(f'Unknown kwargs: {kwargs}')
+        if len(self.initial) != len(self.STATE_NAMES):
+            raise ValueError(
+                f"Length mismatch: expected {len(self.STATE_NAMES)} values for {self.STATE_NAMES}, got {len(self.initial)}"
+            )
 
     @classmethod
-    def from_kwargs(cls, **kwargs):
-        """ From node specific name-value kwargs """
-        initial = [
-            kwargs.pop(name)
-            for name in cls.STATE_NAMES
-        ]
-        if kwargs:
-            raise ValueError(f'Unknown kwargs: {kwargs}')
+    def from_options(cls, options: Dict) -> "NodeStateOptions":
+        """Create from a dict of options."""
+        initial = options.get("initial")
+        if initial is None:
+            raise ValueError("Missing required 'initial' values in options")
         return cls(initial=initial)
 
-    @classmethod
-    def from_options(cls, kwargs: Dict):
-        """ From options """
-        return cls(**kwargs)
+    def __repr__(self):
+        pairs = ", ".join(f"{n}={v}" for n, v in zip(self.STATE_NAMES, self.initial))
+        return f"{self.__class__.__name__}({pairs})"
 
 
 class NodeLogOptions(Options):
@@ -542,12 +539,8 @@ class OscillatorStateOptions(NodeStateOptions):
 
     STATE_NAMES = ["phase", "amplitude_0", "amplitude"]
 
-    def __init__(self, **kwargs):
-        super().__init__(
-            initial=kwargs.pop("initial"),
-            names=OscillatorStateOptions.STATE_NAMES
-        )
-        assert len(self.initial) == 3, f"Number of initial states {len(self.initial)} should be 3"
+    def __init__(self, initial):
+        super().__init__(initial=initial)
 
 
 class OscillatorEdgeOptions(EdgeOptions):
@@ -681,12 +674,8 @@ class HopfOscillatorStateOptions(NodeStateOptions):
 
     STATE_NAMES = ["x", "y"]
 
-    def __init__(self, **kwargs):
-        super().__init__(
-            initial=kwargs.pop("initial"),
-            names=HopfOscillatorStateOptions.STATE_NAMES
-        )
-        assert len(self.initial) == 2, f"Number of initial states {len(self.initial)} should be 2"
+    def __init__(self, initial):
+        super().__init__(initial)
 
 
 ##################################
@@ -770,12 +759,8 @@ class LeakyIntegratorStateOptions(NodeStateOptions):
 
     STATE_NAMES = ["m",]
 
-    def __init__(self, **kwargs):
-        super().__init__(
-            initial=kwargs.pop("initial"),
-            names=LeakyIntegratorStateOptions.STATE_NAMES
-        )
-        assert len(self.initial) == 1, f"Number of initial states {len(self.initial)} should be 1"
+    def __init__(self, initial):
+        super().__init__(initial)
 
 
 #########################################
@@ -877,12 +862,8 @@ class LIDannerStateOptions(NodeStateOptions):
 
     STATE_NAMES = ["v", "a"]
 
-    def __init__(self, **kwargs):
-        super().__init__(
-            initial=kwargs.pop("initial", [-60.0, 0.0]),
-            names=LIDannerStateOptions.STATE_NAMES
-        )
-        assert len(self.initial) == 2, f"Number of initial states {len(self.initial)} should be 2"
+    def __init__(self, initial):
+        super().__init__(initial=initial)
 
 
 ##################################################
@@ -988,12 +969,8 @@ class LINaPDannerStateOptions(NodeStateOptions):
 
     STATE_NAMES = ["v", "h"]
 
-    def __init__(self, **kwargs):
-        super().__init__(
-            initial=kwargs.pop("initial"),
-            names=LINaPDannerStateOptions.STATE_NAMES
-        )
-        assert len(self.initial) == 2, f"Number of initial states {len(self.initial)} should be 2"
+    def __init__(self, initial):
+        super().__init__(initial)
 
 
 ####################
@@ -1052,12 +1029,8 @@ class IzhikevichStateOptions(NodeStateOptions):
 
     STATE_NAMES = ["v", "u"]
 
-    def __init__(self, **kwargs):
-        super().__init__(
-            initial=kwargs.pop("initial"),
-            names=IzhikevichStateOptions.STATE_NAMES
-        )
-        assert len(self.initial) == 2, f"Number of initial states {len(self.initial)} should be 2"
+    def __init__(self, initial):
+        super().__init__(initial)
 
 
 ##############################

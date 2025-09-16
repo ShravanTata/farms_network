@@ -8,6 +8,10 @@ from farms_network.core import options
 
 from components import *
 from components import limb_circuit
+from farms_network.core.network import Network
+from farms_network.numeric.integrators_cy import RK4Solver
+from scipy.integrate import ode
+from tqdm import tqdm
 
 
 def generate_network(n_iterations: int):
@@ -388,35 +392,85 @@ def generate_quadruped_circuit(
 def run_network(*args):
     network_options = args[0]
 
-    network = PyNetwork.from_options(network_options)
-    network.setup_integrator(network_options)
+    network = Network.from_options(network_options)
+    iterations = network_options.integration.n_iterations
+    rk4solver = RK4Solver(network.nstates, network_options.integration.timestep)
+
+    integrator = ode(network.get_ode_func()).set_integrator(
+        u'dopri5',
+        method=u'adams',
+        max_step=0.0,
+        # nsteps=0
+    )
+    nnodes = len(network_options.nodes)
+    integrator.set_initial_value(np.zeros(len(network.data.states.array[:]),), 0.0)
+
+    # print("Data ------------", np.array(network.network.data.states.array))
 
     # data.to_file("/tmp/sim.hdf5")
 
-    # Integrate
-    N_ITERATIONS = network_options.integration.n_iterations
-    # states = np.ones((len(network.data.states.array),)) * 1.0
+    # # Integrate
+    states = np.ones((iterations, len(network.data.states.array[:])))*1.0
+    states_tmp = np.zeros((len(network.data.states.array[:],)))
+    outputs = np.ones((iterations, len(network.data.outputs.array[:])))*1.0
+    # states[0, 2] = -1.0
 
-    # network_gui = NetworkGUI(data=data)
-    # network_gui.run()
-
-    inputs_view = network.data.external_inputs.array
+    # for index, node in enumerate(network_options.nodes):
+    #     print(index, node.name)
+    # network.data.external_inputs.array[:] = np.ones((1,))*(iteration/iterations)*1.0
     drive_input_indices = [
         index
         for index, node in enumerate(network_options.nodes)
-        if "DR" in node.name and node.model == "linear"
+        if "BS_input" in node.name and node.model == "relay"
     ]
-    inputs = np.zeros((len(inputs_view),))
-    for iteration in tqdm(range(0, N_ITERATIONS), colour="green", ascii=" >="):
-        inputs[drive_input_indices] = 0.02
-        inputs_view[:] = inputs
-        # states = rk4(iteration * 1e-3, states, network.ode, step_size=1)
-        # states = network.integrator.step(network, iteration * 1e-3, states)
-        network.step()
-        # states = network.ode(iteration*1e-3, states)
-        # print(np.array(states)[0], network.data.states.array[0], network.data.derivatives.array[0])
-        network.data.times.array[iteration] = iteration*1e-3
-        # network.logging(iteration)
+    inputs = np.zeros(np.shape(network.data.external_inputs.array[:]))
+    # print(np.array(network.data.connectivity.weights), np.array(network.data.connectivity.edge_indices), np.array(network.data.connectivity.node_indices), np.array(network.data.connectivity.index_offsets))
+    for iteration in tqdm(range(0, iterations), colour='green', ascii=' >='):
+        time = iteration
+        # network.step(network.ode, iteration*1e-3, network.data.states.array)
+        # network.step()
+        # states[iteration+1, :] = network.data.states.array
+        # network.step()
+        # network.evaluate(iteration*1e-3, states[iteration, :])
+
+        _iter = network._network_cy.iteration
+        network.log.times.array[_iter] = time
+        inputs[drive_input_indices] = 0.5
+        network.data.external_inputs.array[:] = inputs
+        # integrator.set_initial_value(integrator.y, integrator.t)
+        # integrator.integrate(integrator.t+1.0)
+        # network.data.states.array[:] = integrator.y
+        rk4solver.step(network._network_cy, time, network.data.states.array)
+        # outputs[iteration, :] = network.data.outputs.array
+        # states[iteration, :] = integrator.y# network.data.states.array
+        # network._network_cy.update_iteration()
+        network._network_cy.update_logs(network._network_cy.iteration)
+        network._network_cy.iteration += 1
+
+    # # Integrate
+    # N_ITERATIONS = network_options.integration.n_iterations
+    # # states = np.ones((len(network.data.states.array),)) * 1.0
+
+    # # network_gui = NetworkGUI(data=data)
+    # # network_gui.run()
+
+    # inputs_view = network.data.external_inputs.array
+    # drive_input_indices = [
+    #     index
+    #     for index, node in enumerate(network_options.nodes)
+    #     if "DR" in node.name and node.model == "linear"
+    # ]
+    # inputs = np.zeros((len(inputs_view),))
+    # for iteration in tqdm(range(0, N_ITERATIONS), colour="green", ascii=" >="):
+    #     inputs[drive_input_indices] = 0.02
+    #     inputs_view[:] = inputs
+    #     # states = rk4(iteration * 1e-3, states, network.ode, step_size=1)
+    #     # states = network.integrator.step(network, iteration * 1e-3, states)
+    #     network.step()
+    #     # states = network.ode(iteration*1e-3, states)
+    #     # print(np.array(states)[0], network.data.states.array[0], network.data.derivatives.array[0])
+    #     network.data.times.array[iteration] = iteration*1e-3
+    #     # network.logging(iteration)
 
     # network.data.to_file("/tmp/network.h5")
     network_options.save("/tmp/network_options.yaml")
@@ -504,39 +558,40 @@ def plot_data(network, network_options):
     ]
 
     plt.figure()
+
     for index, node_index in enumerate(plot_nodes):
         plt.fill_between(
-            np.array(network.data.times.array),
-            index + np.array(network.data.nodes[node_index].output.array),
+            np.array(network.log.times.array)*1e-3,
+            index + np.array(network.log.nodes[node_index].output.array),
             index,
             alpha=0.2,
             lw=1.0,
         )
         plt.plot(
-            np.array(network.data.times.array),
-            index + np.array(network.data.nodes[node_index].output.array),
-            label=network.data.nodes[node_index].name,
+            np.array(network.log.times.array)*1e-3,
+            index + np.array(network.log.nodes[node_index].output.array),
+            label=network.log.nodes[node_index].name,
         )
     plt.legend()
 
     plot_nodes = [
         index
-        for index, node in enumerate(network.data.nodes)
+        for index, node in enumerate(network.log.nodes)
         if ("Mn" in node.name)
     ]
     plt.figure()
     for index, node_index in enumerate(plot_nodes):
         plt.fill_between(
-            np.array(network.data.times.array),
-            index + np.array(network.data.nodes[node_index].output.array),
+            np.array(network.log.times.array)*1e-3,
+            index + np.array(network.log.nodes[node_index].output.array),
             index,
             alpha=0.2,
             lw=1.0,
         )
         plt.plot(
-            np.array(network.data.times.array),
-            index + np.array(network.data.nodes[node_index].output.array),
-            label=network.data.nodes[node_index].name,
+            np.array(network.log.times.array)*1e-3,
+            index + np.array(network.log.nodes[node_index].output.array),
+            label=network.log.nodes[node_index].name,
         )
     plt.legend()
     plt.show()
@@ -548,9 +603,9 @@ def main():
     # Generate the network
     # network_options = generate_network(int(1e4))
     # network_options = generate_limb_circuit(int(5e4))
-    network_options = generate_quadruped_circuit((5e4))
+    network_options = generate_quadruped_circuit((1e4))
 
-    plot_network(network_options)
+    # plot_network(network_options)
     network = run_network(network_options)
     plot_data(network, network_options)
 
@@ -591,4 +646,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    profile.profile(main)
+    # main()

@@ -13,7 +13,7 @@ from farms_network.core.data import NetworkData
 from farms_network.core.network import Network
 from tqdm import tqdm
 from farms_network.numeric.integrators_cy import RK4Solver
-from scipy.integrate import ode
+from scipy.integrate import ode, RK45, RK23
 
 plt.rcParams['text.usetex'] = False
 
@@ -48,10 +48,12 @@ def oscillator_chain(network_options, n_oscillators, name_prefix, **kwargs):
                 visual=options.NodeVisualOptions(
                     label=f"{j}", color=[1.0, 0.0, 0.0]
                 ),
-                state=options.OscillatorStateOptions.from_kwargs(
-                    phase=np.random.uniform(-np.pi, np.pi),
-                    amplitude=np.random.uniform(0, 1),
-                    amplitude_0=np.random.uniform(0, 1)
+                state=options.OscillatorStateOptions(
+                    initial=[
+                        np.random.uniform(-np.pi, np.pi),
+                        np.random.uniform(0, 1),
+                        np.random.uniform(0, 1)
+                    ]
                 ),
                 noise=None,
             )
@@ -156,7 +158,7 @@ class RhythmDrive:
         return nodes
 
 
-def generate_network(iterations=30000):
+def generate_network(iterations=3000):
     """ Generate network """
 
     # Main network
@@ -201,12 +203,27 @@ def generate_network(iterations=30000):
     # network.setup_integrator(network_options)
     rk4solver = RK4Solver(network.nstates, 1e-3)
 
-    integrator = ode(network.get_ode_func()).set_integrator(
-        u'dopri5',
-        method=u'adams',
-        max_step=0.0,
-        # nsteps=0
+    sc_integrator = RK23(
+        network.get_ode_func(),
+        t0=0.0,
+        y0=np.zeros(len(data.states.array[:]),),
+        t_bound=3000*1e-3,
+        max_step=1e-3,
+        first_step=1e-3,
+        # rtol=1e-2,
+        # atol=1e2,
     )
+
+    integrator = ode(network.get_ode_func()).set_integrator(
+        'dopri5',
+        max_step=1e-3,          # your RK4 step
+    )
+    # set_integrator(
+    #     u'dopri5',
+    #     method=u'adams',
+    #     max_step=0.0,
+    #     # nsteps=0
+    # )
     nnodes = len(network_options.nodes)
     integrator.set_initial_value(np.zeros(len(data.states.array[:]),), 0.0)
 
@@ -233,6 +250,7 @@ def generate_network(iterations=30000):
 
         # integrator.set_initial_value(integrator.y, integrator.t)
         # integrator.integrate(integrator.t+1e-3)
+        # sc_integrator.step()
 
         rk4solver.step(network._network_cy, time, network.data.states.array)
         outputs[iteration, :] = network.data.outputs.array

@@ -71,9 +71,9 @@ cdef inline void ode(
         __node.input_tf(
             time,
             states_ptr + c_network.states_indices[j],
-            node_inputs,
-            c_nodes[j],
-            c_edges,
+            <const node_inputs_t> node_inputs,
+            <const node_t *> c_nodes[j],
+            <const edge_t **> c_edges,
             &processed_inputs
         )
 
@@ -81,19 +81,19 @@ cdef inline void ode(
             # Compute the ode
             __node.ode(
                 time,
-                states_ptr + c_network.states_indices[j],
+                <const double *> states_ptr + c_network.states_indices[j],
                 derivatives_ptr + c_network.states_indices[j],
                 processed_inputs,
                 0.0,
-                c_nodes[j]
+                <const node_t *> c_nodes[j]
             )
         # Check for writing to proper outputs array
         c_network.tmp_outputs[j] = __node.output_tf(
             time,
-            states_ptr + c_network.states_indices[j],
+            <const double *> states_ptr + c_network.states_indices[j],
             processed_inputs,
             0.0,
-            c_nodes[j],
+            <const node_t *> c_nodes[j],
         )
     # # Swap pointers for the outputs (Maybe!)
     # c_network.outputs, c_network.tmp_outputs = c_network.tmp_outputs, c_network.outputs

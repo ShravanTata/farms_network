@@ -15,7 +15,7 @@ license = {file = "LICENSE"}
 dependencies = [
     "tqdm",
     "networkx",
-    "farms_core",
+    "numpy"
 ]
 classifiers = [
   "Development Status :: 3 - Beta",
@@ -43,7 +43,6 @@ gui = [
     "PyQt5",
     "networkx",
     "pydot",
-    "farms_core",
 ]
 cli = ["rich",]
 

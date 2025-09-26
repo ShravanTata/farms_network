@@ -1,17 +1,21 @@
 import numpy as np
-from farms_network.core import li_danner, network, node, options
-from farms_network.data.data import NetworkData, StatesArray
+from farms_network.core import network, node, options
+from farms_network.core.data import NetworkData
 
 
 nstates = 100
 niterations = 1000
-states = StatesArray(np.empty((niterations, nstates)))
 
-data = NetworkData(nstates=100, states=states)
+net_opts = options.NetworkOptions(
+    logs=options.NetworkLogOptions(
+        n_iterations=niterations,
+    )
+)
+
+data = NetworkData.from_options(net_opts)
 
 
-net = network.PyNetwork(nnodes=10)
-net.test(data)
+net = network.Network(nnodes=10)
 
 n1_opts = options.NodeOptions(
     name="n1",
@@ -19,7 +23,7 @@ n1_opts = options.NodeOptions(
     visual=options.NodeVisualOptions(),
     state=options.NodeStateOptions(initial=[0, 0]),
 )
-n1 = node.PyNode.from_options(n1_opts)
+n1 = node.Node.from_options(n1_opts)
 n1_opts.save("/tmp/opts.yaml")
 
 

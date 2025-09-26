@@ -540,7 +540,7 @@ def draw_network(network_options, data, iteration, edges_x, edges_y):
                 )
                 implot.push_style_var(
                     implot.StyleVar_.fill_alpha,
-                    0.05+data.nodes[index].output.array[iteration]*3.0
+                    0.05+data.nodes[index].output.array[iteration]
                 )
                 implot.plot_scatter(
                     "##",
@@ -727,7 +727,7 @@ def main():
     alpha_input_indices = [
         index
         for index, node in enumerate(network_options.nodes)
-        if "input" in node.name and node.model == "external_relay"
+        if "input" in node.name and node.model == "relay"
     ]
     drive_input_indices = [
         index
@@ -752,12 +752,12 @@ def main():
     Vn_input_indices = [
         index
         for index, node in enumerate(network_options.nodes)
-        if "Vn" == node.name[-2:] and node.model == "external_relay"
+        if "Vn" == node.name[-2:] and node.model == "relay"
     ]
     Cut_input_indices = [
         index
         for index, node in enumerate(network_options.nodes)
-        if "cut" == node.name[-3:] and node.model == "external_relay"
+        if "cut" == node.name[-3:] and node.model == "relay"
     ]
     slider_values = np.zeros((7,))
     slider_values[0] = 1.0
@@ -766,7 +766,7 @@ def main():
     button_state = False
     # input_array[drive_input_indices[0]] *= 1.05
     for index, node in enumerate(network_options.nodes):
-        if "BS_DR" in node.name and node.model == "linear":
+        if "BS_DR" in node.name: # and node.model == "linear"
             bs_dr = index
 
     for iteration in tqdm(range(0, N_ITERATIONS), colour="green", ascii=" >="):
@@ -793,8 +793,8 @@ def main():
             # button_state = draw_play_pause_button(button_state)
             draw_table(network_options, network.data)
             draw_network(network_options, network.data, buffer_iteration, edges_x, edges_y)
-            plot_hind_motor_activity(buffer_iteration, network.data)
-            plot_fore_motor_activity(buffer_iteration, network.data)
+            # plot_hind_motor_activity(buffer_iteration, network.data)
+            # plot_fore_motor_activity(buffer_iteration, network.data)
             # draw_vn_activity(buffer_iteration, network.data)
             gui.render_frame()
         implot.pop_style_var()

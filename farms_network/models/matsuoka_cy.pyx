@@ -10,12 +10,13 @@ cpdef enum STATE:
     w = STATE_W
 
 
-cdef processed_inputs_t matsuoka_input_tf(
+cdef void matsuoka_input_tf(
     double time,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
+    processed_inputs_t* out
 ) noexcept:
     # Parameters
     cdef matsuoka_params_t params = (<matsuoka_params_t*> node[0].params)[0]

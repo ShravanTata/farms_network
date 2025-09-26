@@ -24,7 +24,7 @@ A stateless node will have zero states and is useful in using the node as a tran
 Node
 ====
 
-.. autoclass:: farms_network.node.Node
+.. autoclass:: farms_network.core.node.Node
    :members:
 
 The Node class provides a high-level interface for neural network nodes.

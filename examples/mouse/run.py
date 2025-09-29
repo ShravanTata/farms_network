@@ -603,7 +603,7 @@ def main():
     # Generate the network
     # network_options = generate_network(int(1e4))
     # network_options = generate_limb_circuit(int(5e4))
-    network_options = generate_quadruped_circuit((1e4))
+    network_options = generate_quadruped_circuit((4e3))
 
     # plot_network(network_options)
     network = run_network(network_options)
@@ -646,5 +646,5 @@ def main():
 
 
 if __name__ == "__main__":
-    profile.profile(main)
+    profile.profile(main, profile_filename="/tmp/network.prof")
     # main()

@@ -1,7 +1,5 @@
 """ Core Data """
 
-from typing import Dict, Iterable, List
-
 cimport numpy as cnp
 
 import numpy as np

@@ -4,9 +4,6 @@ from libc.stdio cimport printf
 from libc.stdlib cimport free, malloc
 from libc.string cimport strdup
 
-from farms_network.core.options import EdgeOptions
-from farms_network.models import EdgeTypes
-
 
 cpdef enum types:
 
@@ -21,7 +18,7 @@ cpdef enum types:
 cdef class EdgeCy:
     """ Python interface to Edge C-Structure"""
 
-    def __cinit__(self, edge_type: str, **kwargs):
+    def __cinit__(self, edge_type: str):
         self._edge = <edge_t*>malloc(sizeof(edge_t))
         if self._edge is NULL:
             raise MemoryError("Failed to allocate memory for edge_t")
@@ -33,7 +30,7 @@ cdef class EdgeCy:
         if self._edge is not NULL:
             free(self._edge)
 
-    def __init__(self, edge_type: str, **kwargs):
+    def __init__(self, edge_type: str):
         ...
 
     @property

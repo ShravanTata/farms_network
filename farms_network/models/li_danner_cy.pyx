@@ -35,7 +35,7 @@ cdef void li_danner_input_tf(
         double _cholinergic_sum = 0.0
         unsigned int j
         double _node_out, res, _input, _weight
-        edge_t* _edge
+        const edge_t* _edge
 
     cdef unsigned int ninputs = inputs.ninputs
     for j in range(ninputs):

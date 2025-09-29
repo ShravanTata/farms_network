@@ -3,6 +3,7 @@
 from typing import List, Optional
 
 import numpy as np
+from farms_core import pylog
 
 from ..models.factory import EdgeFactory, NodeFactory
 from .data import NetworkData, NetworkLog
@@ -50,6 +51,8 @@ class Network:
 
     def _setup_network(self):
         """ Setup network nodes and edges """
+        pylog.info(f"Number of nodes in network: {len(self.options.nodes)}")
+        pylog.info(f"Number of edges in network: {len(self.options.edges)}")
         # Create Python nodes
         nstates = 0
         for index, node_options in enumerate(self.options.nodes):

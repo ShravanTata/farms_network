@@ -38,8 +38,9 @@ cdef void oscillator_input_tf(
         double _sum = 0.0
         unsigned int j
         double _input, _weight
+        unsigned int ninputs = inputs.ninputs
 
-    for j in range(inputs.ninputs):
+    for j in range(ninputs):
         _input = inputs.network_outputs[inputs.node_indices[j]]
         _weight = inputs.weights[j]
         edge_params = (<oscillator_edge_params_t*> edges[inputs.edge_indices[j]].params)[0]

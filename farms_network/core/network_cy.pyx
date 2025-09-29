@@ -18,8 +18,7 @@ from .data_cy cimport (NetworkConnectivityCy, NetworkDataCy, NetworkNoiseCy,
 
 from typing import List
 
-from .options import (EdgeOptions, IntegrationOptions, NetworkOptions,
-                      NodeOptions)
+from .options import NetworkOptions
 
 
 cdef inline void ode(
@@ -95,8 +94,6 @@ cdef inline void ode(
             0.0,
             <const node_t *> c_nodes[j],
         )
-    # # Swap pointers for the outputs (Maybe!)
-    # c_network.outputs, c_network.tmp_outputs = c_network.tmp_outputs, c_network.outputs
 
 
 cdef inline void _noise_states_to_output(
@@ -215,7 +212,13 @@ cdef class NetworkCy(ODESystem):
             free(self._network)
             self._network = NULL
 
-    def setup_network(self, options: NetworkOptions, data: NetworkData, nodes: List[NodeCy], edges: List[EdgeCy]):
+    def setup_network(
+            self,
+            options: NetworkOptions,
+            data: NetworkData,
+            nodes: List[NodeCy],
+            edges: List[EdgeCy]
+    ):
         """ Setup network """
 
         for index, node in enumerate(nodes):

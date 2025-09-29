@@ -214,7 +214,6 @@ cdef class NetworkCy(ODESystem):
 
     def setup_network(
             self,
-            options: NetworkOptions,
             data: NetworkData,
             nodes: List[NodeCy],
             edges: List[EdgeCy]

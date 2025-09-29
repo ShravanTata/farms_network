@@ -73,7 +73,7 @@ class Network:
         self._network_cy.nstates = nstates
 
         # Pass Python nodes/edges to Cython layer for C struct setup
-        self._network_cy.setup_network(self.options, self.data, self.nodes, self.edges)
+        self._network_cy.setup_network(self.data, self.nodes, self.edges)
 
         # Initialize states
         self._initialize_states()

@@ -21,6 +21,11 @@ class Network:
         """ Initialize network with composition approach """
         self.options = network_options
 
+        # Sort nodes based on node-type
+        self.options.nodes = sorted(
+            self.options.nodes, key=lambda node: node["model"]
+        )
+
         # Core network data and Cython implementation
         self.data = NetworkData.from_options(network_options)
         self.log = NetworkLog.from_options(network_options)

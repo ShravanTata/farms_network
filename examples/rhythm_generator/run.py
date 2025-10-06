@@ -167,12 +167,12 @@ def create_node(
         color=color,
     )
     if node_type == "LINaPDanner":
-        state_options = options.LINaPDannerStateOptions.from_kwargs(**states)
+        state_options = options.LINaPDannerStateOptions(list(states.values()))
         parameters = options.LINaPDannerNodeParameterOptions.defaults(**parameters)
         noise = options.OrnsteinUhlenbeckOptions.defaults()
         node_options_class = options.LINaPDannerNodeOptions
     elif node_type == "LIDanner":
-        state_options = options.LIDannerStateOptions.from_kwargs(**states)
+        state_options = options.LIDannerStateOptions(list(states.values()))
         parameters = options.LIDannerNodeParameterOptions.defaults(**parameters)
         noise = options.OrnsteinUhlenbeckOptions.defaults()
         node_options_class = options.LIDannerNodeOptions
@@ -485,7 +485,7 @@ class RhythmGenerator:
 #         return edges
 
 
-def generate_network(iterations=1000):
+def generate_network(iterations=5000):
     """ Generate network """
 
     # Main network

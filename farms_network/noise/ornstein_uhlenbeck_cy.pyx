@@ -23,7 +23,7 @@ limitations under the License.
 from libc.math cimport sqrt as csqrt
 from libc.stdlib cimport free, malloc
 
-from .ornstein_uhlenbeck cimport mt19937, mt19937_64, normal_distribution
+from .ornstein_uhlenbeck_cy cimport mt19937, mt19937_64, normal_distribution
 
 from typing import List
 
@@ -123,7 +123,10 @@ cdef class OrnsteinUhlenbeck(SDESystem):
         return diffusion
 
     def initialize_parameters_from_options(self, noise_options, random_seed=123124):
-        """ Initialize the parameters from noise options  """
+        """ Initialize the parameters from noise options
+
+        # TODO: Remove default random seed in code
+        """
         for index in range(self.n_dim):
             noise_option = noise_options[index]
             self.parameters.mu[index] = noise_option.mu

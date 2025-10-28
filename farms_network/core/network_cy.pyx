@@ -9,7 +9,7 @@ from libc.stdlib cimport free, malloc
 from libc.string cimport strdup
 
 from ..models.factory import NodeFactory
-from ..noise.ornstein_uhlenbeck import OrnsteinUhlenbeck
+# from ..noise.ornstein_uhlenbeck import OrnsteinUhlenbeck
 from .data import NetworkData, NetworkStates
 from .node_cy cimport processed_inputs_t
 

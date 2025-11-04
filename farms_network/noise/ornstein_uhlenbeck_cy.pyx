@@ -1,4 +1,4 @@
-# distutils: language = c++
+ # distutils: language = c++
 
 """
 -----------------------------------------------------------------------
@@ -32,86 +32,82 @@ import numpy as np
 from ..core.options import OrnsteinUhlenbeckOptions
 
 
-cdef class OrnsteinUhlenbeck(SDESystem):
+cdef void evaluate_a(
+    double time,
+    double[:] states,
+    double[:] drift,
+    ornstein_uhlenbeck_params_t params
+) noexcept:
+    cdef unsigned int j
+    for j in range(params.n_dim):
+        drift[j] = (params.mu-states[j])/params.tau
+
+
+cdef void evaluate_b(
+    double time,
+    double[:] states,
+    double[:] diffusion,
+    ornstein_uhlenbeck_params_t params
+) noexcept:
+    cdef unsigned int j
+    for j in range(params.n_dim):
+        diffusion[j] = params.sigma*csqrt(2.0/params.tau)*params.distribution(params.random_generator)
+
+
+cdef class OrnsteinUhlenbeckCy(SDESystem):
     """ Ornstein Uhlenheck parameters """
 
-    def __cinit__(self, noise_options: List[OrnsteinUhlenbeckOptions], random_seed: int=None):
+    def __cinit__(
+            self,
+            n_dim: int,
+            noise_options: List[OrnsteinUhlenbeckOptions],
+            random_seed: int = None
+    ):
         """ C initialization for manual memory allocation """
 
-        self.n_dim = len(noise_options)
+        self.n_dim = n_dim
 
-        self.parameters = <OrnsteinUhlenbeckParameters*>malloc(
-            sizeof(OrnsteinUhlenbeckParameters)
+        self.params = <ornstein_uhlenbeck_params_t**>malloc(
+            self.n_dim * sizeof(ornstein_uhlenbeck_params_t*)
         )
-        if self.parameters is NULL:
+
+        if self.params is NULL:
             raise MemoryError(
                 "Failed to allocate memory for OrnsteinUhlenbeck Parameters"
-            )
-
-        self.parameters.mu = <double*>malloc(self.n_dim*sizeof(double))
-        if self.parameters.mu is NULL:
-            raise MemoryError(
-                "Failed to allocate memory for OrnsteinUhlenbeck parameter MU"
-            )
-
-        self.parameters.sigma = <double*>malloc(self.n_dim*sizeof(double))
-        if self.parameters.sigma is NULL:
-            raise MemoryError(
-                "Failed to allocate memory for OrnsteinUhlenbeck parameter SIGMA"
-            )
-
-        self.parameters.tau = <double*>malloc(self.n_dim*sizeof(double))
-        if self.parameters.tau is NULL:
-            raise MemoryError(
-                "Failed to allocate memory for OrnsteinUhlenbeck parameter TAU"
-            )
-
-        self.random_samples = <double*>malloc(self.n_dim*sizeof(double))
-        if self.random_samples is NULL:
-            raise MemoryError(
-                "Failed to allocate memory for OrnsteinUhlenbeck random samples"
             )
 
     def __dealloc__(self):
         """ Deallocate any manual memory as part of clean up """
 
-        if self.parameters.mu is not NULL:
-            free(self.parameters.mu)
-        if self.parameters.sigma is not NULL:
-            free(self.parameters.sigma)
-        if self.parameters.tau is not NULL:
-            free(self.parameters.tau)
-        if self.parameters is not NULL:
-            free(self.parameters)
-        if self.random_samples is not NULL:
-            free(self.random_samples)
+        if self.params is not NULL:
+            free(self.params)
 
-    def __init__(self, noise_options: List[OrnsteinUhlenbeckOptions], random_seed: int=None):
+    def __init__(
+            self,
+            n_dim: int,
+            noise_options: List[OrnsteinUhlenbeckOptions],
+            random_seed: int = None
+    ):
         super().__init__()
-        # if random_seed is None:
-        #     random_seed = np.random.rand
+
         self.initialize_parameters_from_options(noise_options)
 
     cdef void evaluate_a(self, double time, double[:] states, double[:] drift) noexcept:
         cdef unsigned int j
-        cdef OrnsteinUhlenbeckParameters params = (
-            <OrnsteinUhlenbeckParameters>self.parameters[0]
-        )
+        cdef ornstein_uhlenbeck_params_t* param
+
         for j in range(self.n_dim):
-            drift[j] = (params.mu[j]-states[j])/params.tau[j]
+            param = self.params[j]
+            drift[j] = (param.mu - states[j])/param.tau
 
     cdef void evaluate_b(self, double time, double[:] states, double[:] diffusion) noexcept:
         cdef unsigned int j
-        cdef OrnsteinUhlenbeckParameters params = (
-            <OrnsteinUhlenbeckParameters>self.parameters[0]
-        )
-        cdef normal_distribution[double] distribution = self.distribution
-        cdef mt19937_64 random_generator = self.random_generator
+        cdef ornstein_uhlenbeck_params_t* param
+
         for j in range(self.n_dim):
-            self.random_samples[j] = distribution(random_generator)
-        for j in range(self.n_dim):
-            diffusion[j] = params.sigma[j]*csqrt(2.0/params.tau[j])*(
-                self.random_samples[j]
+            param = self.params[j]
+            diffusion[j] = param.sigma*(
+                csqrt(2.0/param.tau)*(self.distribution(self.random_generator))
             )
 
     def py_evaluate_a(self, time, states, drift):
@@ -129,9 +125,10 @@ cdef class OrnsteinUhlenbeck(SDESystem):
         """
         for index in range(self.n_dim):
             noise_option = noise_options[index]
-            self.parameters.mu[index] = noise_option.mu
-            self.parameters.sigma[index] = noise_option.sigma
-            self.parameters.tau[index] = noise_option.tau
+            self.params[index].mu = noise_option.mu
+            self.params[index].sigma = noise_option.sigma
+            self.params[index].tau = noise_option.tau
+
         self.random_generator = mt19937_64(random_seed)
         # The distribution should always be mean=0.0 and std=1.0
         self.distribution = normal_distribution[double](0.0, 1.0)

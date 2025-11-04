@@ -7,6 +7,17 @@ from .edge_cy cimport EdgeCy, edge_t
 from .node_cy cimport NodeCy, node_t, node_inputs_t
 
 
+cdef struct noise_t:
+    # States
+    int nstates
+    double* states
+    double* drift
+    double* diffusion
+    const unsigned int* indices
+    # Outputs
+    double* outputs
+
+
 cdef struct network_t:
     # info
     unsigned int nnodes
@@ -30,12 +41,13 @@ cdef struct network_t:
 
     const double* external_inputs
 
-    double* noise
-
     const unsigned int* node_indices
     const unsigned int* edge_indices
     const double* weights
     const unsigned int* index_offsets
+
+    # Noise
+    noise_t noise
 
 
 cdef class NetworkCy(ODESystem):
@@ -55,3 +67,10 @@ cdef class NetworkCy(ODESystem):
 
     cdef void evaluate(self, double time, double[:] states, double[:] derivatives) noexcept
     # cpdef void update_iteration(self)
+
+
+cdef class NetworkNoiseCy(SDESystem):
+    """ Interface to stochastic noise in the network """
+
+    cdef void evaluate_a(self, double time, double[:] states, double[:] drift) noexcept
+    cdef void evaluate_b(self, double time, double[:] states, double[:] diffusion) noexcept

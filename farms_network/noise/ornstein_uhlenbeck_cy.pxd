@@ -42,23 +42,19 @@ cdef extern from "<random>" namespace "std" nogil:
         result_type max()
 
 
-cdef struct OrnsteinUhlenbeckParameters:
-    double* mu
-    double* sigma
-    double* tau
-    mt19937_64 random_generator
-    normal_distribution[double] distribution
+cdef struct ornstein_uhlenbeck_params_t:
+    double mu
+    double sigma
+    double tau
 
 
-cdef class OrnsteinUhlenbeck(SDESystem):
+cdef class OrnsteinUhlenbeckCy(SDESystem):
 
     cdef:
-        double timestep
-        unsigned int n_dim
-        OrnsteinUhlenbeckParameters* parameters
-        normal_distribution[double] distribution
+        int n_dim
+        ornstein_uhlenbeck_params_t** params
         mt19937_64 random_generator
-        double* random_samples
+        normal_distribution[double] distribution
 
     cdef void evaluate_a(self, double time, double[:] states, double[:] drift) noexcept
     cdef void evaluate_b(self, double time, double[:] states, double[:] diffusion) noexcept

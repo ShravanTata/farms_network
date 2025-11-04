@@ -48,6 +48,9 @@ cdef inline void ode(
     cdef double* states_ptr = &states[0]
     cdef double* derivatives_ptr = &derivatives[0]
 
+    # Noise
+    cdef double* noise = c_network.noise.outputs
+
     for j in range(nnodes):
         __node = c_nodes[j]
 
@@ -83,7 +86,7 @@ cdef inline void ode(
                 <const double *> states_ptr + c_network.states_indices[j],
                 derivatives_ptr + c_network.states_indices[j],
                 processed_inputs,
-                0.0,
+                noise[j],
                 <const node_t *> c_nodes[j]
             )
         # Check for writing to proper outputs array
@@ -91,7 +94,7 @@ cdef inline void ode(
             time,
             <const double *> states_ptr + c_network.states_indices[j],
             processed_inputs,
-            0.0,
+            noise[j],
             <const node_t *> c_nodes[j],
         )
 
@@ -168,11 +171,6 @@ cdef class NetworkCy(ODESystem):
         else:
             raise ValueError("Temp Outputs array cannot be of size 0")
 
-        if self.data.noise.outputs.size > 0:
-            self._network.noise = &self.data.noise.outputs[0]
-        else:
-            self._network.noise = NULL
-
         if self.data.connectivity.node_indices.size > 0:
             self._network.node_indices = &self.data.connectivity.node_indices[0]
         else:
@@ -192,6 +190,32 @@ cdef class NetworkCy(ODESystem):
             self._network.index_offsets = &self.data.connectivity.index_offsets[0]
         else:
             raise ValueError("Connectivity array cannot be of size 0")
+
+        # Noise
+        if self.data.noise.states.size > 0:
+            self._network.noise.states = &self.data.noise.states[0]
+        else:
+            self._network.noise.states = NULL
+
+        if self.data.noise.drift.size > 0:
+            self._network.noise.drift = &self.data.noise.drift[0]
+        else:
+            self._network.noise.drift = NULL
+
+        if self.data.noise.diffusion.size > 0:
+            self._network.noise.diffusion = &self.data.noise.diffusion[0]
+        else:
+            self._network.noise.diffusion = NULL
+
+        if self.data.noise.indices.size > 0:
+            self._network.noise.indices = &self.data.noise.indices[0]
+        else:
+            self._network.noise.indices = NULL
+
+        if self.data.noise.outputs.size > 0:
+            self._network.noise.outputs = &self.data.noise.outputs[0]
+        else:
+            self._network.noise.outputs = NULL
 
 
     def __init__(self, nnodes, nedges, data: NetworkDataCy, log: NetworkLogCy):
@@ -228,6 +252,8 @@ cdef class NetworkCy(ODESystem):
 
     cdef void evaluate(self, double time, double[:] states, double[:] derivatives) noexcept:
         """ Evaluate the ODE """
+        # Update noise states
+        # Update network ODE
         ode(time, states, derivatives, self._network)
         # Swap the temporary outputs
         self.data.outputs.array[:] = self.data.tmp_outputs.array[:]
@@ -262,3 +288,13 @@ cdef class NetworkCy(ODESystem):
     def nstates(self, value: int):
         """ Number of network states """
         self._network.nstates = value
+
+    @property
+    def noise_nstates(self):
+        """ Number of noise states in the network """
+        return self._network.noise.nstates
+
+    @noise_nstates.setter
+    def noise_nstates(self, value: int):
+        """ Number of network noise states """
+        self._network.noise.nstates = value

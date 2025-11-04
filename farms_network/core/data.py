@@ -78,7 +78,6 @@ class NetworkData(NetworkDataCy):
         states = NetworkStates.from_options(network_options)
         derivatives = NetworkStates.from_options(network_options)
         connectivity = NetworkConnectivity.from_options(network_options)
-        noise = NetworkNoise.from_options(network_options)
 
         outputs = DoubleArray1D(
             array=np.full(
@@ -112,6 +111,9 @@ class NetworkData(NetworkDataCy):
             )
             for node_index, node_options in enumerate(network_options.nodes)
         ]
+
+        noise = NetworkNoise.from_options(network_options)
+
         # nodes = np.array(
         #     [
         #         NodeData.from_options(
@@ -257,7 +259,7 @@ class NetworkConnectivity(NetworkConnectivityCy):
 class NetworkNoise(NetworkNoiseCy):
     """ Data for network noise modeling """
 
-    def __init__(self, states, indices,drift, diffusion, outputs):
+    def __init__(self, states, indices, drift, diffusion, outputs):
         super().__init__(states, indices, drift, diffusion, outputs)
 
     @classmethod
@@ -268,20 +270,16 @@ class NetworkNoise(NetworkNoiseCy):
         n_nodes = len(nodes)
 
         indices = []
-        # for index, node in enumerate(nodes):
-        #     if node.noise and node.noise.is_stochastic:
-        #         n_noise_states += 1
-        #         indices.append(index)
+        for index, node in enumerate(nodes):
+            if node.noise and node.noise.is_stochastic:
+                n_noise_states += 1
+                indices.append(index)
 
         return cls(
             states=np.full(
                 shape=n_noise_states,
                 fill_value=0.0,
                 dtype=NPDTYPE,
-            ),
-            indices=np.array(
-                indices,
-                dtype=NPUITYPE,
             ),
             drift=np.full(
                 shape=n_noise_states,
@@ -292,6 +290,10 @@ class NetworkNoise(NetworkNoiseCy):
                 shape=n_noise_states,
                 fill_value=0.0,
                 dtype=NPDTYPE,
+            ),
+            indices=np.array(
+                indices,
+                dtype=NPUITYPE,
             ),
             outputs=np.full(
                 shape=n_nodes,

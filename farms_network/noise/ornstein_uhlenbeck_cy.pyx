@@ -21,6 +21,7 @@ limitations under the License.
 
 
 from libc.math cimport sqrt as csqrt
+from libc.stdio cimport printf
 from libc.stdlib cimport free, malloc
 
 from .ornstein_uhlenbeck_cy cimport mt19937, mt19937_64, normal_distribution
@@ -32,43 +33,18 @@ import numpy as np
 from ..core.options import OrnsteinUhlenbeckOptions
 
 
-cdef void evaluate_a(
-    double time,
-    double[:] states,
-    double[:] drift,
-    ornstein_uhlenbeck_params_t params
-) noexcept:
-    cdef unsigned int j
-    for j in range(params.n_dim):
-        drift[j] = (params.mu-states[j])/params.tau
-
-
-cdef void evaluate_b(
-    double time,
-    double[:] states,
-    double[:] diffusion,
-    ornstein_uhlenbeck_params_t params
-) noexcept:
-    cdef unsigned int j
-    for j in range(params.n_dim):
-        diffusion[j] = params.sigma*csqrt(2.0/params.tau)*params.distribution(params.random_generator)
-
-
 cdef class OrnsteinUhlenbeckCy(SDESystem):
     """ Ornstein Uhlenheck parameters """
 
     def __cinit__(
             self,
-            n_dim: int,
             noise_options: List[OrnsteinUhlenbeckOptions],
-            random_seed: int = None
+            random_seed: int
     ):
         """ C initialization for manual memory allocation """
 
-        self.n_dim = n_dim
-
-        self.params = <ornstein_uhlenbeck_params_t**>malloc(
-            self.n_dim * sizeof(ornstein_uhlenbeck_params_t*)
+        self.params = <ornstein_uhlenbeck_params_t*>malloc(
+            len(noise_options) * sizeof(ornstein_uhlenbeck_params_t)
         )
 
         if self.params is NULL:
@@ -78,23 +54,21 @@ cdef class OrnsteinUhlenbeckCy(SDESystem):
 
     def __dealloc__(self):
         """ Deallocate any manual memory as part of clean up """
-
         if self.params is not NULL:
             free(self.params)
 
     def __init__(
-            self,
-            n_dim: int,
-            noise_options: List[OrnsteinUhlenbeckOptions],
-            random_seed: int = None
+        self,
+        noise_options: List[OrnsteinUhlenbeckOptions],
+        random_seed: int
     ):
         super().__init__()
-
-        self.initialize_parameters_from_options(noise_options)
+        self.n_dim = len(noise_options)
+        self.initialize_parameters_from_options(noise_options, random_seed)
 
     cdef void evaluate_a(self, double time, double[:] states, double[:] drift) noexcept:
         cdef unsigned int j
-        cdef ornstein_uhlenbeck_params_t* param
+        cdef ornstein_uhlenbeck_params_t param
 
         for j in range(self.n_dim):
             param = self.params[j]
@@ -102,7 +76,7 @@ cdef class OrnsteinUhlenbeckCy(SDESystem):
 
     cdef void evaluate_b(self, double time, double[:] states, double[:] diffusion) noexcept:
         cdef unsigned int j
-        cdef ornstein_uhlenbeck_params_t* param
+        cdef ornstein_uhlenbeck_params_t param
 
         for j in range(self.n_dim):
             param = self.params[j]
@@ -118,7 +92,7 @@ cdef class OrnsteinUhlenbeckCy(SDESystem):
         self.evaluate_b(time, states, diffusion)
         return diffusion
 
-    def initialize_parameters_from_options(self, noise_options, random_seed=123124):
+    def initialize_parameters_from_options(self, noise_options, random_seed):
         """ Initialize the parameters from noise options
 
         # TODO: Remove default random seed in code

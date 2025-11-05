@@ -52,7 +52,7 @@ cdef class OrnsteinUhlenbeckCy(SDESystem):
 
     cdef:
         int n_dim
-        ornstein_uhlenbeck_params_t** params
+        ornstein_uhlenbeck_params_t* params
         mt19937_64 random_generator
         normal_distribution[double] distribution
 

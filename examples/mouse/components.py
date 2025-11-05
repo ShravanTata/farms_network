@@ -202,7 +202,7 @@ def create_node(
     return node_options_class(
         name=full_name,
         parameters=parameters,
-        visual=None,
+        visual=visual_options,
         state=state_options,
         noise=noise,
     )
@@ -1839,7 +1839,6 @@ def brain_stem_circuit(
                     "excitatory",
                 )
             )
-    print(edge_specs)
     edges = create_edges(edge_specs, base_name="")
     return edges
 

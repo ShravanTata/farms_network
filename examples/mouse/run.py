@@ -1,17 +1,18 @@
 """ Generate and reproduce Zhang, Shevtsova, et al. eLife 2022;11:e73424. DOI:
 https://doi.org/10.7554/eLife.73424 paper network """
 
+import numpy.matlib as npml
 import seaborn as sns
 from farms_core.io.yaml import read_yaml
 from farms_core.utils import profile
 from farms_network.core import options
-
-from components import *
-from components import limb_circuit
 from farms_network.core.network import Network
 from farms_network.numeric.integrators_cy import RK4Solver
 from scipy.integrate import ode
 from tqdm import tqdm
+
+from components import *
+from components import limb_circuit
 
 
 def generate_network(n_iterations: int):
@@ -394,7 +395,8 @@ def run_network(*args):
 
     network = Network.from_options(network_options)
     iterations = network_options.integration.n_iterations
-    rk4solver = RK4Solver(network.nstates, network_options.integration.timestep)
+    timestep = network_options.integration.timestep
+    network.setup_integrator()
 
     integrator = ode(network.get_ode_func()).set_integrator(
         u'dopri5',
@@ -424,7 +426,15 @@ def run_network(*args):
         if "BS_input" in node.name and node.model == "relay"
     ]
     inputs = np.zeros(np.shape(network.data.external_inputs.array[:]))
-    # print(np.array(network.data.connectivity.weights), np.array(network.data.connectivity.edge_indices), np.array(network.data.connectivity.node_indices), np.array(network.data.connectivity.index_offsets))
+
+    # Network drive : Alpha
+    time_vec = np.arange(0, iterations)*timestep
+    drive = 1.0
+    drive_vec = np.hstack(
+        (np.linspace(0, 1.05, len(time_vec[::2])),
+         np.linspace(1.05, 0, len(time_vec[::2])))
+    )
+
     for iteration in tqdm(range(0, iterations), colour='green', ascii=' >='):
         time = iteration
         # network.step(network.ode, iteration*1e-3, network.data.states.array)
@@ -433,19 +443,18 @@ def run_network(*args):
         # network.step()
         # network.evaluate(iteration*1e-3, states[iteration, :])
 
-        _iter = network._network_cy.iteration
-        network.log.times.array[_iter] = time
-        inputs[drive_input_indices] = 0.5
+        inputs[drive_input_indices] = drive_vec[iteration]*drive
         network.data.external_inputs.array[:] = inputs
+
+        network.step(time)
+        network.update_logs(time)
         # integrator.set_initial_value(integrator.y, integrator.t)
         # integrator.integrate(integrator.t+1.0)
         # network.data.states.array[:] = integrator.y
-        rk4solver.step(network._network_cy, time, network.data.states.array)
         # outputs[iteration, :] = network.data.outputs.array
         # states[iteration, :] = integrator.y# network.data.states.array
         # network._network_cy.update_iteration()
-        network._network_cy.update_logs(network._network_cy.iteration)
-        network._network_cy.iteration += 1
+
 
     # # Integrate
     # N_ITERATIONS = network_options.integration.n_iterations
@@ -550,6 +559,145 @@ def plot_network(network_options):
     plt.show()
 
 
+def get_gait_plot_from_neuron_act(act):
+    """ Get start and end times of neurons for gait plot. """
+    act = np.reshape(act, (np.shape(act)[0], 1))
+    act_binary = (np.array(act) > 0.1).astype(int)
+    act_binary = np.logical_not(act_binary).astype(int)
+    act_binary[0] = 0
+    gait_cycle = []
+    start = (np.where(np.diff(act_binary[:, 0]) == 1.))[0]
+    end = (np.where(np.diff(act_binary[:, 0]) == -1.))[0]
+    for id, val in enumerate(start[:len(end)]):
+        # HARD CODED TIME SCALING HERE!!
+        gait_cycle.append((val*0.001, end[id]*0.001 - val*0.001))
+    return gait_cycle
+
+
+def calc_on_offsets(time_vec, out):
+    os_=((np.diff((out>0.1).astype(np.int64),axis=0)==1).T)
+    of_=((np.diff((out>0.1).astype(np.int64),axis=0)==-1).T)
+    onsets=npml.repmat(time_vec[:-1],out.shape[1],1)[os_]
+    offsets=npml.repmat(time_vec[:-1],out.shape[1],1)[of_]
+    leg_os=(npml.repmat(np.arange(out.shape[1]),len(time_vec)-1,1).T)[os_]
+    leg_of=(npml.repmat(np.arange(out.shape[1]),len(time_vec)-1,1).T)[of_]
+
+    times_os=np.stack((onsets,leg_os,np.arange(len(leg_os))),1)
+    times_os=times_os[times_os[:,0].argsort()]
+    times_of=np.stack((offsets,leg_of,np.arange(len(leg_of))),1)
+    times_of=times_of[times_of[:,0].argsort()]
+
+    times = np.concatenate((
+                np.concatenate((times_os,np.ones((len(times_os),1))*0.0),1),
+                np.concatenate((times_of,np.ones((len(times_of),1))*1.0),1)))
+    times=times[times[:,0].argsort()]
+    return times
+
+
+def calc_phase(time_vec, out, phase_diffs):
+    times = calc_on_offsets(time_vec,out)
+    ref_onsets = times[np.logical_and(times[:,1]==0,times[:,3]==0)][:,0]
+    phase_dur=np.append(ref_onsets[1:]-ref_onsets[:-1],np.nan)
+
+    p = times[times[:,1]==0]
+    indices = np.where(np.diff(p[:,3])==1)
+    fl_phase_dur = np.zeros((len(ref_onsets)))
+    fl_phase_dur[:] = np.nan
+    fl_phase_dur[p[indices,2].astype(int)] = p[[ind+1 for ind in indices],0] - p[indices,0]
+    ex_phase_dur = phase_dur-fl_phase_dur
+
+    M = np.zeros((len(ref_onsets),out.shape[1]))
+    M[:] = np.nan
+    M[:,0]=ref_onsets
+
+
+    for i in range(1,out.shape[1]):
+        p = times[np.logical_and((times[:,1]==0) | (times[:,1]==i),times[:,3]==0)]
+        indices = np.where(np.diff(p[:,1])==i)
+        M[p[indices,2].astype(int),i] = p[[ind+1 for ind in indices],0]
+
+
+    phases=np.zeros((len(ref_onsets),len(phase_diffs)))
+    for i,(x,y) in enumerate(phase_diffs):
+        phases[:,i] = ((M[:,y]-M[:,x])/phase_dur)  % 1.0
+
+    if phases.shape[0]!=0:
+        no_nan = ~np.isnan(np.concatenate(
+                    (np.stack((phase_dur,fl_phase_dur,ex_phase_dur),1),phases),1
+                    )).any(axis=1)
+        return (phase_dur[no_nan],fl_phase_dur[no_nan],ex_phase_dur[no_nan],phases[no_nan],ref_onsets[no_nan])
+    else:
+        return (phase_dur,fl_phase_dur,ex_phase_dur,phases,ref_onsets[:-1])
+
+
+def plot_analysis(network: Network, network_options):
+    """ Plot analysis """
+    plot_names = [
+        'right_fore_RG_F',
+        'left_fore_RG_F',
+        'right_hind_RG_F',
+        'left_hind_RG_F',
+    ]
+
+    plot_traces = [
+        network.log.nodes[name].output.array for name in plot_names
+    ]
+
+    _split_ramp = int(len(network.log.times.array)/2)
+    phases_up = calc_phase(
+        network.log.times.array[:_split_ramp],
+        (np.asarray(plot_traces[:4]).T)[:_split_ramp],
+        ((3, 2), (1, 0), (3, 1), (3, 0))
+    )
+    phases_down = calc_phase(
+        network.log.times.array[_split_ramp:],
+        (np.asarray(plot_traces[:4]).T)[_split_ramp:],
+        ((3, 2), (1, 0), (3, 1), (3, 0))
+    )
+
+    alpha_vec = np.array(network.log.nodes["BS_input"].output.array)
+
+    fig, ax = plt.subplots(4, 1, sharex='all')
+    for j in range(4):
+        ax[j].plot(alpha_vec[np.int32(phases_up[4])], phases_up[3][:, j], 'b*')
+        ax[j].plot(alpha_vec[np.int32(phases_down[4])], phases_down[3][:, j], 'r*')
+
+    fig, ax = plt.subplots(len(plot_names)+2, 1, sharex='all')
+    #fig.canvas.set_window_title('Model Performance')
+    fig.suptitle('Model Performance', fontsize=12)
+    time_vec = np.array(network.log.times.array)
+    for i, tr in enumerate(plot_traces):
+        ax[i].plot(time_vec*0.001, np.array(tr), 'b', linewidth=1)
+        ax[i].grid('on', axis='x')
+        ax[i].set_ylabel(plot_names[i], fontsize=10)
+        ax[i].set_yticks([0, 1])
+
+    _width = 0.2
+    colors = ['blue', 'green', 'red', 'black']
+    for i, tr in enumerate(plot_traces):
+        if i > 3:
+            break
+        ax[len(plot_names)].broken_barh(get_gait_plot_from_neuron_act(tr),
+                                        (1.6-i*0.2, _width), facecolors=colors[i])
+
+    ax[len(plot_names)].broken_barh(get_gait_plot_from_neuron_act(plot_traces[3]),
+                                    (1.0, _width*4), facecolors=(0.2, 0.2, 0.2), alpha=0.5)
+    ax[len(plot_names)].set_ylim(1.0, 1.8)
+    ax[len(plot_names)].set_xlim(0)
+    ax[len(plot_names)].set_xlabel('Time')
+    ax[len(plot_names)].set_yticks([1.1, 1.3, 1.5, 1.7])
+    ax[len(plot_names)].set_yticklabels(['RF', 'LF', 'RH', 'LH'])
+    ax[len(plot_names)].grid(True)
+
+    ax[len(plot_names)+1].fill_between(time_vec*0.001, 0, alpha_vec,
+                                       color=(0.2, 0.2, 0.2), alpha=0.5)
+    ax[len(plot_names)+1].grid('on', axis='x')
+    ax[len(plot_names)+1].set_ylabel('ALPHA')
+    ax[len(plot_names)+1].set_xlabel('Time [s]')
+
+    plt.show()
+
+
 def plot_data(network, network_options):
     plot_nodes = [
         index
@@ -603,11 +751,12 @@ def main():
     # Generate the network
     # network_options = generate_network(int(1e4))
     # network_options = generate_limb_circuit(int(5e4))
-    network_options = generate_quadruped_circuit((4e3))
+    network_options = generate_quadruped_circuit((1e3))
 
     # plot_network(network_options)
     network = run_network(network_options)
     plot_data(network, network_options)
+    plot_analysis(network, network_options)
 
 
     # from abstract_control.control.generate import quadruped_siggraph_network

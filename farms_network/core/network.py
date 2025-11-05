@@ -4,8 +4,10 @@ from typing import List, Optional
 
 import numpy as np
 from farms_core import pylog
+from farms_network.numeric.integrators_cy import RK4Solver
 
 from ..models.factory import EdgeFactory, NodeFactory
+from ..noise.ornstein_uhlenbeck import OrnsteinUhlenbeck
 from .data import NetworkData, NetworkLog
 from .edge import Edge
 from .network_cy import NetworkCy
@@ -27,12 +29,12 @@ class Network:
         )
 
         # Core network data and Cython implementation
-        self.data = NetworkData.from_options(network_options)
-        self.log = NetworkLog.from_options(network_options)
+        self.data = NetworkData.from_options(self.options)
+        self.log = NetworkLog.from_options(self.options)
 
         self._network_cy = NetworkCy(
-            nnodes=len(network_options.nodes),
-            nedges=len(network_options.edges),
+            nnodes=len(self.options.nodes),
+            nedges=len(self.options.edges),
             data=self.data,
             log=self.log
         )
@@ -43,16 +45,43 @@ class Network:
 
         # Setup the network
         self._setup_network()
-        # self._setup_integrator()
+
+        # Internal default solver
+        self.solver: RK4Solver = None
 
         # Logs
-        self.buffer_size: int = network_options.logs.buffer_size
+        self.buffer_size: int = self.options.logs.buffer_size
 
         # Iteration
-        if network_options.integration:
-            self.timestep: float = network_options.integration.timestep
+        if self.options.integration:
+            self.timestep: float = self.options.integration.timestep
             self.iteration: int = 0
-            self.n_iterations: int = network_options.integration.n_iterations
+            self.n_iterations: int = self.options.integration.n_iterations
+        else:
+            raise ValueError("Integration options missing!")
+
+    def step(self, time):
+        """ Step the network integration """
+        self.solver.step(
+            self._network_cy,
+            time,
+            self.data.states.array
+        )
+        # Update noise
+        self._network_cy.update_noise(time, self.timestep)
+
+    # Update logs
+    def update_logs(self, time):
+        self._network_cy.update_logs(time)
+
+    def run(self, n_iterations: Optional[int] = None):
+        """ Run the network for n_iterations """
+        if n_iterations is None:
+            n_iterations = self.n_iterations
+
+        for iteration in range(n_iterations):
+            self.step(iteration*self.timestep)
+            self.update_logs(iteration*self.timestep)
 
     def _setup_network(self):
         """ Setup network nodes and edges """
@@ -77,15 +106,20 @@ class Network:
 
         self._network_cy.nstates = nstates
 
+        # Noise
+        self.sde_noise = OrnsteinUhlenbeck(self.options)
+
         # Pass Python nodes/edges to Cython layer for C struct setup
-        self._network_cy.setup_network(self.data, self.nodes, self.edges)
+        self._network_cy.setup_network(
+            self.data, self.nodes, self.edges, self.sde_noise._ou_cy
+        )
 
         # Initialize states
         self._initialize_states()
 
-    def _setup_integrator(self):
+    def setup_integrator(self):
         """ Setup numerical integrators """
-        self._network_cy.setup_integrator(self.options)
+        self.solver = RK4Solver(self._network_cy.nstates, self.options.integration.timestep)
 
     def _initialize_states(self):
         """ Initialize node states from options """
@@ -124,19 +158,6 @@ class Network:
     @property
     def nstates(self) -> int:
         return self._network_cy.nstates
-
-    def step(self):
-        """ Step the network simulation """
-        self._network_cy.step()
-        self.iteration += 1
-
-    def run(self, n_iterations: Optional[int] = None):
-        """ Run the network for n_iterations """
-        if n_iterations is None:
-            n_iterations = self.n_iterations
-
-        for _ in range(n_iterations):
-            self.step()
 
     # Factory methods
     @classmethod

@@ -2,6 +2,7 @@ cimport numpy as cnp
 
 from ..numeric.integrators_cy cimport EulerMaruyamaSolver, RK4Solver
 from ..numeric.system_cy cimport ODESystem, SDESystem
+from ..noise.ornstein_uhlenbeck_cy cimport OrnsteinUhlenbeckCy
 from .data_cy cimport NetworkDataCy, NetworkLogCy
 from .edge_cy cimport EdgeCy, edge_t
 from .node_cy cimport NodeCy, node_t, node_inputs_t
@@ -31,20 +32,20 @@ cdef struct network_t:
 
     # ODE
     double* states
-    const unsigned int* states_indices
+    unsigned int* states_indices
 
     double* derivatives
-    const unsigned int* derivatives_indices
+    unsigned int* derivatives_indices
 
     double* outputs
     double* tmp_outputs
 
-    const double* external_inputs
+    double* external_inputs
 
-    const unsigned int* node_indices
-    const unsigned int* edge_indices
-    const double* weights
-    const unsigned int* index_offsets
+    unsigned int* node_indices
+    unsigned int* edge_indices
+    double* weights
+    unsigned int* index_offsets
 
     # Noise
     noise_t noise
@@ -65,7 +66,10 @@ cdef class NetworkCy(ODESystem):
         const unsigned int buffer_size
         const double timestep
 
+        OrnsteinUhlenbeckCy sde_noise
+
     cdef void evaluate(self, double time, double[:] states, double[:] derivatives) noexcept
+    cdef void c_update_noise(self, double time, double timestep) noexcept
     # cpdef void update_iteration(self)
 
 

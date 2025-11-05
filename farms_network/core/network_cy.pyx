@@ -9,12 +9,16 @@ from libc.stdlib cimport free, malloc
 from libc.string cimport strdup
 
 from ..models.factory import NodeFactory
-# from ..noise.ornstein_uhlenbeck import OrnsteinUhlenbeck
+
+from libc.math cimport sqrt as csqrt
+
+from ..noise.ornstein_uhlenbeck_cy cimport OrnsteinUhlenbeckCy
+
 from .data import NetworkData, NetworkStates
-from .node_cy cimport processed_inputs_t
 
 from .data_cy cimport (NetworkConnectivityCy, NetworkDataCy, NetworkNoiseCy,
                        NetworkStatesCy)
+from .node_cy cimport processed_inputs_t
 
 from typing import List
 
@@ -240,7 +244,8 @@ cdef class NetworkCy(ODESystem):
             self,
             data: NetworkData,
             nodes: List[NodeCy],
-            edges: List[EdgeCy]
+            edges: List[EdgeCy],
+            sde_noise: SDESystem=None,
     ):
         """ Setup network """
 
@@ -250,24 +255,41 @@ cdef class NetworkCy(ODESystem):
         for index, edge in enumerate(edges):
             self._network.edges[index] = <edge_t*>((<EdgeCy>edge._edge_cy)._edge)
 
+        self.sde_noise = sde_noise
+
     cdef void evaluate(self, double time, double[:] states, double[:] derivatives) noexcept:
         """ Evaluate the ODE """
-        # Update noise states
         # Update network ODE
         ode(time, states, derivatives, self._network)
         # Swap the temporary outputs
         self.data.outputs.array[:] = self.data.tmp_outputs.array[:]
+
+    cdef void c_update_noise(self, double time, double timestep) noexcept:
+        """ Update """
+        if self.sde_noise is not None:
+            self.sde_noise.evaluate_a(time, self.data.noise.states, self.data.noise.drift)
+            self.sde_noise.evaluate_b(time, self.data.noise.states, self.data.noise.diffusion)
+            for j in range(self.sde_noise.n_dim):
+                self.data.noise.states[j] += (
+                    self.data.noise.drift[j]*timestep + csqrt(timestep)*self.data.noise.diffusion[j]
+                )
+                self.data.noise.outputs[self.data.noise.indices[j]] = self.data.noise.states[j]
+
+    def update_noise(self, double time, double timestep):
+        self.c_update_noise(time, timestep)
 
     def ode_func(self, double time, double[:] states):
         """ Evaluate the ODE """
         self.evaluate(time, states, self.data.derivatives.array)
         return self.data.derivatives.array
 
-    def update_logs(self, iteration: int):
+    def update_logs(self, time: float):
         """ Updated logs to copy current iteration data into logs """
-        self.log.states.array[iteration, :] = self.data.states.array[:]
-        self.log.external_inputs.array[iteration, :] = self.data.external_inputs.array[:]
-        self.log.outputs.array[iteration, :] = self.data.outputs.array[:]
+        self.iteration += 1
+        self.log.times.array[self.iteration] = time
+        self.log.states.array[self.iteration, :] = self.data.states.array[:]
+        self.log.external_inputs.array[self.iteration, :] = self.data.external_inputs.array[:]
+        self.log.outputs.array[self.iteration, :] = self.data.outputs.array[:]
 
     @property
     def nnodes(self):

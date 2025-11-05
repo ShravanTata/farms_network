@@ -173,6 +173,7 @@ def run_network(network_options: options.NetworkOptions):
     network = Network.from_options(network_options)
     iterations = network_options.integration.n_iterations
     timestep = network_options.integration.timestep
+    network.setup_integrator()
 
     # Setup integrators
     rk4solver = RK4Solver(network.nstates, timestep)
@@ -201,17 +202,19 @@ def run_network(network_options: options.NetworkOptions):
     states = np.ones((iterations+1, network.nstates))*1.0
     outputs = np.ones((iterations, network.nnodes))*1.0
     for iteration in tqdm(range(0, iterations), colour='green', ascii=' >='):
-        network.data.times.array[iteration] = iteration*timestep
+        # network.data.times.array[iteration] = iteration*timestep
 
-        integrator.set_initial_value(integrator.y, integrator.t)
-        integrator.integrate(integrator.t+timestep)
+        # integrator.set_initial_value(integrator.y, integrator.t)
+        # integrator.integrate(integrator.t+timestep)
 
-        # sc_integrator.step()
+        # # sc_integrator.step()
 
-        # rk4solver.step(network._network_cy, iteration*timestep, network.data.states.array)
+        # # rk4solver.step(network._network_cy, iteration*timestep, network.data.states.array)
 
-        network._network_cy.update_logs(network._network_cy.iteration)
-        network._network_cy.iteration += 1
+        # network._network_cy.update_logs(network._network_cy.iteration)
+        # network._network_cy.iteration += 1
+        network.step(iteration*timestep)
+        network.update_logs(iteration*timestep)
 
     plt.figure()
     for j in range(int(network.nnodes/2)):
@@ -223,7 +226,7 @@ def run_network(network_options: options.NetworkOptions):
             lw=1.0,
         )
         plt.plot(
-            np.array(network.data.times.array),
+            np.array(network.log.times.array),
             2*j + (1 + np.sin(network.log.outputs.array[:, j])),
             label=f"{j}"
         )

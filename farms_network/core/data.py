@@ -367,7 +367,7 @@ class NetworkLog(NetworkLogCy):
         self.external_inputs = external_inputs
         self.noise = noise
 
-        self.nodes: List[NodeData] = nodes
+        self.nodes: Nodes = nodes
 
         # assert that the data created is c-contiguous
         assert self.states.array.is_c_contig()
@@ -405,15 +405,8 @@ class NetworkLog(NetworkLogCy):
                 dtype=NPDTYPE,
             )
         )
-        nodes = [
-            NodeData(
-                node_options.name,
-                NodeStates(states, node_index,),
-                NodeOutput(outputs, node_index,),
-                NodeExternalInput(external_inputs, node_index,),
-            )
-            for node_index, node_options in enumerate(network_options.nodes)
-        ]
+
+        nodes = Nodes(network_options, states, outputs, external_inputs)
 
         return cls(
             times=times,
@@ -444,6 +437,40 @@ class NetworkLog(NetworkLogCy):
         pylog.info('Saving data to %s', filename)
         dict_to_hdf5(filename=filename, data=data_dict)
         pylog.info('Saved data to %s', filename)
+
+
+class Nodes:
+    """ Nodes """
+
+    def __init__(self, network_options: NetworkOptions, states, outputs, external_inputs):
+        self._nodes = []
+        self._name_to_index = {}
+
+        for idx, node_opt in enumerate(network_options.nodes):
+            node = NodeData(
+                node_opt.name,
+                NodeStates(states, idx),
+                NodeOutput(outputs, idx),
+                NodeExternalInput(external_inputs, idx),
+            )
+            self._nodes.append(node)
+            self._name_to_index[node_opt.name] = idx
+
+    def __getitem__(self, key):
+        # Access by index
+        if isinstance(key, int):
+            return self._nodes[key]
+        # Access by name
+        return self._nodes[self._name_to_index[key]]
+
+    def __len__(self):
+        return len(self._nodes)
+
+    def __iter__(self):
+        return iter(self._nodes)
+
+    def names(self):
+        return list(self._name_to_index.keys())
 
 
 class NodeStates:

@@ -68,9 +68,6 @@ cdef struct node_t:
     # Parameters
     void* params                # Pointer to the parameters of the node.
 
-    # Noise parameters
-    void* noise_params          # Pointer to noise parameters for the node.
-
     # Functions
     void input_tf(
         double time,

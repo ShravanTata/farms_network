@@ -271,9 +271,10 @@ class NetworkNoise(NetworkNoiseCy):
 
         indices = []
         for index, node in enumerate(nodes):
-            if node.noise and node.noise.is_stochastic:
-                n_noise_states += 1
-                indices.append(index)
+            if node.noise:
+                if node.noise.is_stochastic:
+                    n_noise_states += 1
+                    indices.append(index)
 
         return cls(
             states=np.full(

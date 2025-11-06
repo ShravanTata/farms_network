@@ -30,7 +30,6 @@ class NetworkData(NetworkDataCy):
 
     def __init__(
             self,
-            times,
             states,
             derivatives,
             connectivity,
@@ -45,7 +44,6 @@ class NetworkData(NetworkDataCy):
 
         super().__init__()
 
-        self.times = times
         self.states = states
         self.derivatives = derivatives
         self.connectivity = connectivity
@@ -67,14 +65,6 @@ class NetworkData(NetworkDataCy):
     def from_options(cls, network_options: NetworkOptions):
         """ From options """
 
-        buffer_size = network_options.logs.buffer_size
-        times = DoubleArray1D(
-            array=np.full(
-                shape=buffer_size,
-                fill_value=0,
-                dtype=NPDTYPE,
-            )
-        )
         states = NetworkStates.from_options(network_options)
         derivatives = NetworkStates.from_options(network_options)
         connectivity = NetworkConnectivity.from_options(network_options)
@@ -114,18 +104,7 @@ class NetworkData(NetworkDataCy):
 
         noise = NetworkNoise.from_options(network_options)
 
-        # nodes = np.array(
-        #     [
-        #         NodeData.from_options(
-        #             node_options,
-        #             buffer_size=network_options.logs.buffer_size
-        #         )
-        #         for node_options in network_options.nodes
-        #     ],
-        #     dtype=NodeDataCy
-        # )
         return cls(
-            times=times,
             states=states,
             derivatives=derivatives,
             connectivity=connectivity,
@@ -380,6 +359,7 @@ class NetworkLog(NetworkLogCy):
         """ From options """
 
         buffer_size = network_options.logs.buffer_size
+
         times = DoubleArray1D(
             array=np.full(
                 shape=buffer_size,
@@ -388,7 +368,9 @@ class NetworkLog(NetworkLogCy):
             )
         )
         states = NetworkLogStates.from_options(network_options)
+
         connectivity = NetworkConnectivity.from_options(network_options)
+
         noise = NetworkNoise.from_options(network_options)
 
         outputs = DoubleArray2D(

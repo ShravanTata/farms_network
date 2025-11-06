@@ -1202,14 +1202,13 @@ class NetworkLogOptions(Options):
         nodes_all (bool): Whether to log all nodes or only selected ones. Defaults to False.
     """
 
-    def __init__(self, n_iterations: int, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.n_iterations: int = n_iterations
-        assert isinstance(self.n_iterations, int), "iterations shoulde be an integer"
-        self.buffer_size: int = kwargs.pop('buffer_size', self.n_iterations)
-        if self.buffer_size == 0:
-            self.buffer_size = self.n_iterations
+        self.enable: bool = kwargs.pop('enable', True)
+        self.buffer_size: int = kwargs.pop('buffer_size')
+        if self.buffer_size < 0:
+            pylog.debug("Logging is disabled because buffer size is -1")
         assert isinstance(self.buffer_size, int), "buffer_size shoulde be an integer"
         self.nodes_all: bool = kwargs.pop("nodes_all", False)
 
@@ -1219,5 +1218,4 @@ class NetworkLogOptions(Options):
     @classmethod
     def from_options(cls, kwargs: Dict):
         """ From options """
-        n_iterations = kwargs.pop("n_iterations")
-        return cls(n_iterations, **kwargs)
+        return cls(**kwargs)

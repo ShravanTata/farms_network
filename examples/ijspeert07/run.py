@@ -144,7 +144,6 @@ def generate_network(iterations=10000):
             timestep=float(1e-3),
         ),
         logs=options.NetworkLogOptions(
-            n_iterations=iterations,
             buffer_size=iterations,
         )
     )

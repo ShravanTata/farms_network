@@ -49,9 +49,6 @@ class Network:
         # Internal default solver
         self.solver: RK4Solver = None
 
-        # Logs
-        self.buffer_size: int = self.options.logs.buffer_size
-
         # Iteration
         if self.options.integration:
             self.timestep: float = self.options.integration.timestep
@@ -72,7 +69,8 @@ class Network:
 
     # Update logs
     def update_logs(self, time):
-        self._network_cy.update_logs(time)
+        if self.options.logs.enable:
+            self._network_cy.update_logs(time)
 
     def run(self, n_iterations: Optional[int] = None):
         """ Run the network for n_iterations """

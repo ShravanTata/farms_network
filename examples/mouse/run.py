@@ -382,7 +382,6 @@ def generate_quadruped_circuit(
             timestep=1.0,
         ),
         logs=options.NetworkLogOptions(
-            n_iterations=int(n_iterations),
             buffer_size=int(n_iterations),
         ),
     )

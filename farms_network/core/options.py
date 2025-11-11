@@ -1084,6 +1084,12 @@ class NetworkOptions(Options):
             raise Exception(f'Unknown kwargs: {kwargs}')
 
     @classmethod
+    def load(cls, file_path: str):
+        """ Load from file """
+        opts = Options.load(file_path)
+        return NetworkOptions.from_options(opts)
+
+    @classmethod
     def from_options(cls, kwargs):
         """ From options """
         options = {}

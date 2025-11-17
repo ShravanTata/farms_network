@@ -1151,6 +1151,20 @@ class NetworkOptions(Options):
             self.add_edge(edge)
         return self
 
+    def get_node(self, name: str):
+        """ Get node options from name """
+        for node in self.nodes:
+            if name == node.name:
+                return node
+        raise KeyError(f"Node {name} not found!")
+
+    def get_edge(self, source: str, target: str):
+        """ Get edge options for target and source node names  """
+        for edge in self.edges:
+            if (source == edge.source) and (target == edge.target):
+                return edge
+        raise KeyError(f"No edge between source node {source} and target noode {target} found!")
+
 
 #################################
 # Numerical Integration Options #

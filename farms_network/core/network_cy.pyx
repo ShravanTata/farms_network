@@ -154,12 +154,6 @@ cdef class NetworkCy(ODESystem):
         #     assert self._network.states == NULL
         self._network.derivatives = NULL
 
-        # if self.data.derivatives.indices.size > 0:
-        #     self._network.derivatives_indices = &self.data.derivatives.indices[0]
-        # else:
-        #     assert self._network.derivatives == NULL
-        self._network.derivatives_indices = NULL
-
         if self.data.external_inputs.array.size > 0:
             self._network.external_inputs = &self.data.external_inputs.array[0]
         else:

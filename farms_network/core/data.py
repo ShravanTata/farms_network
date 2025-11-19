@@ -424,14 +424,14 @@ class Nodes:
         for idx, node_opt in enumerate(network_options.nodes):
             node = NodeData(
                 node_opt.name,
-                NodeStates(states, idx),
-                NodeOutput(outputs, idx),
-                NodeExternalInput(external_inputs, idx),
+                NodeStates(states, idx, node_opt.name),
+                NodeOutput(outputs, idx, node_opt.name),
+                NodeExternalInput(external_inputs, idx, node_opt.name),
             )
             self._nodes.append(node)
             self._name_to_index[node_opt.name] = idx
 
-    def __getitem__(self, key):
+    def __getitem__(self, key: str):
         # Access by index
         if isinstance(key, int):
             return self._nodes[key]
@@ -449,37 +449,83 @@ class Nodes:
 
 
 class NodeStates:
-    def __init__(self, network_states, node_index):
+    def __init__(self, network_states, node_index: int, node_name: str):
+        self.node_name = node_name
         self._network_states = network_states
         self._node_index = node_index
-
-    @property
-    def array(self):
+        self.ndim = self._network_states.array.ndim
         start = self._network_states.indices[self._node_index]
         end = self._network_states.indices[self._node_index + 1]
         if start == end:
-            return None
-        return self._network_states.array[:, start:end]
+            self._has_states = False
+        else:
+            self._start_idx = start
+            self._end_idx = end
+            self._has_states = True
+
+    @property
+    def values(self):
+        if not self._has_states:
+            raise ValueError(f"Node {self.node_name} has no states")
+
+        if self.ndim == 1:
+            return self._network_states.array[self._start_idx:self._end_idx]
+        return self._network_states.array[:, self._start_idx:self._end_idx]
+
+    @values.setter
+    def values(self, v: np.ndarray):
+        if not self._has_states:
+            raise ValueError(f"Node {self.node_name} has no states to be set")
+        assert v.dtype == np.float_, "Values must be of type double/float"
+
+        if self.ndim == 1:
+            self._network_states.array[self._start_idx:self._end_idx] = v[:]
+            return
+
+        raise AttributeError("Cannot assign to values in logging mode.")
 
 
 class NodeOutput:
-    def __init__(self, network_outputs, node_index):
+    def __init__(self, network_outputs, node_index: str, node_name: str):
+        self.node_name = node_name
         self._network_outputs = network_outputs
+        self.ndim = self._network_outputs.array.ndim
         self._node_index = node_index
 
     @property
-    def array(self):
+    def values(self):
+        if self.ndim == 1:
+            return self._network_outputs.array[self._node_index]
         return self._network_outputs.array[:, self._node_index]
+
+    @values.setter
+    def values(self, v: float):
+
+        if self.ndim == 1:
+            self._network_outputs.array[self._node_index] = v
+            return
+        raise AttributeError("Cannot assign to values in logging mode.")
 
 
 class NodeExternalInput:
-    def __init__(self, network_external_inputs, node_index):
+    def __init__(self, network_external_inputs, node_index: int, node_name: str):
+        self.node_name = node_name
         self._network_external_inputs = network_external_inputs
+        self.ndim = self._network_external_inputs.array.ndim
         self._node_index = node_index
 
     @property
-    def array(self):
+    def values(self):
+        if self.ndim == 1:
+            return self._network_external_inputs.array[self._node_index]
         return self._network_external_inputs.array[:, self._node_index]
+
+    @values.setter
+    def values(self, v: float):
+        if self.ndim == 1:
+            self._network_external_inputs.array[self._node_index] = v
+            return
+        raise AttributeError("Cannot assign to values in logging mode.")
 
 
 class NodeData:
@@ -496,119 +542,3 @@ class NodeData:
         self.states = states
         self.output = output
         self.external_input = external_input
-
-
-# class NodeData(NodeDataCy):
-#     """ Base class for representing an arbitrary node data """
-
-#     def __init__(
-#             self,
-#             name: str,
-#             states: "NodeStatesArray",
-#             output: "NodeOutputArray",
-#             external_input: "NodeExternalInputArray",
-#     ):
-#         """ Node data initialization """
-
-#         super().__init__()
-#         self.name = name
-#         self.states = states
-#         self.output = output
-#         self.external_input = external_input
-
-#     @classmethod
-#     def from_options(cls, options: NodeOptions, buffer_size: int):
-#         """ Node data from class """
-#         return cls(
-#             name=options.name,
-#             states=NodeStatesArray.from_options(options, buffer_size),
-#             output=NodeOutputArray.from_options(options, buffer_size),
-#             external_input=NodeExternalInputArray.from_options(options, buffer_size),
-#         )
-
-#     def to_dict(self, iteration: int = None) -> Dict:
-#         """ Concert data to dictionary """
-#         return {
-#             'states': self.states.to_dict(iteration),
-#             'output': to_array(self.output.array),
-#             'external_input': to_array(self.output.array),
-#         }
-
-
-# class NodeStatesArray(DoubleArray2D):
-#     """ State array data """
-
-#     def __init__(self, array: NDARRAY_V2_D, names: List):
-#         super().__init__(array)
-#         self.names = names
-
-#     @classmethod
-#     def from_options(cls, options: NodeOptions, buffer_size: int):
-#         """ State options """
-#         nstates = options._nstates
-#         if nstates > 0:
-#             names = options.state.names
-#             array = np.full(
-#                 shape=[buffer_size, nstates],
-#                 fill_value=0,
-#                 dtype=NPDTYPE,
-#             )
-#         else:
-#             names = []
-#             array = np.full(
-#                 shape=[buffer_size, 0],
-#                 fill_value=0,
-#                 dtype=NPDTYPE,
-#             )
-#         return cls(array=array, names=names)
-
-#     def to_dict(self, iteration: int = None) -> Dict:
-#         """ Concert data to dictionary """
-#         return {
-#             'names': self.names,
-#             'array': to_array(self.array)
-#         }
-
-
-# class NodeOutputArray(DoubleArray1D):
-#     """ Output array data """
-
-#     def __init__(self, array: NDARRAY_V1_D):
-#         super().__init__(array)
-
-#     @classmethod
-#     def from_options(cls, options: NodeOptions, buffer_size: int):
-#         """ State options """
-#         array = np.full(
-#             shape=buffer_size,
-#             fill_value=0,
-#             dtype=NPDTYPE,
-#         )
-#         return cls(array=array)
-
-
-# class NodeExternalInputArray(DoubleArray1D):
-#     """ ExternalInput array data """
-
-#     def __init__(self, array: NDARRAY_V1_D):
-#         super().__init__(array)
-
-#     @classmethod
-#     def from_options(cls, options: NodeOptions, buffer_size: int):
-#         """ State options """
-#         array = np.full(
-#             shape=buffer_size,
-#             fill_value=0,
-#             dtype=NPDTYPE,
-#         )
-#         return cls(array=array)
-
-
-def main():
-
-    data = NetworkData(100)
-    print(data.nodes[0].states.names)
-
-
-if __name__ == '__main__':
-    main()

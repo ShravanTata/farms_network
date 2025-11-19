@@ -442,8 +442,7 @@ def run_network(*args):
         # network.step()
         # network.evaluate(iteration*1e-3, states[iteration, :])
 
-        inputs[drive_input_indices] = drive_vec[iteration]*drive
-        network.data.external_inputs.array[:] = inputs
+        network.data.nodes['BS_input'].external_input.values = drive_vec[iteration]*drive
 
         network.step(time)
         network.update_logs(time)
@@ -639,7 +638,7 @@ def plot_analysis(network: Network, network_options):
     ]
 
     plot_traces = [
-        network.log.nodes[name].output.array for name in plot_names
+        network.log.nodes[name].output.values for name in plot_names
     ]
 
     _split_ramp = int(len(network.log.times.array)/2)
@@ -654,7 +653,7 @@ def plot_analysis(network: Network, network_options):
         ((3, 2), (1, 0), (3, 1), (3, 0))
     )
 
-    alpha_vec = np.array(network.log.nodes["BS_input"].output.array)
+    alpha_vec = np.array(network.log.nodes["BS_input"].output.values)
 
     fig, ax = plt.subplots(4, 1, sharex='all')
     for j in range(4):
@@ -709,14 +708,14 @@ def plot_data(network, network_options):
     for index, node_index in enumerate(plot_nodes):
         plt.fill_between(
             np.array(network.log.times.array)*1e-3,
-            index + np.array(network.log.nodes[node_index].output.array),
+            index + np.array(network.log.nodes[node_index].output.values),
             index,
             alpha=0.2,
             lw=1.0,
         )
         plt.plot(
             np.array(network.log.times.array)*1e-3,
-            index + np.array(network.log.nodes[node_index].output.array),
+            index + np.array(network.log.nodes[node_index].output.values),
             label=network.log.nodes[node_index].name,
         )
     plt.legend()
@@ -730,14 +729,14 @@ def plot_data(network, network_options):
     for index, node_index in enumerate(plot_nodes):
         plt.fill_between(
             np.array(network.log.times.array)*1e-3,
-            index + np.array(network.log.nodes[node_index].output.array),
+            index + np.array(network.log.nodes[node_index].output.values),
             index,
             alpha=0.2,
             lw=1.0,
         )
         plt.plot(
             np.array(network.log.times.array)*1e-3,
-            index + np.array(network.log.nodes[node_index].output.array),
+            index + np.array(network.log.nodes[node_index].output.values),
             label=network.log.nodes[node_index].name,
         )
     plt.legend()

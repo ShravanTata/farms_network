@@ -60,7 +60,7 @@ def oscillator_chain(network_options, n_oscillators, name_prefix, **kwargs):
         )
     # Connect
     phase_diff = kwargs.get('axial_phi', -np.pi/2)
-    weight = kwargs.get('axial_w', 1e4)
+    weight = kwargs.get('axial_w', 1e1)
     connections = np.vstack(
         (np.arange(n_oscillators),
          np.roll(np.arange(n_oscillators), -1)))[:, :-1]
@@ -102,7 +102,7 @@ def oscillator_double_chain(network_options, n_oscillators, **kwargs):
 
     # Connect double chain
     phase_diff = kwargs.get('anti_phi', np.pi)
-    weight = kwargs.get('anti_w', 1e4)
+    weight = kwargs.get('anti_w', 1e1)
     for n in range(n_oscillators):
         network_options.add_edge(
             options.OscillatorEdgeOptions(
@@ -200,6 +200,7 @@ def run_network(network_options: options.NetworkOptions):
     # Integrate
     states = np.ones((iterations+1, network.nstates))*1.0
     outputs = np.ones((iterations, network.nnodes))*1.0
+
     for iteration in tqdm(range(0, iterations), colour='green', ascii=' >='):
         # network.data.times.array[iteration] = iteration*timestep
 

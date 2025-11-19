@@ -92,15 +92,7 @@ class NetworkData(NetworkDataCy):
                 dtype=NPDTYPE,
             )
         )
-        nodes = [
-            NodeData(
-                node_options.name,
-                NodeStates(states, node_index,),
-                NodeOutput(outputs, node_index,),
-                NodeExternalInput(external_inputs, node_index,),
-            )
-            for node_index, node_options in enumerate(network_options.nodes)
-        ]
+        nodes = Nodes(network_options, states, outputs, external_inputs)
 
         noise = NetworkNoise.from_options(network_options)
 

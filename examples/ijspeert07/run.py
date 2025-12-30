@@ -60,7 +60,7 @@ def oscillator_chain(network_options, n_oscillators, name_prefix, **kwargs):
         )
     # Connect
     phase_diff = kwargs.get('axial_phi', -np.pi/2)
-    weight = kwargs.get('axial_w', 1e1)
+    weight = kwargs.get('axial_w', 1e2)
     connections = np.vstack(
         (np.arange(n_oscillators),
          np.roll(np.arange(n_oscillators), -1)))[:, :-1]
@@ -101,8 +101,8 @@ def oscillator_double_chain(network_options, n_oscillators, **kwargs):
     network_options = oscillator_chain(network_options, n_oscillators, 'right', **kwargs)
 
     # Connect double chain
-    phase_diff = kwargs.get('anti_phi', np.pi)
-    weight = kwargs.get('anti_w', 1e1)
+    phase_diff = kwargs.get('anti_phi', 2*np.pi/3)
+    weight = kwargs.get('anti_w', 1e2)
     for n in range(n_oscillators):
         network_options.add_edge(
             options.OscillatorEdgeOptions(
@@ -123,7 +123,7 @@ def oscillator_double_chain(network_options, n_oscillators, **kwargs):
                 weight=weight,
                 type="excitatory",
                 parameters=options.OscillatorEdgeParameterOptions(
-                    phase_difference=phase_diff
+                    phase_difference=-1*phase_diff
                 ),
                 visual=options.EdgeVisualOptions(),
             )
@@ -149,13 +149,13 @@ def generate_network(iterations=10000):
     )
 
     # Generate rhythm centers
-    n_oscillators = 10
+    n_oscillators = 9
     network_options = oscillator_double_chain(network_options, n_oscillators)
     graph = nx.node_link_graph(
         network_options,
         directed=True,
         multigraph=False,
-        link="edges",
+        edges="edges",
         name="name",
         source="source",
         target="target"
@@ -216,6 +216,7 @@ def run_network(network_options: options.NetworkOptions):
         network.step(iteration*timestep)
         network.update_logs(iteration*timestep)
 
+    names = network.data.nodes.names()
     plt.figure()
     for j in range(int(network.nnodes/2)):
         plt.fill_between(
@@ -224,11 +225,29 @@ def run_network(network_options: options.NetworkOptions):
             2*j,
             alpha=0.2,
             lw=1.0,
+            label=names[j]
         )
         plt.plot(
             np.array(network.log.times.array),
             2*j + (1 + np.sin(network.log.outputs.array[:, j])),
-            label=f"{j}"
+            # label=f"{j}"
+            label="_nolegend_"
+        )
+    for j in range(int(network.nnodes/2), int(network.nnodes)):
+        k = j - int(network.nnodes/2)
+        plt.fill_between(
+            np.array(network.log.times.array),
+            2*k + (1 + np.sin(np.array(network.log.outputs.array[:, j]))),
+            2*k,
+            alpha=0.2,
+            lw=1.0,
+            label=names[j]
+        )
+        plt.plot(
+            np.array(network.log.times.array),
+            2*k + (1 + np.sin(network.log.outputs.array[:, j])),
+            # label=f"{j}"
+            label="_nolegend_"
         )
     plt.legend()
 
@@ -236,7 +255,7 @@ def run_network(network_options: options.NetworkOptions):
         network_options,
         directed=True,
         multigraph=False,
-        link="edges",
+        edges="edges",
         name="name",
         source="source",
         target="target"
@@ -274,6 +293,7 @@ def run_network(network_options: options.NetworkOptions):
             for edge, data in graph.edges.items()
         ],
         width=1.,
+        alpha=np.array(network.data.connectivity.weights)/1e2,
         arrowsize=10,
         style='dashed',
         arrows=True,

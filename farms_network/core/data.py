@@ -29,16 +29,16 @@ class NetworkData(NetworkDataCy):
     """ Network data """
 
     def __init__(
-            self,
-            states,
-            derivatives,
-            connectivity,
-            outputs,
-            tmp_outputs,
-            external_inputs,
-            noise,
-            nodes,
-            **kwargs,
+        self,
+        states,
+        derivatives,
+        connectivity,
+        outputs,
+        tmp_outputs,
+        external_inputs,
+        noise,
+        nodes,
+        **kwargs,
     ):
         """ Network data structure """
 
@@ -311,7 +311,6 @@ class NetworkLogStates(NetworkLogStatesCy):
             'array': to_array(self.array),
             'indices': to_array(self.indices),
         }
-
 
 
 class NetworkLog(NetworkLogCy):

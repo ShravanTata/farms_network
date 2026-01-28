@@ -50,10 +50,9 @@ cli = ["rich",]
 farms_network = "farms_network.utils.run:main"
 
 [tool.setuptools.package-data]
-farms_muscle = [
+farms_network = [
     "*.pxd",
     "core/*.pxd",
     "models/*.pxd",
     "numeric/*.pxd",
     "noise/*.pxd"
-]

@@ -157,7 +157,7 @@ class EdgeOptions(Options):
         self.target: str = kwargs.pop("target")
         self.weight: float = kwargs.pop("weight")
         self.type = EdgeTypes.to_str(kwargs.pop("type"))
-        model = kwargs.pop("model", Models.BASE)
+        model = kwargs.pop("model", EdgeOptions.MODEL.BASE)
         if isinstance(model, Models):
             model = Models.to_str(model)
         elif not isinstance(model, str):
@@ -188,9 +188,10 @@ class EdgeOptions(Options):
         options["target"] = kwargs["target"]
         options["weight"] = kwargs["weight"]
         options["type"] = kwargs["type"]
-        options["parameters"] = EdgeParameterOptions.from_options(
-            kwargs["parameters"]
-        )
+        if parameters := kwargs.get("parameters"):
+            options["parameters"] = EdgeParameterOptions.from_options(parameters)
+        else:
+            options["parameters"] = None
         if visual := kwargs.get("visual"):
             options["visual"] = EdgeVisualOptions.from_options(visual)
         else:
@@ -1108,7 +1109,9 @@ class NetworkOptions(Options):
         ]
         # Edges
         options["edges"] = [
-            cls.EDGE_TYPES[edge["model"]].from_options(edge)
+            cls.EDGE_TYPES[
+                edge.get("model", OscillatorEdgeOptions.MODEL.BASE)
+            ].from_options(edge)
             for edge in kwargs["edges"]
         ]
         return cls(**options)

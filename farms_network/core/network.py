@@ -29,8 +29,8 @@ class Network:
         )
 
         # Core network data and Cython implementation
-        self.data = NetworkData.from_options(self.options)
-        self.log = NetworkLog.from_options(self.options)
+        self.data: NetworkData = NetworkData.from_options(self.options)
+        self.log: NetworkLog = NetworkLog.from_options(self.options)
 
         self._network_cy = NetworkCy(
             nnodes=len(self.options.nodes),

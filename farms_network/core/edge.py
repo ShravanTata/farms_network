@@ -11,8 +11,8 @@ class Edge:
 
     CY_EDGE_CLASS: Type[EdgeCy] = None
 
-    def __init__(self, source: str, target: str, edge_type: EdgeTypes, model, **kwargs):
-        self.model = model
+    def __init__(self, source: str, target: str, edge_type: EdgeTypes, model: str, **kwargs):
+        self.model: str = model
         self.source: str = source
         self.target: str = target
         self._edge_cy = self._create_cy_edge(edge_type, **kwargs)

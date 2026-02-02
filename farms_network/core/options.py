@@ -35,10 +35,10 @@ class NodeOptions(Options):
                 f"{model} is of {type(model)}. Needs to {type(Models)} or {type(str)}"
             )
         self.model: str = model
-        self.parameters = parameters
-        self.visual = visual
-        self.state = state
-        self.noise = noise
+        self.parameters: NodeParameterOptions = parameters
+        self.visual: NodeVisualOptions = visual
+        self.state: NodeStateOptions = state
+        self.noise: NoiseOptions = noise
 
     @classmethod
     def from_options(cls, options: Dict):

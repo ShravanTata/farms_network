@@ -392,7 +392,8 @@ def generate_quadruped_circuit(
 def run_network(*args):
     network_options = args[0]
 
-    network = Network.from_options(network_options)
+    network: Network = Network.from_options(network_options)
+
     iterations = network_options.integration.n_iterations
     timestep = network_options.integration.timestep
     network.setup_integrator()
@@ -752,7 +753,7 @@ def main():
     network_options = generate_quadruped_circuit((1e3))
 
     # plot_network(network_options)
-    network = run_network(network_options)
+    network: Network = run_network(network_options)
     plot_data(network, network_options)
     plot_analysis(network, network_options)
 

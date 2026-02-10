@@ -5,7 +5,7 @@ Main data structure for the network
 """
 
 from pprint import pprint
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Tuple, Union, overload, Optional
 
 import numpy as np
 from farms_core import pylog
@@ -44,7 +44,7 @@ class NetworkStates(NetworkStatesCy):
             indices=np.array(indices)
         )
 
-    def to_dict(self, iteration: int = None) -> Dict:
+    def to_dict(self, iteration: Optional[int] = None) -> Dict:
         """Convert data to dictionary"""
         return {
             'array': to_array(self.array),
@@ -56,6 +56,7 @@ class NetworkConnectivity(NetworkConnectivityCy):
 
     def __init__(self, node_indices, edge_indices, weights, index_offsets):
         super().__init__(node_indices, edge_indices, weights, index_offsets)
+        self.names: List[str] = []
 
     @classmethod
     def from_options(cls, network_options: NetworkOptions):
@@ -112,7 +113,7 @@ class NetworkConnectivity(NetworkConnectivityCy):
             index_offsets=np.array(index_offsets, dtype=NPUITYPE)
         )
 
-    def to_dict(self, iteration: int = None) -> Dict:
+    def to_dict(self, iteration: Optional[int] = None) -> Dict:
         """Convert data to dictionary"""
         return {
             'node_indices': to_array(self.node_indices),
@@ -169,7 +170,7 @@ class NetworkNoise(NetworkNoiseCy):
             )
         )
 
-    def to_dict(self, iteration: int = None) -> Dict:
+    def to_dict(self, iteration: Optional[int] = None) -> Dict:
         """Convert data to dictionary"""
         return {
             'states': to_array(self.states),
@@ -200,7 +201,7 @@ class NetworkLogStates(NetworkLogStatesCy):
             indices=np.array(indices)
         )
 
-    def to_dict(self, iteration: int = None) -> Dict:
+    def to_dict(self, iteration: Optional[int] = None) -> Dict:
         """Convert data to dictionary"""
         return {
             'array': to_array(self.array),
@@ -212,15 +213,16 @@ class NetworkLog(NetworkLogCy):
     """ Network Logs """
 
     def __init__(
-            self,
-            times,
-            states,
-            connectivity,
-            outputs,
-            external_inputs,
-            noise,
-            nodes,
-            **kwargs,
+        self,
+        times,
+        states,
+        connectivity,
+        outputs,
+        external_inputs,
+        noise,
+        nodes,
+        edges,
+        **kwargs,
     ):
         """ Network data structure """
 
@@ -234,6 +236,7 @@ class NetworkLog(NetworkLogCy):
         self.noise = noise
 
         self.nodes: Nodes = nodes
+        self.edges: Edges = edges
 
         # assert that the data created is c-contiguous
         assert self.states.array.is_c_contig()
@@ -276,6 +279,7 @@ class NetworkLog(NetworkLogCy):
         )
 
         nodes = Nodes(network_options, states, outputs, external_inputs)
+        edges = Edges(network_options, connectivity=connectivity)
 
         return cls(
             times=times,
@@ -285,9 +289,10 @@ class NetworkLog(NetworkLogCy):
             external_inputs=external_inputs,
             noise=noise,
             nodes=nodes,
+            edges=edges,
         )
 
-    def to_dict(self, iteration: int = None) -> Dict:
+    def to_dict(self, iteration: Optional[int] = None) -> Dict:
         """Convert data to dictionary"""
         return {
             'times': to_array(self.times.array),
@@ -297,9 +302,10 @@ class NetworkLog(NetworkLogCy):
             'external_inputs': to_array(self.external_inputs.array),
             'noise': self.noise.to_dict(),
             'nodes': {node.name: node.to_dict() for node in self.nodes},
+            'edges': {(edge.source, edge.target): edge.to_dict() for edge in self.edges},
         }
 
-    def to_file(self, filename: str, iteration: int = None):
+    def to_file(self, filename: str, iteration: Optional[int] = None):
         """Save data to file"""
         pylog.info('Exporting to dictionary')
         data_dict = self.to_dict(iteration)
@@ -308,48 +314,14 @@ class NetworkLog(NetworkLogCy):
         pylog.info('Saved data to %s', filename)
 
 
-class Nodes:
-    """ Nodes """
-
-    def __init__(self, network_options: NetworkOptions, states, outputs, external_inputs):
-        self._nodes = []
-        self._name_to_index = {}
-
-        for idx, node_opt in enumerate(network_options.nodes):
-            node = NodeData(
-                node_opt.name,
-                NodeStates(states, idx, node_opt.name),
-                NodeOutput(outputs, idx, node_opt.name),
-                NodeExternalInput(external_inputs, idx, node_opt.name),
-            )
-            self._nodes.append(node)
-            self._name_to_index[node_opt.name] = idx
-
-    def __getitem__(self, key: str):
-        # Access by index
-        if isinstance(key, int):
-            return self._nodes[key]
-        # Access by name
-        return self._nodes[self._name_to_index[key]]
-
-    def __len__(self):
-        return len(self._nodes)
-
-    def __iter__(self):
-        return iter(self._nodes)
-
-    def names(self):
-        return list(self._name_to_index.keys())
-
-
 class NodeStates:
     def __init__(self, network_states, node_index: int, node_name: str):
         self.node_name = node_name
         self._network_states = network_states
         self._node_index = node_index
         self.ndim = self._network_states.array.ndim
-        start = self._network_states.indices[self._node_index]
-        end = self._network_states.indices[self._node_index + 1]
+        start: int = self._network_states.indices[self._node_index]
+        end: int = self._network_states.indices[self._node_index + 1]
         if start == end:
             self._has_states = False
         else:
@@ -425,17 +397,130 @@ class NodeExternalInput:
 class NodeData:
     """ Accesssor for Node Data """
     def __init__(
-            self,
-            name: str,
-            states: "NodeStates",
-            output: "NodeOutput",
-            external_input: "NodeExternalInput",
+        self,
+        name: str,
+        states: NodeStates,
+        output: NodeOutput,
+        external_input: NodeExternalInput,
     ):
         super().__init__()
-        self.name = name
-        self.states = states
-        self.output = output
-        self.external_input = external_input
+        self.name: str = name
+        self.states: NodeStates = states
+        self.output: NodeOutput = output
+        self.external_input: NodeExternalInput = external_input
+
+
+class Nodes:
+    """ Nodes """
+
+    def __init__(self, network_options: NetworkOptions, states, outputs, external_inputs):
+        self._nodes = []
+        self._name_to_index = {}
+
+        for idx, node_opt in enumerate(network_options.nodes):
+            node = NodeData(
+                node_opt.name,
+                NodeStates(states, idx, node_opt.name),
+                NodeOutput(outputs, idx, node_opt.name),
+                NodeExternalInput(external_inputs, idx, node_opt.name),
+            )
+            self._nodes.append(node)
+            self._name_to_index[node_opt.name] = idx
+
+    def __getitem__(self, key: str):
+        # Access by index
+        if isinstance(key, int):
+            return self._nodes[key]
+        # Access by name
+        return self._nodes[self._name_to_index[key]]
+
+    def __len__(self):
+        return len(self._nodes)
+
+    def __iter__(self):
+        return iter(self._nodes)
+
+    def names(self):
+        return list(self._name_to_index.keys())
+
+
+class EdgeWeight:
+    def __init__(self, network_connectivity, edge_index: int):
+        self._network_connectivity: NetworkConnectivity = network_connectivity
+        self.ndim: int = self._network_connectivity.weights.ndim
+        self._edge_index: int = edge_index
+
+    @property
+    def values(self):
+        if self.ndim == 1:
+            return self._network_connectivity.weights[self._edge_index]
+        return self._network_connectivity.weights[:, self._edge_index]
+
+    @values.setter
+    def values(self, v: float):
+
+        if self.ndim == 1:
+            self._network_connectivity.weights[self._edge_index] = v
+            return
+        raise AttributeError("Cannot assign to values in logging mode.")
+
+
+class EdgeData:
+    """ Accesssor for Edge Data """
+    def __init__(
+        self,
+        source: str,
+        target: str,
+        weight: EdgeWeight
+    ):
+        super().__init__()
+        self.source: str = source
+        self.target: str = target
+        self.weight: EdgeWeight = weight
+
+
+class Edges:
+    """ Edges """
+
+    def __init__(self, network_options: NetworkOptions, connectivity):
+        self._edges: List['EdgeData'] = []
+        self._name_to_index = {}
+
+        for idx, edge_opt in enumerate(network_options.edges):
+            edge = EdgeData(
+                source=edge_opt.source,
+                target=edge_opt.target,
+                weight=EdgeWeight(
+                    network_connectivity=connectivity,
+                    edge_index=idx,
+                )
+            )
+            self._edges.append(edge)
+            self._name_to_index[(edge_opt.source, edge_opt.target)] = idx
+
+    @overload
+    def __getitem__(self, key: int) -> EdgeData:
+        pass
+
+    @overload
+    def __getitem__(self, key: Tuple[str, str]) -> EdgeData:
+        pass
+
+    def __getitem__(self, key: Union[int, tuple]) -> EdgeData:
+        # Access by index
+        if isinstance(key, int):
+            return self._edges[key]
+        # Access by name
+        return self._edges[self._name_to_index[key]]
+
+    def __len__(self):
+        return len(self._edges)
+
+    def __iter__(self):
+        return iter(self._edges)
+
+    def names(self):
+        return list(self._name_to_index.keys())
 
 
 class NetworkData(NetworkDataCy):
@@ -444,14 +529,14 @@ class NetworkData(NetworkDataCy):
     def __init__(
         self,
         states: NetworkStates,
-        derivatives,
-        connectivity,
-        outputs,
-        tmp_outputs,
-        external_inputs,
-        noise,
-        nodes,
-        **kwargs,
+        derivatives: NetworkStates,
+        connectivity: NetworkConnectivity,
+        outputs: DoubleArray1D,
+        tmp_outputs: DoubleArray1D,
+        external_inputs: DoubleArray1D,
+        noise: NetworkNoise,
+        nodes: List[NodeData],
+        edges: List[EdgeData],
     ):
         """ Network data structure """
 
@@ -466,6 +551,7 @@ class NetworkData(NetworkDataCy):
         self.noise: NetworkNoise = noise
 
         self.nodes: List[NodeData] = nodes
+        self.edges: List[EdgeData] = edges
 
         # assert that the data created is c-contiguous
         assert self.states.array.is_c_contig()
@@ -506,6 +592,7 @@ class NetworkData(NetworkDataCy):
             )
         )
         nodes = Nodes(network_options, states, outputs, external_inputs)
+        edges = Edges(network_options, connectivity)
 
         noise = NetworkNoise.from_options(network_options)
 
@@ -518,9 +605,10 @@ class NetworkData(NetworkDataCy):
             external_inputs=external_inputs,
             noise=noise,
             nodes=nodes,
+            edges=edges,
         )
 
-    def to_dict(self, iteration: int = None) -> Dict:
+    def to_dict(self, iteration: Optional[int] = None) -> Dict:
         """Convert data to dictionary"""
         return {
             'times': to_array(self.times.array),
@@ -532,9 +620,11 @@ class NetworkData(NetworkDataCy):
             'external_inputs': to_array(self.external_inputs.array),
             'noise': self.noise.to_dict(),
             'nodes': {node.name: node.to_dict() for node in self.nodes},
+            'edges': {(edge.source, edge.target): edge.to_dict()
+                      for edge in self.edges},
         }
 
-    def to_file(self, filename: str, iteration: int = None):
+    def to_file(self, filename: str, iteration: Optional[int] = None):
         """Save data to file"""
         pylog.info('Exporting to dictionary')
         data_dict = self.to_dict(iteration)

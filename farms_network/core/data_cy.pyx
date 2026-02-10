@@ -13,7 +13,6 @@ cdef class NetworkDataCy:
 
     def __init__(self):
         """ network data initialization """
-
         super().__init__()
 
 
@@ -22,7 +21,6 @@ cdef class NetworkLogCy:
 
     def __init__(self):
         """ Network Logs initialization """
-
         super().__init__()
 
 
@@ -30,9 +28,9 @@ cdef class NetworkStatesCy(DoubleArray1D):
     """ State array """
 
     def __init__(
-            self,
-            array: NDArray[(Any,), np.double],
-            indices: NDArray[(Any,), np.uintc],
+        self,
+        array: NDArray[(Any,), np.double],
+        indices: NDArray[(Any,), np.uintc],
     ):
         super().__init__(array)
         assert self.array.is_c_contig()
@@ -44,9 +42,9 @@ cdef class NetworkLogStatesCy(DoubleArray2D):
     """ State array """
 
     def __init__(
-            self,
-            array: NDArray[(Any, Any), np.double],
-            indices: NDArray[(Any,), np.uintc],
+        self,
+        array: NDArray[(Any, Any), np.double],
+        indices: NDArray[(Any,), np.uintc],
     ):
         super().__init__(array)
         assert self.array.is_c_contig()
@@ -58,11 +56,11 @@ cdef class NetworkConnectivityCy:
     """ Connectivity array """
 
     def __init__(
-            self,
-            node_indices: NDArray[(Any,), np.uintc],
-            edge_indices: NDArray[(Any,), np.uintc],
-            weights: NDArray[(Any,), np.double],
-            index_offsets: NDArray[(Any,), np.uintc],
+        self,
+        node_indices: NDArray[(Any,), np.uintc],
+        edge_indices: NDArray[(Any,), np.uintc],
+        weights: NDArray[(Any,), np.double],
+        index_offsets: NDArray[(Any,), np.uintc],
     ):
         super().__init__()
         self.node_indices = np.array(node_indices, dtype=np.uintc)
@@ -79,12 +77,12 @@ cdef class NetworkNoiseCy:
     """ Noise data """
 
     def __init__(
-            self,
-            states: NDArray[(Any,), np.double],
-            indices: NDArray[(Any,), np.uintc],
-            drift: NDArray[(Any,), np.double],
-            diffusion: NDArray[(Any,), np.double],
-            outputs: NDArray[(Any,), np.double],
+        self,
+        states: NDArray[(Any,), np.double],
+        indices: NDArray[(Any,), np.uintc],
+        drift: NDArray[(Any,), np.double],
+        diffusion: NDArray[(Any,), np.double],
+        outputs: NDArray[(Any,), np.double],
     ):
         super().__init__()
         self.states = np.array(states, dtype=np.double)

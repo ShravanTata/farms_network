@@ -3,6 +3,7 @@
 
 from farms_core.array.array_cy cimport (DoubleArray1D, DoubleArray2D, IntegerArray1D)
 
+
 include 'types.pxd'
 
 
@@ -57,33 +58,3 @@ cdef class NetworkNoiseCy:
         public DTYPEv1 drift
         public DTYPEv1 diffusion
         public DTYPEv1 outputs
-
-
-# Network data will hold the necessary computational data
-cdef class NetworkData:
-
-    cdef:
-        # Time
-        public DoubleArray1D times
-
-        # States
-        public DoubleArray1D curr_states
-        DoubleArray1D tmp_states
-        public UITYPEv1 state_indices
-
-        # Derivatives
-        public DoubleArray1D curr_derivatives
-        DoubleArray1D tmp_derivatives
-
-        # Outputs
-        public DoubleArray1D curr_outputs
-        DoubleArray1D tmp_outputs
-
-        # External inputs
-        public DoubleArray1D external_inputs
-
-        # Network connectivity
-        public NetworkConnectivityCy connectivity
-
-        # Noise
-        public NetworkNoiseCy noise

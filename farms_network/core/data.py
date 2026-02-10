@@ -535,8 +535,8 @@ class NetworkData(NetworkDataCy):
         tmp_outputs: DoubleArray1D,
         external_inputs: DoubleArray1D,
         noise: NetworkNoise,
-        nodes: List[NodeData],
-        edges: List[EdgeData],
+        nodes: Nodes,
+        edges: Edges,
     ):
         """ Network data structure """
 
@@ -550,8 +550,8 @@ class NetworkData(NetworkDataCy):
         self.external_inputs: DoubleArray1D = external_inputs
         self.noise: NetworkNoise = noise
 
-        self.nodes: List[NodeData] = nodes
-        self.edges: List[EdgeData] = edges
+        self.nodes: Nodes = nodes
+        self.edges: Edges = edges
 
         # assert that the data created is c-contiguous
         assert self.states.array.is_c_contig()

@@ -1,6 +1,6 @@
 """ Network """
 
-from typing import List, Optional
+from typing import List, Optional, Self
 
 import numpy as np
 from farms_core import pylog
@@ -21,10 +21,10 @@ class Network:
 
     def __init__(self, network_options: NetworkOptions):
         """ Initialize network with composition approach """
-        self.options = network_options
+        self.options: NetworkOptions = network_options
 
         # Sort nodes based on node-type
-        self.options.nodes = sorted(
+        self.options.nodes: list[NodeOptions] = sorted(
             self.options.nodes, key=lambda node: node["model"]
         )
 
@@ -88,19 +88,19 @@ class Network:
         # Create Python nodes
         nstates = 0
         for index, node_options in enumerate(self.options.nodes):
-            python_node = self._generate_node(node_options)
-            python_node._node_cy.ninputs = len(
+            node_py = self._generate_node(node_options)
+            node_py._node_cy.ninputs = len(
                 self.data.connectivity.node_indices[
                     self.data.connectivity.index_offsets[index]:self.data.connectivity.index_offsets[index+1]
                 ]
             ) if self.data.connectivity.index_offsets else 0
-            nstates += python_node.nstates
-            self.nodes.append(python_node)
+            nstates += node_py.nstates
+            self.nodes.append(node_py)
 
         # Create Python edges
         for edge_options in self.options.edges:
-            python_edge = self._generate_edge(edge_options)
-            self.edges.append(python_edge)
+            edge_py = self._generate_edge(edge_options)
+            self.edges.append(edge_py)
 
         self._network_cy.nstates = nstates
 
@@ -159,7 +159,7 @@ class Network:
 
     # Factory methods
     @classmethod
-    def from_options(cls, options: NetworkOptions):
+    def from_options(cls, options: NetworkOptions) -> Self:
         """ Initialize network from NetworkOptions """
         return cls(options)
 

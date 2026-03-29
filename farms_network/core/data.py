@@ -63,54 +63,46 @@ class NetworkConnectivity(NetworkConnectivityCy):
 
         nodes = network_options.nodes
         edges = network_options.edges
+        nedges = len(edges)
+        nnodes = len(nodes)
 
-        connectivity = np.full(
-            shape=(len(edges), 4),
-            fill_value=0,
-            dtype=NPDTYPE,
-        )
-        node_names = [node.name for node in nodes]
+        if nedges == 0:
+            raise ValueError(
+                "Network must have at least one edge. "
+                "Networks with zero edges are not currently supported."
+            )
 
-        for index, edge in enumerate(edges):
-            connectivity[index][0] = int(node_names.index(edge.source))
-            connectivity[index][1] = int(node_names.index(edge.target))
-            connectivity[index][2] = edge.weight
-            connectivity[index][3] = index
-        connectivity = np.array(sorted(connectivity, key=lambda col: col[1]))
+        # O(1) name→index lookup instead of O(n) list.index()
+        name_to_index = {node.name: i for i, node in enumerate(nodes)}
 
-        node_indices = np.full(
-            shape=len(edges),
-            fill_value=0,
-            dtype=NPDTYPE,
-        )
-        weights = np.full(
-            shape=len(edges),
-            fill_value=0,
-            dtype=NPDTYPE,
-        )
-        edge_indices = np.full(
-            shape=len(edges),
-            fill_value=0,
-            dtype=NPDTYPE,
-        )
-        nedges = 0
-        index_offsets = []
-        if len(edges) > 0:
-            index_offsets.append(0)
-            for index, node in enumerate(nodes):
-                _node_indices = connectivity[connectivity[:, 1] == index][:, 0].tolist()
-                _weights = connectivity[connectivity[:, 1] == index][:, 2].tolist()
-                _edge_indices = connectivity[connectivity[:, 1] == index][:, 3].tolist()
-                nedges += len(_node_indices)
-                index_offsets.append(nedges)
-                node_indices[index_offsets[index]:index_offsets[index+1]] = _node_indices
-                edge_indices[index_offsets[index]:index_offsets[index+1]] = _edge_indices
-                weights[index_offsets[index]:index_offsets[index+1]] = _weights
+        # Build source, target, weight, edge_index arrays
+        source_indices = np.empty(nedges, dtype=NPUITYPE)
+        target_indices = np.empty(nedges, dtype=NPUITYPE)
+        edge_weights = np.empty(nedges, dtype=NPDTYPE)
+        orig_edge_indices = np.arange(nedges, dtype=NPUITYPE)
+
+        for i, edge in enumerate(edges):
+            source_indices[i] = name_to_index[edge.source]
+            target_indices[i] = name_to_index[edge.target]
+            edge_weights[i] = edge.weight
+
+        # Sort by target node using numpy (C-level sort)
+        sort_order = np.argsort(target_indices, kind='stable')
+        source_indices = source_indices[sort_order]
+        target_indices = target_indices[sort_order]
+        edge_weights = edge_weights[sort_order]
+        orig_edge_indices = orig_edge_indices[sort_order]
+
+        # Build CSR index_offsets directly from sorted target indices
+        index_offsets = np.zeros(nnodes + 1, dtype=NPUITYPE)
+        np.add.at(index_offsets[1:], target_indices, 1)
+        np.cumsum(index_offsets, out=index_offsets)
+
         return cls(
-            node_indices=np.array(node_indices, dtype=NPUITYPE),
-            edge_indices=np.array(edge_indices, dtype=NPUITYPE),
-            weights=np.array(weights, dtype=NPDTYPE),
-            index_offsets=np.array(index_offsets, dtype=NPUITYPE)
+            node_indices=source_indices,
+            edge_indices=orig_edge_indices,
+            weights=edge_weights,
+            index_offsets=index_offsets,
         )
 
     def to_dict(self, iteration: Optional[int] = None) -> Dict:

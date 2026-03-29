@@ -31,29 +31,32 @@ cdef inline void ode(
     double[:] derivatives,
     network_t* c_network,
 ) noexcept:
-    """ C Implementation to compute full network state """
+    """ C implementation of the full network ODE evaluation.
+
+    NOTE: Coupling uses explicit time-stepping — each node's input_tf reads
+    outputs from the PREVIOUS evaluate() call. This introduces an O(dt)
+    coupling lag, making the overall system first-order accurate for
+    inter-node coupling regardless of integrator order. This is standard
+    practice in computational neuroscience simulators (Brian2, NEST).
+    For higher accuracy, reduce dt.
+    """
 
     cdef node_t* __node
     cdef node_t** c_nodes = c_network.nodes
     cdef edge_t** c_edges = c_network.edges
-    cdef unsigned int nnodes = c_network.nnodes
     cdef unsigned int j
-    cdef processed_inputs_t processed_inputs = {
-        'generic': 0.0,
-        'excitatory': 0.0,
-        'inhibitory': 0.0,
-        'cholinergic': 0.0,
-        'phase_coupling': 0.0
-    }
+    cdef unsigned int nnodes = c_network.nnodes
+    cdef processed_inputs_t processed_inputs
     cdef node_inputs_t node_inputs
 
-    node_inputs.network_outputs = c_network.outputs
     # It is important to use the states passed to the function and not from the data.states
     cdef double* states_ptr = &states[0]
     cdef double* derivatives_ptr = &derivatives[0]
 
     # Noise
     cdef double* noise = c_network.noise.outputs
+
+    node_inputs.network_outputs = c_network.outputs
 
     for j in range(nnodes):
         __node = c_nodes[j]
@@ -78,7 +81,7 @@ cdef inline void ode(
             time,
             states_ptr + c_network.states_indices[j],
             <const node_inputs_t> node_inputs,
-            <const node_t *> c_nodes[j],
+            <const node_t *> __node,
             <const edge_t **> c_edges,
             &processed_inputs
         )
@@ -91,15 +94,17 @@ cdef inline void ode(
                 derivatives_ptr + c_network.states_indices[j],
                 processed_inputs,
                 noise[j],
-                <const node_t *> c_nodes[j]
+                <const node_t *> __node
             )
-        # Check for writing to proper outputs array
+
+        # Compute output (for stateless nodes this is the actual output;
+        # for stateful nodes this updates tmp_outputs for the post-evaluate swap)
         c_network.tmp_outputs[j] = __node.output_tf(
             time,
             <const double *> states_ptr + c_network.states_indices[j],
             processed_inputs,
             noise[j],
-            <const node_t *> c_nodes[j],
+            <const node_t *> __node,
         )
 
 
@@ -200,14 +205,19 @@ cdef class NetworkCy(ODESystemCy):
         for index, edge in enumerate(edges):
             self._network.edges[index] = <edge_t*>((<EdgeCy>edge._edge_cy)._edge)
 
+        # Store the noise model
         self.sde_noise = sde_noise
 
     cdef void evaluate(self, double time, double[:] states, double[:] derivatives) noexcept:
         """ Evaluate the ODE """
-        # Update network ODE
         ode(time, states, derivatives, self._network)
-        # Swap the temporary outputs
-        self.data.outputs.array[:] = self.data.tmp_outputs.array[:]
+        # Copy new outputs from tmp buffer (memcpy avoids memoryview overhead)
+        memcpy(
+            self._network.outputs,
+            self._network.tmp_outputs,
+            self._network.nnodes * sizeof(double),
+        )
+
     cdef void on_substep(self, double time, double h) noexcept:
         """ Called by integrators after each accepted sub-step.
         Advances the noise SDE by the sub-step size h. """

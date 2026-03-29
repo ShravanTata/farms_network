@@ -1,32 +1,32 @@
 from farms_core.array.array_cy cimport DoubleArray1D
 from libc.math cimport sqrt as csqrt
 
-from .system_cy cimport ODESystem, SDESystem
+from .system_cy cimport ODESystemCy, SDESystemCy
 
 include 'types.pxd'
 
 
-cdef class Integrator:
+cdef class IntegratorCy:
     cdef:
         unsigned int dim
         double dt
 
-    cdef void _step(self, ODESystem sys, double time, double[:] states) noexcept
+    cdef void _step(self, ODESystemCy sys, double time, double[:] states) noexcept
 
 
-cdef class EulerSolver(Integrator):
+cdef class EulerSolverCy(IntegratorCy):
     cdef:
         DoubleArray1D derivatives
 
 
-cdef class RK2Solver(Integrator):
+cdef class RK2SolverCy(IntegratorCy):
     cdef:
         DoubleArray1D k1
         DoubleArray1D k2
         DoubleArray1D states_tmp
 
 
-cdef class RK4Solver(Integrator):
+cdef class RK4SolverCy(IntegratorCy):
     cdef:
         DoubleArray1D k1
         DoubleArray1D k2
@@ -35,7 +35,7 @@ cdef class RK4Solver(Integrator):
         DoubleArray1D states_tmp
 
 
-cdef class RK45Solver(Integrator):
+cdef class RK45SolverCy(IntegratorCy):
     cdef:
         DoubleArray1D k1
         DoubleArray1D k2
@@ -59,7 +59,7 @@ cdef class RK45Solver(Integrator):
         public unsigned long total_steps
 
 
-cdef class EulerMaruyamaSolver:
+cdef class EulerMaruyamaSolverCy:
 
     cdef:
         DoubleArray1D drift
@@ -69,4 +69,4 @@ cdef class EulerMaruyamaSolver:
         double dt
 
     cdef:
-        cdef void step(self, SDESystem sys, double time, double[:] state) noexcept
+        cdef void step(self, SDESystemCy sys, double time, double[:] state) noexcept

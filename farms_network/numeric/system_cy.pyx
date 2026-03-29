@@ -1,7 +1,7 @@
 """ Template for an ODE system """
 
 
-cdef class ODESystem:
+cdef class ODESystemCy:
     """ ODE System """
 
     def __init__(self):
@@ -18,7 +18,7 @@ cdef class ODESystem:
         pass
 
 
-cdef class SDESystem:
+cdef class SDESystemCy:
     """ SDE system of the form: dXt = a(Xt,t) dt + b(Xt,t) dW,"""
 
     def __init__(self):

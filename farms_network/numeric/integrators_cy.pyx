@@ -9,20 +9,20 @@ from libc.math cimport fabs, pow as cpow
 NPDTYPE = np.float64
 
 
-cdef class Integrator:
+cdef class IntegratorCy:
 
     def __init__(self, unsigned int dim, double dt):
         self.dim = dim
         self.dt = dt
 
-    cdef void _step(self, ODESystem sys, double time, double[:] states) noexcept:
+    cdef void _step(self, ODESystemCy sys, double time, double[:] states) noexcept:
         pass
 
-    def step(self, ODESystem sys, double time, double[:] states):
+    def step(self, ODESystemCy sys, double time, double[:] states):
         self._step(sys, time, states)
 
 
-cdef class EulerSolver(Integrator):
+cdef class EulerSolverCy(IntegratorCy):
 
     def __init__(self, unsigned int dim, double dt):
         super().__init__(dim, dt)
@@ -30,7 +30,7 @@ cdef class EulerSolver(Integrator):
             array=np.full(shape=dim, fill_value=0.0, dtype=NPDTYPE,)
         )
 
-    cdef void _step(self, ODESystem sys, double time, double[:] states) noexcept:
+    cdef void _step(self, ODESystemCy sys, double time, double[:] states) noexcept:
         cdef unsigned int i
         cdef double[:] derivatives = self.derivatives.array
 
@@ -40,7 +40,7 @@ cdef class EulerSolver(Integrator):
         sys.on_substep(time, self.dt)
 
 
-cdef class RK2Solver(Integrator):
+cdef class RK2SolverCy(IntegratorCy):
 
     def __init__(self, unsigned int dim, double dt):
         super().__init__(dim, dt)
@@ -54,7 +54,7 @@ cdef class RK2Solver(Integrator):
             array=np.full(shape=dim, fill_value=0.0, dtype=NPDTYPE,)
         )
 
-    cdef void _step(self, ODESystem sys, double time, double[:] states) noexcept:
+    cdef void _step(self, ODESystemCy sys, double time, double[:] states) noexcept:
         cdef unsigned int i
         cdef double dt = self.dt
         cdef double[:] k1 = self.k1.array
@@ -75,7 +75,7 @@ cdef class RK2Solver(Integrator):
         sys.on_substep(time, dt)
 
 
-cdef class RK4Solver(Integrator):
+cdef class RK4SolverCy(IntegratorCy):
 
     def __init__ (self, unsigned int dim, double dt):
         super().__init__(dim, dt)
@@ -95,7 +95,7 @@ cdef class RK4Solver(Integrator):
             array=np.full(shape=dim, fill_value=0.0, dtype=NPDTYPE,)
         )
 
-    cdef void _step(self, ODESystem sys, double time, double[:] states) noexcept:
+    cdef void _step(self, ODESystemCy sys, double time, double[:] states) noexcept:
         cdef unsigned int i
         cdef double dt2 = self.dt / 2.0
         cdef double dt6 = self.dt / 6.0
@@ -129,7 +129,7 @@ cdef class RK4Solver(Integrator):
         sys.on_substep(time, self.dt)
 
 
-cdef class RK45Solver(Integrator):
+cdef class RK45SolverCy(IntegratorCy):
     """ Dormand-Prince RK45 adaptive integrator.
     Subdivides within a fixed dt window to meet error tolerances.
     Uses FSAL (First Same As Last) optimization. """
@@ -168,7 +168,7 @@ cdef class RK45Solver(Integrator):
         self.k7 = DoubleArray1D(array=array.copy())
         self.states_tmp = DoubleArray1D(array=array.copy())
 
-    cdef void _step(self, ODESystem sys, double time, double[:] states) noexcept:
+    cdef void _step(self, ODESystemCy sys, double time, double[:] states) noexcept:
         """ Advance states by exactly self.dt using adaptive sub-stepping. """
         cdef unsigned int i
         cdef double t = time
@@ -307,7 +307,7 @@ cdef class RK45Solver(Integrator):
         self.total_rejections += rejections
 
 
-cdef class EulerMaruyamaSolver:
+cdef class EulerMaruyamaSolverCy:
 
     def __init__ (self, unsigned int dim, double dt):
 
@@ -321,7 +321,7 @@ cdef class EulerMaruyamaSolver:
             array=np.full(shape=self.dim, fill_value=0.0, dtype=NPDTYPE,)
         )
 
-    cdef void step(self, SDESystem sys, double time, double[:] state) noexcept:
+    cdef void step(self, SDESystemCy sys, double time, double[:] state) noexcept:
         """ Update stochastic noise process with Euler–Maruyama method (also called the
         Euler method) is a method for the approximate numerical solution of a stochastic
         differential equation (SDE) """

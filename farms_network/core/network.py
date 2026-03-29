@@ -4,7 +4,7 @@ from typing import List, Optional, Self
 
 import numpy as np
 from farms_core import pylog
-from farms_network.numeric.integrators_cy import RK4Solver
+from farms_network.numeric import integrators
 
 from ..models.factory import EdgeFactory, NodeFactory
 from ..noise.ornstein_uhlenbeck import OrnsteinUhlenbeck
@@ -50,7 +50,7 @@ class Network:
         self._setup_network()
 
         # Internal default solver
-        self.solver: RK4Solver = None
+        self.solver: integrators.Integrator = None
 
         # Iteration
         if self.options.integration:
@@ -124,7 +124,9 @@ class Network:
 
     def setup_integrator(self):
         """ Setup numerical integrators """
-        self.solver = RK4Solver(self._network_cy.nstates, self.options.integration.timestep)
+        self.solver = integrators.from_options(
+            self.options.integration, self._network_cy.nstates
+        )
 
     def _initialize_states(self):
         """ Initialize node states from options """

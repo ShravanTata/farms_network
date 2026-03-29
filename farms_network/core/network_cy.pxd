@@ -1,7 +1,6 @@
 cimport numpy as cnp
 
-from ..numeric.integrators_cy cimport EulerMaruyamaSolver, RK4Solver
-from ..numeric.system_cy cimport ODESystem, SDESystem
+from ..numeric.system_cy cimport ODESystemCy, SDESystemCy
 from ..noise.ornstein_uhlenbeck_cy cimport OrnsteinUhlenbeckCy
 from .data_cy cimport NetworkDataCy, NetworkLogCy
 from .edge_cy cimport EdgeCy, edge_t
@@ -51,7 +50,7 @@ cdef struct network_t:
     noise_t noise
 
 
-cdef class NetworkCy(ODESystem):
+cdef class NetworkCy(ODESystemCy):
     """ Python interface to Network ODE """
 
     cdef:
@@ -74,7 +73,7 @@ cdef class NetworkCy(ODESystem):
     # cpdef void update_iteration(self)
 
 
-cdef class NetworkNoiseCy(SDESystem):
+cdef class NetworkNoiseCy(SDESystemCy):
     """ Interface to stochastic noise in the network """
 
     cdef void evaluate_a(self, double time, double[:] states, double[:] drift) noexcept

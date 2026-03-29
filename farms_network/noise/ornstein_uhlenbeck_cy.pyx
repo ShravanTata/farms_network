@@ -33,7 +33,7 @@ import numpy as np
 from ..core.options import OrnsteinUhlenbeckOptions
 
 
-cdef class OrnsteinUhlenbeckCy(SDESystem):
+cdef class OrnsteinUhlenbeckCy(SDESystemCy):
     """ Ornstein Uhlenheck parameters """
 
     def __cinit__(

@@ -115,7 +115,7 @@ cdef inline void _noise_states_to_output(
         outputs[indices[index]] = states[index]
 
 
-cdef class NetworkCy(ODESystem):
+cdef class NetworkCy(ODESystemCy):
     """ Python interface to Network ODE """
 
     def __cinit__(self, nnodes: int, nedges: int, data: NetworkDataCy, log: NetworkLogCy):
@@ -239,7 +239,7 @@ cdef class NetworkCy(ODESystem):
             data: NetworkData,
             nodes: List[NodeCy],
             edges: List[EdgeCy],
-            sde_noise: SDESystem=None,
+            sde_noise: SDESystemCy=None,
     ):
         """ Setup network """
 

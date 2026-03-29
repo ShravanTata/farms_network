@@ -3,7 +3,7 @@
 from libc.math cimport sqrt as csqrt
 from libc.stdint cimport uint_fast32_t, uint_fast64_t
 
-from ..numeric.system_cy cimport SDESystem
+from ..numeric.system_cy cimport SDESystemCy
 
 
 cdef extern from "<random>" namespace "std" nogil:
@@ -48,7 +48,7 @@ cdef struct ornstein_uhlenbeck_params_t:
     double tau
 
 
-cdef class OrnsteinUhlenbeckCy(SDESystem):
+cdef class OrnsteinUhlenbeckCy(SDESystemCy):
 
     cdef:
         int n_dim

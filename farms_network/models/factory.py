@@ -17,6 +17,8 @@ from farms_network.models.linear import LinearNode
 # from farms_network.models.matsuoka_node import MatsuokaNode
 # from farms_network.models.morphed_oscillator import MorphedOscillator
 # from farms_network.models.morris_lecar import MorrisLecarNode
+from farms_network.models.molkov_oscillator import MolkovOscillatorNode
+from farms_network.models.molkov_oscillator import MolkovOscillatorEdge
 from farms_network.models.oscillator import OscillatorNode
 from farms_network.models.oscillator import OscillatorEdge
 from farms_network.models.relay import RelayNode
@@ -101,6 +103,7 @@ class NodeFactory(BaseFactory):
         Models.LINEAR: LinearNode,
         Models.RELU: ReLUNode,
         Models.OSCILLATOR: OscillatorNode,
+        Models.MOLKOV_OSCILLATOR: MolkovOscillatorNode,
         Models.HOPF_OSCILLATOR: HopfOscillatorNode,
         # Models.MORPHED_OSCILLATOR: MorphedOscillatorNode,
         # Models.MATSUOKA: MatsuokaNode,
@@ -123,6 +126,7 @@ class EdgeFactory(BaseFactory):
     _registry: Dict[Models, Type[Edge]] = {
         Models.BASE: Edge,
         Models.OSCILLATOR: OscillatorEdge,
+        Models.MOLKOV_OSCILLATOR: MolkovOscillatorEdge,
     }
 
     @classmethod

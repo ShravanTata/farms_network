@@ -599,6 +599,145 @@ class OscillatorEdgeParameterOptions(EdgeParameterOptions):
         return cls(**options)
 
 
+##################################
+# Molkov Oscillator Model Options #
+##################################
+class MolkovOscillatorNodeOptions(NodeOptions):
+    """ Molkov phase oscillator (Molkov et al. 2015) """
+
+    MODEL = Models.MOLKOV_OSCILLATOR
+
+    def __init__(self, **kwargs):
+        """ Initialize """
+
+        super().__init__(
+            name=kwargs.pop("name"),
+            model=MolkovOscillatorNodeOptions.MODEL,
+            parameters=kwargs.pop("parameters"),
+            visual=kwargs.pop("visual"),
+            state=kwargs.pop("state"),
+            noise=kwargs.pop("noise"),
+        )
+        self._nstates = 1
+        self._nparameters = 1
+
+        if kwargs:
+            raise Exception(f'Unknown kwargs: {kwargs}')
+
+    @classmethod
+    def from_options(cls, kwargs: Dict):
+        """ Load from options """
+        options = {}
+        options["name"] = kwargs.pop("name")
+        options["parameters"] = MolkovOscillatorNodeParameterOptions.from_options(
+            kwargs["parameters"]
+        )
+        options["visual"] = NodeVisualOptions.from_options(
+            kwargs["visual"]
+        )
+        options["state"] = MolkovOscillatorStateOptions.from_options(
+            kwargs["state"]
+        )
+        options["noise"] = None
+        if kwargs["noise"] is not None:
+            options["noise"] = NoiseOptions.from_options(
+                kwargs["noise"]
+            )
+        return cls(**options)
+
+
+class MolkovOscillatorNodeParameterOptions(NodeParameterOptions):
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.intrinsic_frequency = kwargs.pop("intrinsic_frequency")  # Hz
+
+        if kwargs:
+            raise Exception(f'Unknown kwargs: {kwargs}')
+
+    @classmethod
+    def defaults(cls, **kwargs):
+        """ Get the default parameters for Molkov Oscillator Node model """
+
+        options = {}
+        options["intrinsic_frequency"] = kwargs.pop("intrinsic_frequency", 1.0)
+        return cls(**options)
+
+
+class MolkovOscillatorStateOptions(NodeStateOptions):
+    """ Molkov oscillator node state options """
+
+    STATE_NAMES = ["phase"]
+
+    def __init__(self, initial):
+        super().__init__(initial=initial)
+
+
+class MolkovOscillatorEdgeOptions(EdgeOptions):
+    """ Molkov Oscillator Edge Options """
+    MODEL = Models.MOLKOV_OSCILLATOR
+
+    def __init__(self, **kwargs):
+        parameters = kwargs.pop("parameters")
+        assert isinstance(parameters, MolkovOscillatorEdgeParameterOptions)
+        super().__init__(
+            source=kwargs.pop("source"),
+            target=kwargs.pop("target"),
+            model=MolkovOscillatorEdgeOptions.MODEL,
+            weight=kwargs.pop("weight"),
+            type=kwargs.pop("type"),
+            parameters=parameters,
+            visual=kwargs.pop("visual"),
+        )
+        self._nparameters = 6
+
+        if kwargs:
+            raise Exception(f'Unknown kwargs: {kwargs}')
+
+    @classmethod
+    def from_options(cls, kwargs: Dict):
+        """ Load from options """
+        options = {}
+        options["source"] = kwargs["source"]
+        options["target"] = kwargs["target"]
+        options["weight"] = kwargs["weight"]
+        options["type"] = kwargs["type"]
+        options["parameters"] = MolkovOscillatorEdgeParameterOptions.from_options(
+            kwargs["parameters"]
+        )
+        options["visual"] = EdgeVisualOptions.from_options(kwargs["visual"])
+        return cls(**options)
+
+
+class MolkovOscillatorEdgeParameterOptions(EdgeParameterOptions):
+    """ Molkov oscillator edge parameter options """
+
+    def __init__(self, **kwargs):
+        super().__init__()
+        self.a0 = kwargs.pop("a0")
+        self.a1 = kwargs.pop("a1")
+        self.b = kwargs.pop("b")
+        self.k0 = kwargs.pop("k0")
+        self.k1 = kwargs.pop("k1")
+        self.k_cpl = kwargs.pop("k_cpl")
+
+        if kwargs:
+            raise Exception(f'Unknown kwargs: {kwargs}')
+
+    @classmethod
+    def defaults(cls, **kwargs):
+        """ Get the default parameters for Molkov Oscillator Edge model """
+
+        options = {}
+        options["a0"] = kwargs.pop("a0", 0.0)
+        options["a1"] = kwargs.pop("a1", 0.0)
+        options["b"] = kwargs.pop("b", 0.0)
+        options["k0"] = kwargs.pop("k0", 0.0)
+        options["k1"] = kwargs.pop("k1", 0.0)
+        options["k_cpl"] = kwargs.pop("k_cpl", 1.0)
+        return cls(**options)
+
+
 #################################
 # Hopf-Oscillator Model Options #
 #################################
@@ -1045,6 +1184,7 @@ class NetworkOptions(Options):
         Models.LINEAR: LinearNodeOptions,
         Models.RELU: ReLUNodeOptions,
         Models.OSCILLATOR: OscillatorNodeOptions,
+        Models.MOLKOV_OSCILLATOR: MolkovOscillatorNodeOptions,
         # Models.HOPF_OSCILLATOR: HopfOscillatorNodeOptions,
         # Models.MORPHED_OSCILLATOR: MorphedOscillatorNodeOptions,
         # Models.MATSUOKA: MatsuokaNodeOptions,
@@ -1060,6 +1200,7 @@ class NetworkOptions(Options):
     EDGE_TYPES: Dict[Models, Type] = {
         Models.BASE: EdgeOptions,
         Models.OSCILLATOR: OscillatorEdgeOptions,
+        Models.MOLKOV_OSCILLATOR: MolkovOscillatorEdgeOptions,
     }
 
     def __init__(self, **kwargs):

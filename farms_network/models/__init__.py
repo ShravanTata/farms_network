@@ -30,6 +30,7 @@ class Models(str, BaseTypes):
     MORRIS_LECAR = "morris_lecar"
     LEAKY_INTEGRATOR = "leaky_integrator"
     LI_DANNER = "li_danner"
+    MOLKOV_OSCILLATOR = "molkov_oscillator"
     LI_NAP_DANNER = "li_nap_danner"
     LI_DAUN = "li_daun"
     HH_DAUN = "hh_daun"

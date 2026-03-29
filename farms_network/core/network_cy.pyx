@@ -115,106 +115,65 @@ cdef inline void _noise_states_to_output(
         outputs[indices[index]] = states[index]
 
 
+cdef inline void _init_data_pointers(network_t* net, NetworkDataCy data):
+    """ Wire up network_t pointers from NetworkDataCy memoryviews. """
+
+    # States
+    if data.states.array.size > 0:
+        net.states = &data.states.array[0]
+        net.states_indices = &data.states.indices[0]
+    else:
+        net.states = NULL
+        net.states_indices = NULL
+    net.derivatives = NULL
+
+    # Per-node arrays (required)
+    net.external_inputs = &data.external_inputs.array[0]
+    net.outputs = &data.outputs.array[0]
+    net.tmp_outputs = &data.tmp_outputs.array[0]
+
+    # Connectivity (optional — network may have 0 edges)
+    net.node_indices = &data.connectivity.node_indices[0] if data.connectivity.node_indices.size > 0 else NULL
+    net.edge_indices = &data.connectivity.edge_indices[0] if data.connectivity.edge_indices.size > 0 else NULL
+    net.weights = &data.connectivity.weights[0] if data.connectivity.weights.size > 0 else NULL
+    net.index_offsets = &data.connectivity.index_offsets[0] if data.connectivity.index_offsets.size > 0 else NULL
+
+    # Noise (optional)
+    net.noise.states = &data.noise.states[0] if data.noise.states.size > 0 else NULL
+    net.noise.drift = &data.noise.drift[0] if data.noise.drift.size > 0 else NULL
+    net.noise.diffusion = &data.noise.diffusion[0] if data.noise.diffusion.size > 0 else NULL
+    net.noise.indices = &data.noise.indices[0] if data.noise.indices.size > 0 else NULL
+    net.noise.outputs = &data.noise.outputs[0] if data.noise.outputs.size > 0 else NULL
+
+
+cdef inline void _free_network(network_t* net) noexcept:
+    """ Free all manually allocated memory on a network_t. """
+    if net is NULL:
+        return
+    if net.nodes is not NULL:
+        free(net.nodes)
+    if net.edges is not NULL:
+        free(net.edges)
+    free(net)
+
+
 cdef class NetworkCy(ODESystemCy):
-    """ Python interface to Network ODE """
+    """ Network ODE """
 
     def __cinit__(self, nnodes: int, nedges: int, data: NetworkDataCy, log: NetworkLogCy):
-        # Memory allocation only
         self._network = <network_t*>malloc(sizeof(network_t))
         if self._network is NULL:
             raise MemoryError("Failed to allocate memory for Network")
 
         self._network.nnodes = nnodes
         self._network.nedges = nedges
+        self._network.nodes = <node_t**>malloc(nnodes * sizeof(node_t*))
+        self._network.edges = <edge_t**>malloc(nedges * sizeof(edge_t*))
+        if self._network.nodes is NULL or self._network.edges is NULL:
+            raise MemoryError("Failed to allocate memory for Network nodes/edges")
 
-        # Allocate C arrays
-        self._network.nodes = <node_t**>malloc(self.nnodes * sizeof(node_t*))
-        if self._network.nodes is NULL:
-            raise MemoryError("Failed to allocate memory for Network nodes")
-        self._network.edges = <edge_t**>malloc(self.nedges * sizeof(edge_t*))
-        if self._network.edges is NULL:
-            raise MemoryError("Failed to allocate memory for Network edges")
-
-        # Initialize network context
         self.data = <NetworkDataCy> data
-        if self.data.states.array.size > 0:
-            self._network.states = &self.data.states.array[0]
-        else:
-            self._network.states = NULL  # No stateful
-
-        if self.data.states.indices.size > 0:
-            self._network.states_indices = &self.data.states.indices[0]
-        else:
-            assert self._network.states == NULL
-            self._network.states_indices = NULL
-
-        # if self.data.derivatives.array.size > 0:
-        #     self._network.derivatives = &self.data.derivatives.array[0]
-        # else:
-        #     assert self._network.states == NULL
-        self._network.derivatives = NULL
-
-        if self.data.external_inputs.array.size > 0:
-            self._network.external_inputs = &self.data.external_inputs.array[0]
-        else:
-            raise ValueError("External inputs array cannot be of size 0")
-
-        if self.data.outputs.array.size > 0:
-            self._network.outputs = &self.data.outputs.array[0]
-        else:
-            raise ValueError("Outputs array cannot be of size 0")
-
-        if self.data.tmp_outputs.array.size > 0:
-            self._network.tmp_outputs = &self.data.tmp_outputs.array[0]
-        else:
-            raise ValueError("Temp Outputs array cannot be of size 0")
-
-        if self.data.connectivity.node_indices.size > 0:
-            self._network.node_indices = &self.data.connectivity.node_indices[0]
-        else:
-            raise ValueError("Connectivity array cannot be of size 0")
-
-        if self.data.connectivity.edge_indices.size > 0:
-            self._network.edge_indices = &self.data.connectivity.edge_indices[0]
-        else:
-            raise ValueError("Connectivity array cannot be of size 0")
-
-        if self.data.connectivity.weights.size > 0:
-            self._network.weights = &self.data.connectivity.weights[0]
-        else:
-            raise ValueError("Connectivity array cannot be of size 0")
-
-        if self.data.connectivity.index_offsets.size > 0:
-            self._network.index_offsets = &self.data.connectivity.index_offsets[0]
-        else:
-            raise ValueError("Connectivity array cannot be of size 0")
-
-        # Noise
-        if self.data.noise.states.size > 0:
-            self._network.noise.states = &self.data.noise.states[0]
-        else:
-            self._network.noise.states = NULL
-
-        if self.data.noise.drift.size > 0:
-            self._network.noise.drift = &self.data.noise.drift[0]
-        else:
-            self._network.noise.drift = NULL
-
-        if self.data.noise.diffusion.size > 0:
-            self._network.noise.diffusion = &self.data.noise.diffusion[0]
-        else:
-            self._network.noise.diffusion = NULL
-
-        if self.data.noise.indices.size > 0:
-            self._network.noise.indices = &self.data.noise.indices[0]
-        else:
-            self._network.noise.indices = NULL
-
-        if self.data.noise.outputs.size > 0:
-            self._network.noise.outputs = &self.data.noise.outputs[0]
-        else:
-            self._network.noise.outputs = NULL
-
+        _init_data_pointers(self._network, self.data)
 
     def __init__(self, nnodes, nedges, data: NetworkDataCy, log: NetworkLogCy):
         """ Initialize """
@@ -223,16 +182,8 @@ cdef class NetworkCy(ODESystemCy):
         self.iteration = 0
 
     def __dealloc__(self):
-        """ Deallocate any manual memory as part of clean up """
-        if self._network.nodes is not NULL:
-            free(self._network.nodes)
-            self._network.nodes = NULL
-        if self._network.edges is not NULL:
-            free(self._network.edges)
-            self._network.edges = NULL
-        if self._network is not NULL:
-            free(self._network)
-            self._network = NULL
+        _free_network(self._network)
+        self._network = NULL
 
     def setup_network(
             self,

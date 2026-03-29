@@ -31,6 +31,9 @@ class Network:
         # Core network data and Cython implementation
         self.data: NetworkData = NetworkData.from_options(self.options)
         self.log: NetworkLog = NetworkLog.from_options(self.options)
+        self.buffer_size: int = self.options.logs.buffer_size
+
+        self.iteration = 0
 
         self._network_cy = NetworkCy(
             nnodes=len(self.options.nodes),
@@ -66,11 +69,14 @@ class Network:
         )
         # Update noise
         self._network_cy.update_noise(time, self.timestep)
+        # Update interation
+        self.iteration += 1
 
     # Update logs
     def update_logs(self, time):
         if self.options.logs.enable:
-            self._network_cy.update_logs(time)
+            buffer_iteration: int = (self.iteration%self.buffer_size)
+            self._network_cy.update_logs(buffer_iteration, time)
 
     def run(self, n_iterations: Optional[int] = None):
         """ Run the network for n_iterations """
@@ -80,6 +86,7 @@ class Network:
         for iteration in range(n_iterations):
             self.step(iteration*self.timestep)
             self.update_logs(iteration*self.timestep)
+            self.iteration: int = iteration
 
     def _setup_network(self):
         """ Setup network nodes and edges """

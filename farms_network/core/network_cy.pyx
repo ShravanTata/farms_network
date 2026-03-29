@@ -277,13 +277,13 @@ cdef class NetworkCy(ODESystem):
         self.evaluate(time, states, self.data.derivatives.array)
         return self.data.derivatives.array
 
-    def update_logs(self, time: float):
+    def update_logs(self, iteration: int, time: float):
         """ Updated logs to copy current iteration data into logs """
-        self.iteration += 1
-        self.log.times.array[self.iteration] = time
-        self.log.states.array[self.iteration, :] = self.data.states.array[:]
-        self.log.external_inputs.array[self.iteration, :] = self.data.external_inputs.array[:]
-        self.log.outputs.array[self.iteration, :] = self.data.outputs.array[:]
+        # self.iteration += 1
+        self.log.times.array[iteration] = time
+        self.log.states.array[iteration, :] = self.data.states.array[:]
+        self.log.external_inputs.array[iteration, :] = self.data.external_inputs.array[:]
+        self.log.outputs.array[iteration, :] = self.data.outputs.array[:]
 
     @property
     def nnodes(self):

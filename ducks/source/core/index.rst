@@ -6,3 +6,5 @@ Core
 
    options
    node
+   network
+   integrators

@@ -515,17 +515,17 @@ EdgeVisualOptions Class
         - 1000
         - Number of steps
       * - integrator
-        - "rk4"
-        - Integration method
+        - "euler"
+        - Integration method (euler, rk2, rk4, rk45)
       * - method
         - "adams"
         - Solver method
       * - atol
-        - 1e-12
-        - Absolute tolerance
+        - 1e-6
+        - Absolute tolerance (used by rk45)
       * - rtol
         - 1e-6
-        - Relative tolerance
+        - Relative tolerance (used by rk45)
       * - max_step
         - 0.0
         - Maximum step size
@@ -586,23 +586,24 @@ EdgeVisualOptions Class
 
       The default values for `IntegrationOptions` are as follows:
 
-      +------------+-------------------+
-      | Parameter  | Default Value     |
-      +------------+-------------------+
-      | timestep   | ``1e-3``          |
-      +------------+-------------------+
-      | integrator | ``"dopri5"``      |
-      +------------+-------------------+
-      | method     | ``"adams"``       |
-      +------------+-------------------+
-      | atol       | ``1e-12``         |
-      +------------+-------------------+
-      | rtol       | ``1e-6``          |
-      +------------+-------------------+
-      | max_step   | ``0.0``           |
-      +------------+-------------------+
-      | checks     | ``True``          |
-      +------------+-------------------+
+      +------------+--------------------------------------+
+      | Parameter  | Default Value                        |
+      +------------+--------------------------------------+
+      | timestep   | ``1e-3``                             |
+      +------------+--------------------------------------+
+      | integrator | ``"euler"``                          |
+      |            | (options: euler, rk2, rk4, rk45)     |
+      +------------+--------------------------------------+
+      | method     | ``"adams"``                          |
+      +------------+--------------------------------------+
+      | atol       | ``1e-6``                             |
+      +------------+--------------------------------------+
+      | rtol       | ``1e-6``                             |
+      +------------+--------------------------------------+
+      | max_step   | ``0.0``                              |
+      +------------+--------------------------------------+
+      | checks     | ``True``                             |
+      +------------+--------------------------------------+
 
    NodeOptions Class
    -----------------

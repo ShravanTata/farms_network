@@ -56,3 +56,4 @@ farms_network = [
     "models/*.pxd",
     "numeric/*.pxd",
     "noise/*.pxd"
+]

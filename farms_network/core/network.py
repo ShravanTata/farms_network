@@ -150,6 +150,52 @@ class Network:
                 ):
                     self.data.states.array[index] = node_opts.state.initial[state_index]
 
+    def rebuild(self):
+        """ Rebuild the network from current options.
+        Call after modifying self.options (adding/removing nodes/edges).
+        Re-creates data arrays, C structures, and integrator. """
+
+        # Re-sort nodes by model type
+        self.options.nodes = sorted(
+            self.options.nodes, key=lambda node: node["model"]
+        )
+
+        # Re-allocate data and log arrays
+        self.data = NetworkData.from_options(self.options)
+        self.log = NetworkLog.from_options(self.options)
+        self.buffer_size = self.options.logs.buffer_size
+
+        # Re-create Cython layer
+        self._network_cy = NetworkCy(
+            nnodes=len(self.options.nodes),
+            nedges=len(self.options.edges),
+            data=self.data,
+            log=self.log,
+        )
+
+        # Re-create Python node/edge objects
+        self.nodes = []
+        self.edges = []
+        self._setup_network()
+
+        # Re-setup integrator and reset iteration
+        self.timestep = self.options.integration.timestep
+        self.n_iterations = self.options.integration.n_iterations
+        self.iteration = 0
+        self.setup_integrator()
+
+    def reset(self):
+        """ Reset states to initial values and clear iteration counter.
+        Outputs, noise, and external inputs are zeroed. """
+        self._initialize_states()
+        self.data.outputs.array[:] = 0.0
+        self.data.tmp_outputs.array[:] = 0.0
+        self.data.external_inputs.array[:] = 0.0
+        if self.data.noise.states.size > 0:
+            self.data.noise.states[:] = 0.0
+            self.data.noise.outputs[:] = 0.0
+        self.iteration = 0
+
     @staticmethod
     def _generate_node(node_options: NodeOptions) -> Node:
         """ Generate a node from options """

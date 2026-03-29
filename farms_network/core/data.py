@@ -301,8 +301,8 @@ class NetworkLog(NetworkLogCy):
             'outputs': to_array(self.outputs.array),
             'external_inputs': to_array(self.external_inputs.array),
             'noise': self.noise.to_dict(),
-            'nodes': {node.name: node.to_dict() for node in self.nodes},
-            'edges': {(edge.source, edge.target): edge.to_dict() for edge in self.edges},
+            # 'nodes': {node.name: node.to_dict() for node in self.nodes},
+            # 'edges': {(edge.source, edge.target): edge.to_dict() for edge in self.edges},
         }
 
     def to_file(self, filename: str, iteration: Optional[int] = None):

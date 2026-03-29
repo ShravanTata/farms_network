@@ -70,6 +70,7 @@ cdef class NetworkCy(ODESystemCy):
     cdef void evaluate(self, double time, double[:] states, double[:] derivatives) noexcept
     cdef void on_substep(self, double time, double h) noexcept
     cdef void c_update_noise(self, double time, double timestep) noexcept
+    cdef void c_update_logs(self, unsigned int iteration, double time) noexcept
     # cpdef void update_iteration(self)
 
 

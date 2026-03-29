@@ -61,22 +61,35 @@ class Network:
             raise ValueError("Integration options missing!")
 
     def step(self, time):
-        """ Step the network integration """
+        """ Step the network using the internal integrator. """
         self.solver.step(
             self._network_cy,
             time,
             self.data.states.array
         )
-        # Update noise
-        self._network_cy.update_noise(time, self.timestep)
-        # Update interation
-        self.iteration += 1
+        # Noise is updated via on_substep() inside the integrator,
+        # using the correct sub-step size for adaptive integrators.
 
-    # Update logs
+    def post_step(self, time, dt):
+        """ Post-step housekeeping for external integrators.
+        Call this after advancing states with an external integrator (e.g. scipy).
+        Updates noise (Euler-Maruyama with timestep dt) and logs.
+
+        Usage::
+
+            scipy_solver.step()
+            network.data.states.array[:] = scipy_solver.y
+            network.post_step(time, dt)
+        """
+        self._network_cy.update_noise(time, dt)
+        self.update_logs(time)
+
     def update_logs(self, time):
+        """ Update logs for the current iteration """
         if self.options.logs.enable:
-            buffer_iteration: int = (self.iteration%self.buffer_size)
+            buffer_iteration: int = (self.iteration % self.buffer_size)
             self._network_cy.update_logs(buffer_iteration, time)
+        self.iteration += 1
 
     def run(self, n_iterations: Optional[int] = None):
         """ Run the network for n_iterations """
@@ -84,9 +97,9 @@ class Network:
             n_iterations = self.n_iterations
 
         for iteration in range(n_iterations):
-            self.step(iteration*self.timestep)
-            self.update_logs(iteration*self.timestep)
-            self.iteration: int = iteration
+            time = iteration * self.timestep
+            self.step(time)
+            self.update_logs(time)
 
     def _setup_network(self):
         """ Setup network nodes and edges """

@@ -6,7 +6,7 @@ import numpy as np
 
 from libc.stdio cimport printf
 from libc.stdlib cimport free, malloc
-from libc.string cimport strdup
+from libc.string cimport strdup, memcpy
 
 from ..models.factory import NodeFactory
 
@@ -281,13 +281,33 @@ cdef class NetworkCy(ODESystemCy):
         self.evaluate(time, states, self.data.derivatives.array)
         return self.data.derivatives.array
 
-    def update_logs(self, iteration: int, time: float):
-        """ Updated logs to copy current iteration data into logs """
-        # self.iteration += 1
+    cdef void c_update_logs(self, unsigned int iteration, double time) noexcept:
+        """ Copy current iteration data into logs using memcpy """
+        cdef unsigned int nstates = self._network.nstates
+        cdef unsigned int nnodes = self._network.nnodes
+
         self.log.times.array[iteration] = time
-        self.log.states.array[iteration, :] = self.data.states.array[:]
-        self.log.external_inputs.array[iteration, :] = self.data.external_inputs.array[:]
-        self.log.outputs.array[iteration, :] = self.data.outputs.array[:]
+
+        if nstates > 0:
+            memcpy(
+                &self.log.states.array[iteration, 0],
+                &self.data.states.array[0],
+                nstates * sizeof(double),
+            )
+        memcpy(
+            &self.log.external_inputs.array[iteration, 0],
+            &self.data.external_inputs.array[0],
+            nnodes * sizeof(double),
+        )
+        memcpy(
+            &self.log.outputs.array[iteration, 0],
+            &self.data.outputs.array[0],
+            nnodes * sizeof(double),
+        )
+
+    def update_logs(self, iteration: int, time: float):
+        """ Python wrapper for log update """
+        self.c_update_logs(iteration, time)
 
     @property
     def nnodes(self):

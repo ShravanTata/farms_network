@@ -37,6 +37,7 @@ cdef class EulerSolver(Integrator):
         sys.evaluate(time, states, derivatives)
         for i in range(self.dim):
             states[i] = states[i] + self.dt * derivatives[i]
+        sys.on_substep(time, self.dt)
 
 
 cdef class RK2Solver(Integrator):
@@ -71,6 +72,7 @@ cdef class RK2Solver(Integrator):
         # Update: midpoint method
         for i in range(self.dim):
             states[i] = states[i] + dt * k2[i]
+        sys.on_substep(time, dt)
 
 
 cdef class RK4Solver(Integrator):
@@ -124,6 +126,7 @@ cdef class RK4Solver(Integrator):
         # Update y: y = y + (k1 + 2*k2 + 2*k3 + k4) / 6
         for i in range(self.dim):
             states[i] = states[i] + dt6 * (k1[i] + 2.0 * k2[i] + 2.0 * k3[i] + k4[i])
+        sys.on_substep(time, self.dt)
 
 
 cdef class RK45Solver(Integrator):
@@ -270,6 +273,8 @@ cdef class RK45Solver(Integrator):
                 for i in range(dim):
                     states[i] = st[i]
 
+                # Advance auxiliary processes (noise) by sub-step size
+                sys.on_substep(t, h)
 
                 # FSAL: k7 becomes k1 for the next step
                 for i in range(dim):

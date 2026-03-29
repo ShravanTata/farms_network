@@ -69,6 +69,7 @@ cdef class NetworkCy(ODESystem):
         OrnsteinUhlenbeckCy sde_noise
 
     cdef void evaluate(self, double time, double[:] states, double[:] derivatives) noexcept
+    cdef void on_substep(self, double time, double h) noexcept
     cdef void c_update_noise(self, double time, double timestep) noexcept
     # cpdef void update_iteration(self)
 

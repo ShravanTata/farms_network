@@ -12,6 +12,11 @@ cdef class ODESystem:
         """ Evaluate that needs to filled out by an ODE system """
         ...
 
+    cdef void on_substep(self, double time, double h) noexcept:
+        """ Called after each accepted integration sub-step.
+        Override to advance auxiliary processes (e.g. noise) by h. """
+        pass
+
 
 cdef class SDESystem:
     """ SDE system of the form: dXt = a(Xt,t) dt + b(Xt,t) dW,"""

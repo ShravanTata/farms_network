@@ -1,6 +1,7 @@
 cdef class ODESystem:
 
     cdef void evaluate(self, double time, double[:] states, double[:] derivatives) noexcept
+    cdef void on_substep(self, double time, double h) noexcept
 
 
 cdef class SDESystem:

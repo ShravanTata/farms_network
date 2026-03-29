@@ -257,6 +257,10 @@ cdef class NetworkCy(ODESystem):
         ode(time, states, derivatives, self._network)
         # Swap the temporary outputs
         self.data.outputs.array[:] = self.data.tmp_outputs.array[:]
+    cdef void on_substep(self, double time, double h) noexcept:
+        """ Called by integrators after each accepted sub-step.
+        Advances the noise SDE by the sub-step size h. """
+        self.c_update_noise(time, h)
 
     cdef void c_update_noise(self, double time, double timestep) noexcept:
         """ Update """

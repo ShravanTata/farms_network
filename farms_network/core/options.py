@@ -1080,6 +1080,8 @@ class NetworkOptions(Options):
 
         self.nodes: List[NodeOptions] = kwargs.pop("nodes", [])
         self.edges: List[EdgeOptions] = kwargs.pop("edges", [])
+        # Set of node names for O(1) membership checks
+        self._node_names: set = {node.name for node in self.nodes}
 
         if kwargs:
             raise Exception(f'Unknown kwargs: {kwargs}')
@@ -1119,8 +1121,9 @@ class NetworkOptions(Options):
     def add_node(self, options: NodeOptions):
         """ Add a node if it does not already exist in the list """
         assert isinstance(options, NodeOptions), f"{type(options)} not an instance of NodeOptions"
-        if options not in self.nodes:
+        if options.name not in self._node_names:
             self.nodes.append(options)
+            self._node_names.add(options.name)
         else:
             pylog.warning(f"Node {options.name} already exists and will not be added again.")
 
@@ -1130,13 +1133,13 @@ class NetworkOptions(Options):
             self.add_node(node)
 
     def add_edge(self, options: EdgeOptions):
-        """ Add a node if it does not already exist in the list """
-        if (options.source in self.nodes) and (options.target in self.nodes):
+        """ Add an edge if source and target nodes exist """
+        if (options.source in self._node_names) and (options.target in self._node_names):
             self.edges.append(options)
         else:
             missing_nodes = [
-                "" if (options.source in self.nodes) else options.source,
-                "" if (options.target in self.nodes) else options.target,
+                "" if (options.source in self._node_names) else options.source,
+                "" if (options.target in self._node_names) else options.target,
             ]
             pylog.debug(f"Missing node {*missing_nodes,} in Edge {options}")
 
@@ -1199,7 +1202,7 @@ class IntegrationOptions(Options):
         options["n_iterations"] = int(kwargs.pop("n_iterations", 1e3))
         options["integrator"] = kwargs.pop("integrator", "rk4")
         options["method"] = kwargs.pop("method", "adams")
-        options["atol"] = kwargs.pop("atol", 1e-12)
+        options["atol"] = kwargs.pop("atol", 1e-6)
         options["rtol"] = kwargs.pop("rtol", 1e-6)
         options["max_step"] = kwargs.pop("max_step", 0.0)
         options["checks"] = kwargs.pop("checks", True)

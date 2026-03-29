@@ -7,7 +7,6 @@ from farms_core.io.yaml import read_yaml
 from farms_core.utils import profile
 from farms_network.core import options
 from farms_network.core.network import Network
-from farms_network.numeric.integrators_cy import RK4Solver
 from scipy.integrate import ode
 from tqdm import tqdm
 

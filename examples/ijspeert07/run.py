@@ -12,7 +12,6 @@ from farms_core.io.yaml import read_yaml
 from farms_network.core.data import NetworkData
 from farms_network.core.network import Network
 from tqdm import tqdm
-from farms_network.numeric.integrators_cy import RK4Solver
 from scipy.integrate import ode, RK45, RK23
 
 plt.rcParams['text.usetex'] = False
@@ -149,7 +148,7 @@ def generate_network(iterations=10000):
     )
 
     # Generate rhythm centers
-    n_oscillators = 9
+    n_oscillators = 10
     network_options = oscillator_double_chain(network_options, n_oscillators)
     graph = nx.node_link_graph(
         network_options,
@@ -175,8 +174,6 @@ def run_network(network_options: options.NetworkOptions):
     network.setup_integrator()
 
     # Setup integrators
-    rk4solver = RK4Solver(network.nstates, timestep)
-
     sc_integrator = RK45(
         network.get_ode_func(),
         t0=0.0,

@@ -57,6 +57,10 @@ class NetworkConnectivity(NetworkConnectivityCy):
     def __init__(self, node_indices, edge_indices, weights, index_offsets):
         super().__init__(node_indices, edge_indices, weights, index_offsets)
         self.names: List[str] = []
+        # Reverse map: original edge index → sorted position in CSR arrays
+        self._orig_to_sorted = np.empty(len(edge_indices), dtype=NPUITYPE)
+        for sorted_pos in range(len(edge_indices)):
+            self._orig_to_sorted[edge_indices[sorted_pos]] = sorted_pos
 
     @classmethod
     def from_options(cls, network_options: NetworkOptions):
@@ -484,7 +488,7 @@ class Edges:
                 target=edge_opt.target,
                 weight=EdgeWeight(
                     network_connectivity=connectivity,
-                    edge_index=idx,
+                    edge_index=connectivity._orig_to_sorted[idx],
                 )
             )
             self._edges.append(edge)

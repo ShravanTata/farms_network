@@ -173,9 +173,9 @@ cdef class NetworkCy(ODESystemCy):
         self._network.nnodes = nnodes
         self._network.nedges = nedges
         self._network.nodes = <node_t**>malloc(nnodes * sizeof(node_t*))
-        self._network.edges = <edge_t**>malloc(nedges * sizeof(edge_t*))
-        if self._network.nodes is NULL or self._network.edges is NULL:
-            raise MemoryError("Failed to allocate memory for Network nodes/edges")
+        if self._network.nodes is NULL:
+            raise MemoryError("Failed to allocate memory for Network nodes")
+        self._network.edges = <edge_t**>malloc(nedges * sizeof(edge_t*)) if nedges > 0 else NULL
 
         self.data = <NetworkDataCy> data
         _init_data_pointers(self._network, self.data)

@@ -71,9 +71,11 @@ class NetworkConnectivity(NetworkConnectivityCy):
         nnodes = len(nodes)
 
         if nedges == 0:
-            raise ValueError(
-                "Network must have at least one edge. "
-                "Networks with zero edges are not currently supported."
+            return cls(
+                node_indices=np.array([], dtype=NPUITYPE),
+                edge_indices=np.array([], dtype=NPUITYPE),
+                weights=np.array([], dtype=NPDTYPE),
+                index_offsets=np.zeros(nnodes + 1, dtype=NPUITYPE),
             )
 
         # O(1) name→index lookup instead of O(n) list.index()

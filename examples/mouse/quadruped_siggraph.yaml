@@ -1,0 +1,1256 @@
+---
+muscles:
+  left_hind_bfa:
+    f_max: 1.45
+    l_opt: 0.013995578408306038
+    l_slack: 0.011754062248637275
+    model: millard_rt
+    abbrev: BFA
+    name: biceps femoris anterior
+    limb: hind
+    side: left
+    function: antagonist
+    type: extensor
+    pennation: 0.0
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: PELVIS}
+      - point: [-0.005100000184029341, -0.0015725267585366964, 0.00042332199518568814]
+    - - {link: PELVIS}
+      - point: [-0.005744318477809429, 0.0031056986190378666, -0.0008034214843064547]
+    - - {link: LEFT_HIND_FEMUR}
+      - point: [-4.328228533267975e-05, -0.0011961422860622406, -0.017200682312250137]
+    - - {link: LEFT_HIND_FEMUR}
+      - point: [-9.282492101192474e-06, -0.0007672407664358616, -0.019721703603863716]
+    lmtu_min: 0.021550967134451503
+    lmtu_max: 0.026449419577358618
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_hind_ip:
+    f_max: 2.98
+    l_opt: 0.006734668874875636
+    l_slack: 0.009493504876602249
+    model: millard_rt
+    abbrev: IP
+    name: iliopsoas
+    limb: hind
+    side: left
+    function: agonist
+    type: flexor
+    pennation: 13.75
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: PELVIS}
+      - point: [-0.0038648333866149187, 0.014911572448909283, 0.002646762877702713]
+    - - {link: PELVIS}
+      - point: [-0.005747915245592594, 0.009288005530834198, 0.00034931168192997575]
+    - - {link: LEFT_HIND_FEMUR}
+      - point: [-1.955777406692505e-08, -0.00039662979543209076, -0.0025530403945595026]
+    - - {link: LEFT_HIND_FEMUR}
+      - point: [-0.0012998925521969795, 0.00038466090336441994, -0.008663836866617203]
+    lmtu_min: 0.014881239976502762
+    lmtu_max: 0.01824857441394058
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_hind_bfpst:
+    f_max: 5.279
+    l_opt: 0.017278008374135886
+    l_slack: 0.007881051733741908
+    model: millard_rt
+    abbrev: BFPST
+    limb: hind
+    side: left
+    function: antagonist
+    type: biart
+    name: biceps femoris posterior and semitendinosus
+    pennation: 0.0
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: PELVIS}
+      - point: [-0.0050039393827319145, -0.0016525102546438575, 0.00039089476922526956]
+    - - {link: PELVIS}
+      - point: [-0.005744318477809429, 0.0009472128003835678, -0.0006873365491628647]
+    - - {link: LEFT_HIND_FEMUR}
+      - point: [-3.927946090698242e-05, -0.0030108457431197166, -0.008822249248623848]
+    - - {link: LEFT_HIND_FEMUR}
+      - point: [-3.927946090698242e-05, -0.0027040818240493536, -0.011439858935773373]
+    - - {link: LEFT_HIND_TIBIA}
+      - point: [0.00019488856196403503, -0.000999536830931902, -0.005738476291298866]
+    - - {link: LEFT_HIND_TIBIA}
+      - point: [0.00019488856196403503, 0.001182757318019867, -0.006712239235639572]
+    lmtu_min: 0.01652005592080985
+    lmtu_max: 0.03379806429494574
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_hind_rf:
+    f_max: 4.162
+    l_opt: 0.021545525358275967
+    l_slack: 0.006506185822311215
+    model: millard_rt
+    abbrev: RF
+    limb: hind
+    side: left
+    function: antagonist
+    type: biart
+    name: rectus femoris
+    pennation: 15.87
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: PELVIS}
+      - point: [-0.005332173779606819, 0.007690977305173874, 0.0007931869477033615]
+    - - {link: PELVIS}
+      - point: [-0.005676489323377609, 0.007072259671986103, 0.000577443977817893]
+    - - {link: LEFT_HIND_FEMUR}
+      - point: [-0.0001271190121769905, 0.0014013927429914474, -0.009986735880374908]
+    - - {link: LEFT_HIND_FEMUR}
+      - point: [-8.381903171539307e-09, 0.002225776668637991, -0.021039927378296852]
+    - - {link: LEFT_HIND_TIBIA}
+      - point: [-1.1175870895385742e-08, 0.002679402008652687, 9.803473949432373e-05]
+    - - {link: LEFT_HIND_TIBIA}
+      - point: [-1.1175870895385742e-08, 0.0033165840432047844, -0.0006199292838573456]
+    lmtu_min: 0.023742606108931984
+    lmtu_max: 0.028051711180587177
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_hind_va:
+    f_max: 4.293
+    l_opt: 0.01308417874840588
+    l_slack: 0.006479984721554435
+    model: millard_rt
+    pennation: 14.2
+    abbrev: VA
+    limb: hind
+    side: left
+    function: antagonist
+    type: extensor
+    name: vastus
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: LEFT_HIND_FEMUR}
+      - point: [-0.0007794015109539032, 0.0003296942450106144, -0.008315326645970345]
+    - - {link: LEFT_HIND_FEMUR}
+      - point: [-5.587935447692871e-09, 0.0029973709024488926, -0.02075137011706829]
+    - - {link: LEFT_HIND_TIBIA}
+      - point: [-7.450580596923828e-09, 0.0029840879142284393, 1.6149133443832397e-06]
+    - - {link: LEFT_HIND_TIBIA}
+      - point: [-7.450580596923828e-09, 0.003316582180559635, -0.0012447312474250793]
+    lmtu_min: 0.01629311878285885
+    lmtu_max: 0.01956416346996032
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_hind_mg:
+    f_max: 6.414
+    l_opt: 0.012717996488711848
+    l_slack: 0.014798882163147719
+    model: millard_rt
+    abbrev: MG
+    limb: hind
+    side: left
+    function: agonist
+    type: biart
+    name: medial gastrocnemius
+    pennation: 16.04
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: LEFT_HIND_FEMUR}
+      - point: [-0.0006934534758329391, -6.069382652640343e-05, -0.01928216964006424]
+    - - {link: LEFT_HIND_FEMUR}
+      - point: [-0.0005040345713496208, -0.00012381887063384056, -0.019759749993681908]
+    - - {link: LEFT_HIND_TIBIA}
+      - point: [0.0006104707717895508, -0.0002554943785071373, -0.0015184972435235977]
+    - - {link: LEFT_HIND_TIBIA}
+      - point: [-0.00010352348908782005, -0.0015881704166531563, -0.02125486359000206]
+    - - {link: LEFT_HIND_TARSUS}
+      - point: [-1.7468351870775223e-05, -0.001916153822094202, -0.00018418952822685242]
+    - - {link: LEFT_HIND_TARSUS}
+      - point: [5.544861778616905e-05, -0.0022396971471607685, -0.0004631541669368744]
+    lmtu_min: 0.023701479705246015
+    lmtu_max: 0.028152778476295163
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_hind_sol:
+    f_max: 1.5
+    l_opt: 0.007434149207289799
+    l_slack: 0.007721632884387694
+    model: millard_rt
+    abbrev: SOL
+    limb: hind
+    side: left
+    function: antagonist
+    type: extensor
+    name: soleus
+    pennation: 14.03
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: LEFT_HIND_TIBIA}
+      - point: [-0.0005117938853800297, 0.0009217257611453533, -0.012371763586997986]
+    - - {link: LEFT_HIND_TIBIA}
+      - point: [-0.00033545074984431267, 0.0004921206273138523, -0.012918449938297272]
+    - - {link: LEFT_HIND_TARSUS}
+      - point: [-2.1974556148052216e-06, -0.002177146729081869, 0.0002127029001712799]
+    - - {link: LEFT_HIND_TARSUS}
+      - point: [0.00011381739750504494, -0.0031719848047941923, -0.0011574849486351013]
+    lmtu_min: 0.012182122408761572
+    lmtu_max: 0.015527489552041982
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_hind_ta:
+    f_max: 2.79
+    l_opt: 0.0047555765633574
+    l_slack: 0.012145921212484312
+    model: millard_rt
+    pennation: 14.5
+    abbrev: TA
+    limb: hind
+    side: left
+    function: agonist
+    type: flexor
+    name: tibialis anterior
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: LEFT_HIND_TIBIA}
+      - point: [0.00015062885358929634, 0.0016467757523059845, -0.00962509959936142]
+    - - {link: LEFT_HIND_TIBIA}
+      - point: [-6.316695362329483e-06, 0.0008027213625609875, -0.02109251543879509]
+    - - {link: LEFT_HIND_TARSUS}
+      - point: [7.046852260828018e-06, 0.0007673939689993858, -0.00029274821281433105]
+    - - {link: LEFT_HIND_TARSUS}
+      - point: [0.0002529802732169628, 0.002326841466128826, -0.00026898831129074097]
+    lmtu_min: 0.015950382463170234
+    lmtu_max: 0.017139276604009584
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_hind_ab:
+    f_max: 0.234
+    l_opt: 0.011587507847898072
+    l_slack: 0.004338668809342156
+    model: millard_rt
+    name: adductor brevis
+    pennation: 0.0
+    abbrev: AB
+    limb: hind
+    side: left
+    function: antagonist
+    type: adductor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: PELVIS}
+      - point: [-0.0019408023357391356, 0.004702660143375397, -0.0030913251638412477]
+    - - {link: LEFT_HIND_FEMUR}
+      - point: [0.000150834321975708, 0.0009438598155975342, -0.015862239599227904]
+    lmtu_min: 0.015950382463170234
+    lmtu_max: 0.017139276604009584
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_hind_gm_dorsal:
+    f_max: 0.936
+    l_opt: 0.004883048585938266
+    l_slack: 0.012627643723770773
+    model: millard_rt
+    name: gluteus maximus dorsal
+    pennation: 20.41999999998613
+    abbrev: GM
+    limb: hind
+    side: left
+    function: agonist
+    type: abductor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: PELVIS}
+      - point: [-0.00414059916511178, 0.016633665189146996, 0.003772876225411892]
+    - - {link: PELVIS}
+      - point: [-0.0037408547941595316, 0.011795440688729286, 0.0026774872094392776]
+    - - {link: LEFT_HIND_FEMUR}
+      - point: [-0.0029682484455406666, -0.0012902282178401947, 0.0010157825890928507]
+    - - {link: LEFT_HIND_FEMUR}
+      - point: [-0.0026644044555723667, -0.0019046193920075893, -0.0024633039720356464]
+    lmtu_min: 0.015950382463170234
+    lmtu_max: 0.017139276604009584
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_hind_edl:
+    f_max: 0.368
+    l_opt: 0.009591862290408606
+    l_slack: 0.02857297244474201
+    model: millard_rt
+    name: extensor digitorum longus
+    pennation: 12.389999999994417
+    abbrev: EDL
+    limb: hind
+    side: left
+    function: antagonist
+    type: biart
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: LEFT_HIND_TIBIA}
+      - point: [-0.0018489127978682518, 0.0025300094857811928, -0.0031821951270103455]
+    - - {link: LEFT_HIND_TIBIA}
+      - point: [-0.0017313365824520588, 0.0013977205380797386, -0.01908557489514351]
+    - - {link: LEFT_HIND_TIBIA}
+      - point: [-0.0010407906956970692, 0.001160934567451477, -0.021655384451150894]
+    - - {link: LEFT_HIND_TARSUS}
+      - point: [-4.899362102150917e-05, 0.002926688641309738, 3.5017728805541992e-06]
+    - - {link: LEFT_HIND_TARSUS}
+      - point: [9.604590013623238e-05, 0.005038843490183353, 0.0003693588078022003]
+    - - {link: LEFT_HIND_TARSUS}
+      - point: [-0.00032987771555781364, 0.008130312897264957, 0.0011511817574501038]
+    - - {link: LEFT_HIND_PHALANGE}
+      - point: [-0.0006310450844466686, 0.0016977433115243912, 0.001137513667345047]
+    - - {link: LEFT_HIND_PHALANGE}
+      - point: [-0.0006551831029355526, 0.003315327689051628, 0.0004373900592327118]
+    - - {link: LEFT_HIND_PHALANGE}
+      - point: [-0.0007892628200352192, 0.004923263564705849, -0.00045264139771461487]
+    - - {link: LEFT_HIND_PHALANGE}
+      - point: [-0.0005885446444153786, 0.006079507991671562, -0.0008535459637641907]
+    - - {link: LEFT_HIND_PHALANGE}
+      - point: [-0.00042905518785119057, 0.0063743311911821365, -0.0008558332920074463]
+    - - {link: LEFT_HIND_PHALANGE}
+      - point: [-0.0002928245812654495, 0.007068844512104988, -0.0005342662334442139]
+    lmtu_min: 0.03559932145083756
+    lmtu_max: 0.03840986060655254
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_hind_fdl:
+    f_max: 1.896
+    l_opt: 0.011300253381695161
+    l_slack: 0.0343101778477372
+    model: millard_rt
+    name: flexor digitorum longus
+    pennation: 15.19999999999209
+    abbrev: FDL
+    limb: hind
+    side: left
+    function: agonist
+    type: biart
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: LEFT_HIND_TIBIA}
+      - point: [0.0003454876132309437, 0.0005156989209353924, -0.0018593408167362213]
+    - - {link: LEFT_HIND_TIBIA}
+      - point: [-0.0004262547008693218, -0.001927003264427185, -0.022614743560552597]
+    - - {link: LEFT_HIND_TARSUS}
+      - point: [0.00011531030759215355, -0.0015828991308808327, -0.002645295113325119]
+    - - {link: LEFT_HIND_TARSUS}
+      - point: [0.0002982374280691147, 0.0027203205972909927, -0.002497337758541107]
+    - - {link: LEFT_HIND_TARSUS}
+      - point: [6.4091756939888e-05, 0.007453788071870804, -0.0027201958000659943]
+    - - {link: LEFT_HIND_PHALANGE}
+      - point: [-0.00040991464629769325, 0.0018559154123067856, -0.002752430737018585]
+    - - {link: LEFT_HIND_PHALANGE}
+      - point: [-0.0003729788586497307, 0.0038912594318389893, -0.0021307431161403656]
+    - - {link: LEFT_HIND_PHALANGE}
+      - point: [-0.0004692724905908108, 0.005475541576743126, -0.0018751807510852814]
+    - - {link: LEFT_HIND_PHALANGE}
+      - point: [-0.00037657376378774643, 0.006244940683245659, -0.002077799290418625]
+    lmtu_min: 0.04248887602652677
+    lmtu_max: 0.04576035477805497
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_fore_spd:
+    f_max: 2.785
+    l_opt: 0.0090075727989171
+    l_slack: 9.99999974737876e-05
+    model: millard_rt
+    name: spinoltoideus
+    pennation: 0.0
+    abbrev: SPD
+    limb: fore
+    side: left
+    function: antagonist
+    type: flexor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: LEFT_FORE_SCAPULA}
+      - point: [-0.0, -0.005446530878543854, -0.00021447567269206047]
+    - - {link: LEFT_FORE_HUMERUS}
+      - point: [-0.0, -0.0006555430591106415, -0.007069217972457409]
+    lmtu_min: 0.004796409434762218
+    lmtu_max: 0.011028858335273298
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_fore_ssp:
+    f_max: 2.785
+    l_opt: 0.008553920436420503
+    l_slack: 0.007425774545277305
+    model: millard_rt
+    name: supraspinatus
+    pennation: 0.0
+    abbrev: SSP
+    limb: fore
+    side: left
+    function: agonist
+    type: extensor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: LEFT_FORE_SCAPULA}
+      - point: [-0.0, -0.004050329327583313, 0.0031824337784200907]
+    - - {link: LEFT_FORE_HUMERUS}
+      - point: [-0.0, 0.0030683414079248905, 0.001050198683515191]
+    - - {link: LEFT_FORE_HUMERUS}
+      - point: [-0.0, 0.002065915847197175, -0.006988696753978729]
+    lmtu_min: 0.013841214872592683
+    lmtu_max: 0.016407390595636125
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_fore_abd:
+    f_max: 0.785
+    l_opt: 0.011071778095561776
+    l_slack: 0.00010001311688602956
+    model: millard_rt
+    name: fore abductor
+    pennation: 13.85
+    abbrev: ABD
+    limb: fore
+    side: left
+    function: antagonist
+    type: abductor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: LEFT_FORE_SCAPULA}
+      - point: [-0.004687825217843056, 0.0, 0.0020285153295844793]
+    - - {link: LEFT_FORE_HUMERUS}
+      - point: [-0.0018434165976941586, 0.0, -0.008454080671072006]
+    lmtu_min: 0.007631408940711268
+    lmtu_max: 0.011766673670749305
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_fore_add:
+    f_max: 0.785
+    l_opt: 0.003678790153573792
+    l_slack: 0.004824199043662888
+    model: millard_rt
+    name: fore adductor
+    pennation: 13.85
+    abbrev: ADD
+    limb: fore
+    side: left
+    function: agonist
+    type: adductor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: LEFT_FORE_SCAPULA}
+      - point: [0.0017957077361643314, 0.0, 0.0018107523210346699]
+    - - {link: LEFT_FORE_HUMERUS}
+      - point: [0.0006471159867942333, 0.0, -0.006022182293236256]
+    lmtu_min: 0.007503073111604149
+    lmtu_max: 0.008574622568462429
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_fore_tbl:
+    f_max: 0.711
+    l_opt: 0.010961890374631697
+    l_slack: 0.002420944352367655
+    model: millard_rt
+    name: triceps brachii lateral head
+    pennation: 23.41
+    abbrev: TBL
+    limb: fore
+    side: left
+    function: antagonist
+    type: biart
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: LEFT_FORE_SCAPULA}
+      - point: [-0.00019200937822461128, -0.004259705543518066, -0.0007050815038383007]
+    - - {link: LEFT_FORE_ULNA}
+      - point: [0.0004401872865855694, -0.0020481757819652557, 0.002740582451224327]
+    lmtu_min: 0.007450727160719945
+    lmtu_max: 0.012983487770230003
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_fore_tbo:
+    f_max: 4.647
+    l_opt: 0.007006461291722669
+    l_slack: 0.0048804897524826
+    model: millard_rt
+    name: triceps brachii long head
+    pennation: 41.88
+    abbrev: TBO
+    limb: fore
+    side: left
+    function: antagonist
+    type: extensor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: LEFT_FORE_HUMERUS}
+      - point: [-0.0017120065167546272, 4.284083843231201e-07, -0.0032646721228957176]
+    - - {link: LEFT_FORE_HUMERUS}
+      - point: [-0.001364322379231453, -0.0016382932662963867, -0.009459593333303928]
+    - - {link: LEFT_FORE_ULNA}
+      - point: [-0.0008363989181816578, -0.0015216954052448273, 0.0027284380048513412]
+    lmtu_min: 0.015950382463170234
+    lmtu_max: 0.017139276604009584
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_fore_bbs:
+    f_max: 2.84
+    l_opt: 0.0108723749158819
+    l_slack: 0.004127775937652076
+    model: millard_rt
+    name: biceps brachii short head
+    pennation: 28.27
+    abbrev: BBS
+    limb: fore
+    side: left
+    function: agonist
+    type: flexor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: LEFT_FORE_HUMERUS}
+      - point: [0.00027480442076921463, 0.0002648681402206421, -0.0014985068701207638]
+    - - {link: LEFT_FORE_HUMERUS}
+      - point: [0.0005734218284487724, 0.0013883188366889954, -0.005840766243636608]
+    - - {link: LEFT_FORE_RADIUS}
+      - point: [0.0007084067910909653, -0.00040485337376594543, -0.0011150240898132324]
+    lmtu_min: 0.01130945902618341
+    lmtu_max: 0.014182131804996823
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_fore_bra:
+    f_max: 0.249
+    l_opt: 0.010537904129486048
+    l_slack: 0.0044780466560524045
+    model: millard_rt
+    name: brachialis
+    pennation: 9.89
+    abbrev: BRA
+    limb: fore
+    side: left
+    function: agonist
+    type: flexor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: LEFT_FORE_HUMERUS}
+      - point: [-0.000616755336523056, -0.0011069513857364655, -0.0026558423414826393]
+    - - {link: LEFT_FORE_HUMERUS}
+      - point: [-0.0015707556158304214, -8.42362642288208e-05, -0.007148376666009426]
+    - - {link: LEFT_FORE_HUMERUS}
+      - point: [-0.0011620977893471718, 0.0001252405345439911, -0.01129389088600874]
+    - - {link: LEFT_FORE_HUMERUS}
+      - point: [-0.00013126572594046593, 0.0014087632298469543, -0.011982607655227184]
+    - - {link: LEFT_FORE_ULNA}
+      - point: [-7.217749953269958e-08, 3.267824649810791e-05, -0.003330674022436142]
+    lmtu_min: 0.012264024424978204
+    lmtu_max: 0.015378415037529389
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_fore_ecu:
+    f_max: 0.516
+    l_opt: 0.01093838134526763
+    l_slack: 0.006008210218044965
+    model: millard_rt
+    name: extensor carpi ulanris
+    pennation: 20.8
+    abbrev: ECU
+    limb: fore
+    side: left
+    function: antagonist
+    type: extensor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - link: LEFT_FORE_ULNA
+      - point:
+        - -0.001295724418014288
+        - 0.00045551033690571785
+        - -0.002853791229426861
+    - - link: LEFT_FORE_RADIUS
+      - point:
+        - -0.0004148148000240326
+        - 0.002021617256104946
+        - -0.013781346380710602
+    - - link: LEFT_FORE_CARPUS
+      - point:
+        - -0.0011874698102474213
+        - 0.0005738716572523117
+        - -0.003054407425224781
+    lmtu_min: 0.017415221576595908
+    lmtu_max: 0.017415232091037687
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  left_fore_fcu:
+    f_max: 0.687
+    l_opt: 0.014399828321685525
+    l_slack: 0.005086504567655385
+    model: millard_rt
+    name: flexor carpi ulnaris
+    pennation: 20.95
+    abbrev: FCU
+    limb: fore
+    side: left
+    function: agonist
+    type: flexor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - link: LEFT_FORE_RADIUS
+      - point:
+        - 0.0007480895146727562
+        - -0.0013272319920361042
+        - -0.0036243926733732224
+    - - link: LEFT_FORE_ULNA
+      - point:
+        - -0.00018490897491574287
+        - -0.0024187276139855385
+        - -0.013434399850666523
+    - - link: LEFT_FORE_CARPUS
+      - point:
+        - 0.0005889423191547394
+        - -0.0023954343050718307
+        - -0.001337587833404541
+    - - link: LEFT_FORE_CARPUS
+      - point:
+        - -0.0015474911779165268
+        - -0.0021929796785116196
+        - -0.004500014707446098
+    lmtu_min: 0.015172426625696683
+    lmtu_max: 0.019206794807667554
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_hind_bfa:
+    f_max: 1.45
+    l_opt: 0.013995578408306038
+    l_slack: 0.011754062248637275
+    model: millard_rt
+    abbrev: BFA
+    limb: hind
+    side: right
+    function: antagonist
+    type: extensor
+    name: Biceps femoris anterior
+    pennation: 0.0
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: PELVIS}
+      - point: [0.005100000184029341, -0.0015725267585366964, 0.00042332199518568814]
+    - - {link: PELVIS}
+      - point: [0.005744318477809429, 0.0031056986190378666, -0.0008034214843064547]
+    - - {link: RIGHT_HIND_FEMUR}
+      - point: [4.328228533267975e-05, -0.0011961422860622406, -0.017200682312250137]
+    - - {link: RIGHT_HIND_FEMUR}
+      - point: [9.282492101192474e-06, -0.0007672407664358616, -0.019721703603863716]
+    lmtu_min: 0.021550967134451503
+    lmtu_max: 0.026449419577358618
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_hind_ip:
+    f_max: 2.98
+    l_opt: 0.006734668874875636
+    l_slack: 0.009493504876602249
+    model: millard_rt
+    abbrev: IP
+    limb: hind
+    side: right
+    function: agonist
+    type: flexor
+    name: iliopsoas
+    pennation: 13.75
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: PELVIS}
+      - point: [0.0038648333866149187, 0.014911572448909283, 0.002646762877702713]
+    - - {link: PELVIS}
+      - point: [0.005747915245592594, 0.009288005530834198, 0.00034931168192997575]
+    - - {link: RIGHT_HIND_FEMUR}
+      - point: [1.955777406692505e-08, -0.00039662979543209076, -0.0025530403945595026]
+    - - {link: RIGHT_HIND_FEMUR}
+      - point: [0.0012998925521969795, 0.00038466090336441994, -0.008663836866617203]
+    lmtu_min: 0.014881239976502762
+    lmtu_max: 0.01824857441394058
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_hind_bfpst:
+    f_max: 5.279
+    l_opt: 0.017278008374135886
+    l_slack: 0.007881051733741908
+    model: millard_rt
+    abbrev: BFPST
+    limb: hind
+    side: right
+    function: antagonist
+    type: biart
+    name: Biceps femoris posterior and semitendinosus
+    pennation: 0.0
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: PELVIS}
+      - point: [0.0050039393827319145, -0.0016525102546438575, 0.00039089476922526956]
+    - - {link: PELVIS}
+      - point: [0.005744318477809429, 0.0009472128003835678, -0.0006873365491628647]
+    - - {link: RIGHT_HIND_FEMUR}
+      - point: [3.927946090698242e-05, -0.0030108457431197166, -0.008822249248623848]
+    - - {link: RIGHT_HIND_FEMUR}
+      - point: [3.927946090698242e-05, -0.0027040818240493536, -0.011439858935773373]
+    - - {link: RIGHT_HIND_TIBIA}
+      - point: [-0.00019488856196403503, -0.000999536830931902, -0.005738476291298866]
+    - - {link: RIGHT_HIND_TIBIA}
+      - point: [-0.00019488856196403503, 0.001182757318019867, -0.006712239235639572]
+    lmtu_min: 0.01652005592080985
+    lmtu_max: 0.03379806429494574
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_hind_rf:
+    f_max: 4.162
+    l_opt: 0.021545525358275967
+    l_slack: 0.006506185822311215
+    model: millard_rt
+    abbrev: RF
+    limb: hind
+    side: right
+    function: antagonist
+    type: biart
+    name: rectus femoris
+    pennation: 15.87
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: PELVIS}
+      - point: [0.005332173779606819, 0.007690977305173874, 0.0007931869477033615]
+    - - {link: PELVIS}
+      - point: [0.005676489323377609, 0.007072259671986103, 0.000577443977817893]
+    - - {link: RIGHT_HIND_FEMUR}
+      - point: [0.0001271190121769905, 0.0014013927429914474, -0.009986735880374908]
+    - - {link: RIGHT_HIND_FEMUR}
+      - point: [8.381903171539307e-09, 0.002225776668637991, -0.021039927378296852]
+    - - {link: RIGHT_HIND_TIBIA}
+      - point: [1.1175870895385742e-08, 0.002679402008652687, 9.803473949432373e-05]
+    - - {link: RIGHT_HIND_TIBIA}
+      - point: [1.1175870895385742e-08, 0.0033165840432047844, -0.0006199292838573456]
+    lmtu_min: 0.023742606108931984
+    lmtu_max: 0.028051711180587177
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_hind_va:
+    f_max: 4.293
+    l_opt: 0.01308417874840588
+    l_slack: 0.006479984721554435
+    model: millard_rt
+    pennation: 14.2
+    abbrev: VA
+    limb: hind
+    side: right
+    function: antagonist
+    type: extensor
+    name: vastus
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: RIGHT_HIND_FEMUR}
+      - point: [0.0007794015109539032, 0.0003296942450106144, -0.008315326645970345]
+    - - {link: RIGHT_HIND_FEMUR}
+      - point: [5.587935447692871e-09, 0.0029973709024488926, -0.02075137011706829]
+    - - {link: RIGHT_HIND_TIBIA}
+      - point: [7.450580596923828e-09, 0.0029840879142284393, 1.6149133443832397e-06]
+    - - {link: RIGHT_HIND_TIBIA}
+      - point: [7.450580596923828e-09, 0.003316582180559635, -0.0012447312474250793]
+    lmtu_min: 0.01629311878285885
+    lmtu_max: 0.01956416346996032
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_hind_mg:
+    f_max: 6.414
+    l_opt: 0.012717996488711848
+    l_slack: 0.014798882163147719
+    model: millard_rt
+    abbrev: MG
+    limb: hind
+    side: right
+    function: agonist
+    type: biart
+    name: medial gastrocnemius
+    pennation: 16.04
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: RIGHT_HIND_FEMUR}
+      - point: [0.0006934534758329391, -6.069382652640343e-05, -0.01928216964006424]
+    - - {link: RIGHT_HIND_FEMUR}
+      - point: [0.0005040345713496208, -0.00012381887063384056, -0.019759749993681908]
+    - - {link: RIGHT_HIND_TIBIA}
+      - point: [-0.0006104707717895508, -0.0002554943785071373, -0.0015184972435235977]
+    - - {link: RIGHT_HIND_TIBIA}
+      - point: [0.00010352348908782005, -0.0015881704166531563, -0.02125486359000206]
+    - - {link: RIGHT_HIND_TARSUS}
+      - point: [1.7468351870775223e-05, -0.001916153822094202, -0.00018418952822685242]
+    - - {link: RIGHT_HIND_TARSUS}
+      - point: [-5.544861778616905e-05, -0.0022396971471607685, -0.0004631541669368744]
+    lmtu_min: 0.023701479705246015
+    lmtu_max: 0.028152778476295163
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_hind_sol:
+    f_max: 1.5
+    l_opt: 0.007434149207289799
+    l_slack: 0.007721632884387694
+    model: millard_rt
+    abbrev: SOL
+    limb: hind
+    side: right
+    name: soleus
+    function: antagonist
+    type: extensor
+    pennation: 14.03
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: RIGHT_HIND_TIBIA}
+      - point: [0.0005117938853800297, 0.0009217257611453533, -0.012371763586997986]
+    - - {link: RIGHT_HIND_TIBIA}
+      - point: [0.00033545074984431267, 0.0004921206273138523, -0.012918449938297272]
+    - - {link: RIGHT_HIND_TARSUS}
+      - point: [2.1974556148052216e-06, -0.002177146729081869, 0.0002127029001712799]
+    - - {link: RIGHT_HIND_TARSUS}
+      - point: [-0.00011381739750504494, -0.0031719848047941923, -0.0011574849486351013]
+    lmtu_min: 0.012182122408761572
+    lmtu_max: 0.015527489552041982
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_hind_ta:
+    f_max: 2.79
+    l_opt: 0.0047555765633574
+    l_slack: 0.012145921212484312
+    model: millard_rt
+    pennation: 14.5
+    abbrev: TA
+    limb: hind
+    side: right
+    function: agonist
+    type: flexor
+    name: tibialis anterior
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: RIGHT_HIND_TIBIA}
+      - point: [-0.00015062885358929634, 0.0016467757523059845, -0.00962509959936142]
+    - - {link: RIGHT_HIND_TIBIA}
+      - point: [6.316695362329483e-06, 0.0008027213625609875, -0.02109251543879509]
+    - - {link: RIGHT_HIND_TARSUS}
+      - point: [-7.046852260828018e-06, 0.0007673939689993858, -0.00029274821281433105]
+    - - {link: RIGHT_HIND_TARSUS}
+      - point: [-0.0002529802732169628, 0.002326841466128826, -0.00026898831129074097]
+    lmtu_min: 0.015950382463170234
+    lmtu_max: 0.017139276604009584
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_hind_ab:
+    f_max: 0.234
+    l_opt: 0.011587507847898072
+    l_slack: 0.004338668809342156
+    model: millard_rt
+    name: adductor brevis
+    pennation: 0.0
+    abbrev: AB
+    limb: hind
+    side: right
+    function: antagonist
+    type: adductor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: PELVIS}
+      - point: [0.0019408023357391356, 0.004702660143375397, -0.0030913251638412477]
+    - - {link: RIGHT_HIND_FEMUR}
+      - point: [-0.000150834321975708, 0.0009438598155975342, -0.015862239599227904]
+    lmtu_min: 0.015950382463170234
+    lmtu_max: 0.017139276604009584
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_hind_gm_dorsal:
+    f_max: 0.936
+    l_opt: 0.004883048585938266
+    l_slack: 0.012627643723770773
+    model: millard_rt
+    name: gluteus maximus dorsal
+    pennation: 20.41999999998613
+    abbrev: GM
+    limb: hind
+    side: right
+    function: agonist
+    type: abductor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: PELVIS}
+      - point: [0.00414059916511178, 0.016633665189146996, 0.003772876225411892]
+    - - {link: PELVIS}
+      - point: [0.0037408547941595316, 0.011795440688729286, 0.0026774872094392776]
+    - - {link: RIGHT_HIND_FEMUR}
+      - point: [0.0029682484455406666, -0.0012902282178401947, 0.0010157825890928507]
+    - - {link: RIGHT_HIND_FEMUR}
+      - point: [0.0026644044555723667, -0.0019046193920075893, -0.0024633039720356464]
+    lmtu_min: 0.015950382463170234
+    lmtu_max: 0.017139276604009584
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_hind_edl:
+    f_max: 0.368
+    l_opt: 0.009591862290408606
+    l_slack: 0.02857297244474201
+    model: millard_rt
+    name: extensor digitorum longus
+    pennation: 12.389999999994417
+    abbrev: EDL
+    limb: hind
+    side: right
+    function: antagonist
+    type: biart
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: RIGHT_HIND_TIBIA}
+      - point: [0.0018489127978682518, 0.0025300094857811928, -0.0031821951270103455]
+    - - {link: RIGHT_HIND_TIBIA}
+      - point: [0.0017313365824520588, 0.0013977205380797386, -0.01908557489514351]
+    - - {link: RIGHT_HIND_TIBIA}
+      - point: [0.0010407906956970692, 0.001160934567451477, -0.021655384451150894]
+    - - {link: RIGHT_HIND_TARSUS}
+      - point: [4.899362102150917e-05, 0.002926688641309738, 3.5017728805541992e-06]
+    - - {link: RIGHT_HIND_TARSUS}
+      - point: [-9.604590013623238e-05, 0.005038843490183353, 0.0003693588078022003]
+    - - {link: RIGHT_HIND_TARSUS}
+      - point: [0.00032987771555781364, 0.008130312897264957, 0.0011511817574501038]
+    - - {link: RIGHT_HIND_PHALANGE}
+      - point: [0.0006310450844466686, 0.0016977433115243912, 0.001137513667345047]
+    - - {link: RIGHT_HIND_PHALANGE}
+      - point: [0.0006551831029355526, 0.003315327689051628, 0.0004373900592327118]
+    - - {link: RIGHT_HIND_PHALANGE}
+      - point: [0.0007892628200352192, 0.004923263564705849, -0.00045264139771461487]
+    - - {link: RIGHT_HIND_PHALANGE}
+      - point: [0.0005885446444153786, 0.006079507991671562, -0.0008535459637641907]
+    - - {link: RIGHT_HIND_PHALANGE}
+      - point: [0.00042905518785119057, 0.0063743311911821365, -0.0008558332920074463]
+    - - {link: RIGHT_HIND_PHALANGE}
+      - point: [0.0002928245812654495, 0.007068844512104988, -0.0005342662334442139]
+    lmtu_min: 0.03559932145083756
+    lmtu_max: 0.03840986060655254
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_hind_fdl:
+    f_max: 1.896
+    l_opt: 0.011300253381695161
+    l_slack: 0.0343101778477372
+    model: millard_rt
+    name: flexor digitorum longus
+    pennation: 15.19999999999209
+    abbrev: FDL
+    limb: hind
+    side: right
+    function: agonist
+    type: biart
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: RIGHT_HIND_TIBIA}
+      - point: [-0.0003454876132309437, 0.0005156989209353924, -0.0018593408167362213]
+    - - {link: RIGHT_HIND_TIBIA}
+      - point: [0.0004262547008693218, -0.001927003264427185, -0.022614743560552597]
+    - - {link: RIGHT_HIND_TARSUS}
+      - point: [-0.00011531030759215355, -0.0015828991308808327, -0.002645295113325119]
+    - - {link: RIGHT_HIND_TARSUS}
+      - point: [-0.0002982374280691147, 0.0027203205972909927, -0.002497337758541107]
+    - - {link: RIGHT_HIND_TARSUS}
+      - point: [-6.4091756939888e-05, 0.007453788071870804, -0.0027201958000659943]
+    - - {link: RIGHT_HIND_PHALANGE}
+      - point: [0.00040991464629769325, 0.0018559154123067856, -0.002752430737018585]
+    - - {link: RIGHT_HIND_PHALANGE}
+      - point: [0.0003729788586497307, 0.0038912594318389893, -0.0021307431161403656]
+    - - {link: RIGHT_HIND_PHALANGE}
+      - point: [0.0004692724905908108, 0.005475541576743126, -0.0018751807510852814]
+    - - {link: RIGHT_HIND_PHALANGE}
+      - point: [0.00037657376378774643, 0.006244940683245659, -0.002077799290418625]
+    lmtu_min: 0.04248887602652677
+    lmtu_max: 0.04576035477805497
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_fore_spd:
+    f_max: 2.785
+    l_opt: 0.0090075727989171
+    l_slack: 9.99999974737876e-05
+    model: millard_rt
+    name: spinoltoideus
+    pennation: 0.0
+    abbrev: SPD
+    limb: fore
+    side: right
+    function: antagonist
+    type: flexor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: RIGHT_FORE_SCAPULA}
+      - point: [0.0, -0.005446530878543854, -0.00021447567269206047]
+    - - {link: RIGHT_FORE_HUMERUS}
+      - point: [0.0, -0.0006555430591106415, -0.007069217972457409]
+    lmtu_min: 0.004796409434762218
+    lmtu_max: 0.011028858335273298
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_fore_ssp:
+    f_max: 2.785
+    l_opt: 0.008553920436420503
+    l_slack: 0.007425774545277305
+    model: millard_rt
+    name: supraspinatus
+    pennation: 0.0
+    abbrev: SSP
+    limb: fore
+    side: right
+    function: agonist
+    type: extensor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: RIGHT_FORE_SCAPULA}
+      - point: [0.0, -0.004050329327583313, 0.0031824337784200907]
+    - - {link: RIGHT_FORE_HUMERUS}
+      - point: [0.0, 0.0030683414079248905, 0.001050198683515191]
+    - - {link: RIGHT_FORE_HUMERUS}
+      - point: [0.0, 0.002065915847197175, -0.006988696753978729]
+    lmtu_min: 0.013841214872592683
+    lmtu_max: 0.016407390595636125
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_fore_abd:
+    f_max: 0.785
+    l_opt: 0.011071778095561776
+    l_slack: 0.00010001311688602956
+    model: millard_rt
+    name: fore abductor
+    pennation: 13.85
+    abbrev: ABD
+    limb: fore
+    side: right
+    function: antagonist
+    type: abductor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: RIGHT_FORE_SCAPULA}
+      - point: [0.004687825217843056, 0.0, 0.0020285153295844793]
+    - - {link: RIGHT_FORE_HUMERUS}
+      - point: [0.0018434165976941586, 0.0, -0.008454080671072006]
+    lmtu_min: 0.007631408940711268
+    lmtu_max: 0.011766673670749305
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_fore_add:
+    f_max: 0.785
+    l_opt: 0.003678790153573792
+    l_slack: 0.004824199043662888
+    model: millard_rt
+    name: adductor
+    pennation: 13.85
+    abbrev: ADD
+    limb: fore
+    side: right
+    function: agonist
+    type: adductor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: RIGHT_FORE_SCAPULA}
+      - point: [-0.0017957077361643314, 0.0, 0.0018107523210346699]
+    - - {link: RIGHT_FORE_HUMERUS}
+      - point: [-0.0006471159867942333, 0.0, -0.006022182293236256]
+    lmtu_min: 0.007503073111604149
+    lmtu_max: 0.008574622568462429
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_fore_tbl:
+    f_max: 0.711
+    l_opt: 0.010961890374631697
+    l_slack: 0.002420944352367655
+    model: millard_rt
+    name: triceps brachii lateral head
+    pennation: 23.41
+    abbrev: TBL
+    limb: fore
+    side: right
+    function: antagonist
+    type: biart
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: RIGHT_FORE_SCAPULA}
+      - point: [0.00019200937822461128, -0.004259705543518066, -0.0007050815038383007]
+    - - {link: RIGHT_FORE_ULNA}
+      - point: [-0.0004401872865855694, -0.0020481757819652557, 0.002740582451224327]
+    lmtu_min: 0.007450727160719945
+    lmtu_max: 0.012983487770230003
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_fore_tbo:
+    f_max: 4.647
+    l_opt: 0.007006461291722669
+    l_slack: 0.0048804897524826
+    model: millard_rt
+    name: triceps brachii long head
+    pennation: 41.88
+    abbrev: TBO
+    limb: fore
+    side: right
+    function: antagonist
+    type: extensor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: RIGHT_FORE_HUMERUS}
+      - point: [0.0017120065167546272, 4.284083843231201e-07, -0.0032646721228957176]
+    - - {link: RIGHT_FORE_HUMERUS}
+      - point: [0.001364322379231453, -0.0016382932662963867, -0.009459593333303928]
+    - - {link: RIGHT_FORE_ULNA}
+      - point: [0.0008363989181816578, -0.0015216954052448273, 0.0027284380048513412]
+    lmtu_min: 0.008973
+    lmtu_max: 0.012373
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_fore_bbs:
+    f_max: 2.84
+    l_opt: 0.0108723749158819
+    l_slack: 0.004127775937652076
+    model: millard_rt
+    name: biceps brachii short head
+    pennation: 28.27
+    abbrev: BBS
+    limb: fore
+    side: right
+    function: agonist
+    type: flexor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: RIGHT_FORE_HUMERUS}
+      - point: [-0.00027480442076921463, 0.0002648681402206421, -0.0014985068701207638]
+    - - {link: RIGHT_FORE_HUMERUS}
+      - point: [-0.0005734218284487724, 0.0013883188366889954, -0.005840766243636608]
+    - - {link: RIGHT_FORE_RADIUS}
+      - point: [-0.0007084067910909653, -0.00040485337376594543, -0.0011150240898132324]
+    lmtu_min: 0.01130945902618341
+    lmtu_max: 0.014182131804996823
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_fore_bra:
+    f_max: 0.249
+    l_opt: 0.010537904129486048
+    l_slack: 0.0044780466560524045
+    model: millard_rt
+    name: brachialis
+    pennation: 9.89
+    abbrev: BRA
+    limb: fore
+    side: right
+    function: agonist
+    type: flexor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - {link: RIGHT_FORE_HUMERUS}
+      - point: [0.000616755336523056, -0.0011069513857364655, -0.0026558423414826393]
+    - - {link: RIGHT_FORE_HUMERUS}
+      - point: [0.0015707556158304214, -8.42362642288208e-05, -0.007148376666009426]
+    - - {link: RIGHT_FORE_HUMERUS}
+      - point: [0.0011620977893471718, 0.0001252405345439911, -0.01129389088600874]
+    - - {link: RIGHT_FORE_HUMERUS}
+      - point: [0.00013126572594046593, 0.0014087632298469543, -0.011982607655227184]
+    - - {link: RIGHT_FORE_ULNA}
+      - point: [7.217749953269958e-08, 3.267824649810791e-05, -0.003330674022436142]
+    lmtu_min: 0.012264024424978204
+    lmtu_max: 0.015378415037529389
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_fore_ecu:
+    f_max: 0.516
+    l_opt: 0.01093838134526763
+    l_slack: 0.006008210218044965
+    model: millard_rt
+    name: extensor carpi ulanris
+    pennation: 20.8
+    abbrev: ECU
+    limb: fore
+    side: right
+    function: antagonist
+    type: extensor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - link: RIGHT_FORE_ULNA
+      - point:
+        - 0.001295724418014288
+        - 0.00045551033690571785
+        - -0.002853791229426861
+    - - link: RIGHT_FORE_RADIUS
+      - point:
+        - 0.0004148148000240326
+        - 0.002021617256104946
+        - -0.013781346380710602
+    - - link: RIGHT_FORE_CARPUS
+      - point:
+        - 0.0011874698102474213
+        - 0.0005738716572523117
+        - -0.003054407425224781
+    lmtu_min: 0.017415221576595908
+    lmtu_max: 0.017415232091037687
+    act_tconst: 0.001
+    deact_tconst: 0.001
+  right_fore_fcu:
+    f_max: 0.687
+    l_opt: 0.014399828321685525
+    l_slack: 0.005086504567655385
+    model: millard_rt
+    name: flexor carpi ulnaris
+    pennation: 20.95
+    abbrev: FCU
+    limb: fore
+    side: right
+    function: agonist
+    type: flexor
+    v_max: 12.0
+    visualize: 1
+    waypoints:
+    - - link: RIGHT_FORE_RADIUS
+      - point:
+        - -0.0007480895146727562
+        - -0.0013272319920361042
+        - -0.0036243926733732224
+    - - link: RIGHT_FORE_ULNA
+      - point:
+        - 0.00018490897491574287
+        - -0.0024187276139855385
+        - -0.013434399850666523
+    - - link: RIGHT_FORE_CARPUS
+      - point:
+        - -0.0005889423191547394
+        - -0.0023954343050718307
+        - -0.001337587833404541
+    - - link: RIGHT_FORE_CARPUS
+      - point:
+        - 0.0015474911779165268
+        - -0.0021929796785116196
+        - -0.004500014707446098
+    lmtu_min: 0.015172426625696683
+    lmtu_max: 0.019206794807667554
+    act_tconst: 0.001
+    deact_tconst: 0.001

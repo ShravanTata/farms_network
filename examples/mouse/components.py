@@ -1853,7 +1853,7 @@ def quadruped_circuit(
     """ Full Quadruped Circuit """
 
     # read muscle config file
-    muscles_config_path = "/Users/tatarama/projects/work/research/neuromechanics/quadruped/mice/mouse-locomotion/data/config/muscles/quadruped_siggraph.yaml"
+    muscles_config_path = "quadruped_siggraph.yaml"
     muscles = generate_muscle_agonist_antagonist_pairs(muscles_config_path)
 
     # Limb circuitry

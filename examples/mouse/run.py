@@ -35,9 +35,7 @@ def generate_network(n_iterations: int):
     # MotorLayer #
     ##############
     # read muscle config file
-    muscles_config = read_yaml(
-        "/Users/tatarama/projects/work/research/neuromechanics/quadruped/mice/mouse-locomotion/data/config/muscles/quadruped_siggraph.yaml"
-    )
+    muscles_config = read_yaml("quadruped_siggraph.yaml")
 
     def update_muscle_name(name: str) -> str:
         """Update muscle name format"""
@@ -294,9 +292,7 @@ def generate_limb_circuit(n_iterations: int):
     # MotorLayer #
     ##############
     # read muscle config file
-    muscles_config = read_yaml(
-        "/Users/tatarama/projects/work/research/neuromechanics/quadruped/mice/mouse-locomotion/data/config/muscles/quadruped_siggraph.yaml"
-    )
+    muscles_config = read_yaml("quadruped_siggraph.yaml")
 
     ###################################
     # Connect patterns and motorlayer #

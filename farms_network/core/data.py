@@ -276,8 +276,19 @@ class NetworkLog(NetworkLogCy):
             )
         )
 
-        nodes = Nodes(network_options, states, outputs, external_inputs)
-        edges = Edges(network_options, connectivity=connectivity)
+        nodes = Nodes(
+            [node.name for node in network_options.nodes],
+            states,
+            outputs,
+            external_inputs
+        )
+        edges = Edges(
+            [
+                (edge.source, edge.target)
+                for edge in network_options.edges
+            ],
+            connectivity=connectivity
+        )
 
         return cls(
             times=times,
@@ -299,9 +310,47 @@ class NetworkLog(NetworkLogCy):
             'outputs': to_array(self.outputs.array),
             'external_inputs': to_array(self.external_inputs.array),
             'noise': self.noise.to_dict(),
-            # 'nodes': {node.name: node.to_dict() for node in self.nodes},
-            # 'edges': {(edge.source, edge.target): edge.to_dict() for edge in self.edges},
+            'node_names': self.nodes.names(),
+            'edge_names': self.edges.names(),
         }
+
+    @classmethod
+    def from_dict(cls, dictionary):
+        states = NetworkLogStates(
+            array=dictionary['states']['array'],
+            indices=dictionary['states']['indices'],
+        )
+        connectivity = NetworkConnectivity(
+            node_indices=dictionary['connectivity']['node_indices'],
+            edge_indices=dictionary['connectivity']['edge_indices'],
+            weights=dictionary['connectivity']['weights'],
+            index_offsets=dictionary['connectivity']['index_offsets'],
+        )
+        noise = NetworkNoise(
+            states=dictionary['noise']['states'],
+            indices=dictionary['noise']['indices'],
+            drift=dictionary['noise']['drift'],
+            diffusion=dictionary['noise']['diffusion'],
+            outputs=dictionary['noise']['outputs'],
+        )
+        outputs = DoubleArray2D(array=dictionary['outputs'])
+        external_inputs = DoubleArray2D(array=dictionary['external_inputs'])
+        node_names = dictionary['node_names']
+        edge_pairs = dictionary['edge_names']
+
+        nodes = Nodes(node_names, states, outputs, external_inputs)
+        edges = Edges(edge_pairs, connectivity)
+
+        return cls(
+            times=DoubleArray1D(array=dictionary['times']),
+            states=states,
+            connectivity=connectivity,
+            outputs=outputs,
+            external_inputs=external_inputs,
+            noise=noise,
+            nodes=nodes,
+            edges=edges,
+        )
 
     def to_file(self, filename: str, iteration: Optional[int] = None):
         """Save data to file"""
@@ -350,7 +399,7 @@ class NodeStates:
 
 
 class NodeOutput:
-    def __init__(self, network_outputs, node_index: str, node_name: str):
+    def __init__(self, network_outputs, node_index: int, node_name: str):
         self.node_name = node_name
         self._network_outputs = network_outputs
         self.ndim = self._network_outputs.array.ndim
@@ -411,19 +460,19 @@ class NodeData:
 class Nodes:
     """ Nodes """
 
-    def __init__(self, network_options: NetworkOptions, states, outputs, external_inputs):
+    def __init__(self, names, states, outputs, external_inputs):
         self._nodes = []
         self._name_to_index = {}
 
-        for idx, node_opt in enumerate(network_options.nodes):
+        for idx, name in enumerate(names):
             node = NodeData(
-                node_opt.name,
-                NodeStates(states, idx, node_opt.name),
-                NodeOutput(outputs, idx, node_opt.name),
-                NodeExternalInput(external_inputs, idx, node_opt.name),
+                name,
+                NodeStates(states, idx, name),
+                NodeOutput(outputs, idx, name),
+                NodeExternalInput(external_inputs, idx, name),
             )
             self._nodes.append(node)
-            self._name_to_index[node_opt.name] = idx
+            self._name_to_index[name] = idx
 
     def __getitem__(self, key: str):
         # Access by index
@@ -480,21 +529,21 @@ class EdgeData:
 class Edges:
     """ Edges """
 
-    def __init__(self, network_options: NetworkOptions, connectivity):
+    def __init__(self, edge_pairs, connectivity):
         self._edges: List['EdgeData'] = []
         self._name_to_index = {}
 
-        for idx, edge_opt in enumerate(network_options.edges):
+        for idx, (source, target) in enumerate(edge_pairs):
             edge = EdgeData(
-                source=edge_opt.source,
-                target=edge_opt.target,
+                source=source,
+                target=target,
                 weight=EdgeWeight(
                     network_connectivity=connectivity,
                     edge_index=connectivity._orig_to_sorted[idx],
                 )
             )
             self._edges.append(edge)
-            self._name_to_index[(edge_opt.source, edge_opt.target)] = idx
+            self._name_to_index[(source, target)] = idx
 
     @overload
     def __getitem__(self, key: int) -> EdgeData:
@@ -522,7 +571,7 @@ class Edges:
 
 
 class NetworkData(NetworkDataCy):
-    """ Network data """
+    """ Network data the integration scheme operates on """
 
     def __init__(
         self,
@@ -589,8 +638,16 @@ class NetworkData(NetworkDataCy):
                 dtype=NPDTYPE,
             )
         )
-        nodes = Nodes(network_options, states, outputs, external_inputs)
-        edges = Edges(network_options, connectivity)
+        nodes = Nodes(
+            [node.name for node in network_options.nodes],
+            states,
+            outputs,
+            external_inputs
+        )
+        edges = Edges(
+            [(edge.source, edge.target) for edge in network_options.edges],
+            connectivity=connectivity
+        )
 
         noise = NetworkNoise.from_options(network_options)
 

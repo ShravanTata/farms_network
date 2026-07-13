@@ -13,9 +13,6 @@ cdef enum:
 
 cdef struct edge_t:
     unsigned int type           # Type of connection
-    # Edge parameters
-    unsigned int nparams
-    void* params
 
 
 cdef class EdgeCy:

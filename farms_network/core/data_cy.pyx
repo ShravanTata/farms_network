@@ -38,6 +38,34 @@ cdef class NetworkStatesCy(DoubleArray1D):
         assert self.indices.is_c_contig()
 
 
+cdef class NetworkNodeParametersCy(DoubleArray1D):
+    """ Node parameters array """
+
+    def __init__(
+        self,
+        array: NDArray[(Any,), np.double],
+        indices: NDArray[(Any,), np.uintc],
+    ):
+        super().__init__(array)
+        assert self.array.is_c_contig()
+        self.indices = np.array(indices, dtype=np.uintc)
+        assert self.indices.is_c_contig()
+
+
+cdef class NetworkEdgeParametersCy(DoubleArray1D):
+    """ Edge parameters array """
+
+    def __init__(
+        self,
+        array: NDArray[(Any,), np.double],
+        indices: NDArray[(Any,), np.uintc],
+    ):
+        super().__init__(array)
+        assert self.array.is_c_contig()
+        self.indices = np.array(indices, dtype=np.uintc)
+        assert self.indices.is_c_contig()
+
+
 cdef class NetworkLogStatesCy(DoubleArray2D):
     """ State array """
 

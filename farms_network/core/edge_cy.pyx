@@ -23,8 +23,6 @@ cdef class EdgeCy:
         if self._edge is NULL:
             raise MemoryError("Failed to allocate memory for edge_t")
         self._edge.type = <int>types[edge_type]
-        self._edge.params = NULL
-        self._edge.nparams = 0
 
     def __dealloc__(self):
         if self._edge is not NULL:
@@ -36,7 +34,3 @@ cdef class EdgeCy:
     @property
     def type(self):
         return self._edge.type
-
-    @property
-    def nparams(self):
-        return self._edge.nparams

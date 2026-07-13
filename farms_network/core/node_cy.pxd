@@ -8,6 +8,8 @@ cdef struct node_inputs_t:
     double* weights              # Network connection weights
     unsigned int* node_indices   # Which nodes provide input
     unsigned int* edge_indices   # Which edges provide input
+    double* edge_params            # Flat edge parameters array (network-wide)
+    unsigned int* edge_params_indices  # Per-edge offset into edge_params
     double external_input        # external input
     int ninputs                  # Number of inputs
     unsigned int node_index      # This node's index (for self-reference)
@@ -25,17 +27,19 @@ cdef struct processed_inputs_t:
 # Receives n-inputs and produces one output to be fed into ode/output_tf
 cdef void base_input_tf(
     double time,
+    const double* params,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
-    processed_inputs_t* out
+    processed_inputs_t* out,
 )
 
 
 # ODE to compute the neural dynamics based on current state and inputs
 cdef void base_ode(
     double time,
+    const double* params,
     const double* states,
     double* derivatives,
     processed_inputs_t input_vals,
@@ -47,6 +51,7 @@ cdef void base_ode(
 # Output transfer function based on current state
 cdef double base_output_tf(
     double time,
+    const double* params,
     const double* states,
     processed_inputs_t input_vals,
     double noise,
@@ -65,20 +70,19 @@ cdef struct node_t:
 
     bint is_statefull           # Flag indicating whether the node is stateful. (ODE)
 
-    # Parameters
-    void* params                # Pointer to the parameters of the node.
-
     # Functions
     void input_tf(
         double time,
+        const double* params,
         const double* states,
         const node_inputs_t inputs,
         const node_t* node,
         const edge_t** edges,
-        processed_inputs_t* out
+        processed_inputs_t* out,
     ) noexcept
     void ode(
         double time,
+        const double* params,
         const double* states,
         double* derivatives,
         processed_inputs_t input_vals,
@@ -87,6 +91,7 @@ cdef struct node_t:
     ) noexcept
     double output_tf(
         double time,
+        const double* params,
         const double* states,
         processed_inputs_t input_vals,
         double noise,

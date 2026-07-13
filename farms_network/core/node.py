@@ -12,15 +12,15 @@ class Node(ABC):
 
     CY_NODE_CLASS: Type[NodeCy] = None
 
-    def __init__(self, name: str, model: str, **parameters):
+    def __init__(self, name: str, model: str):
         self.name: str = name        # Unique name of the node
         self.model: str = model      # Type of the model (e.g., "empty")
-        self._node_cy = self._create_cy_node(**parameters)
+        self._node_cy = self._create_cy_node()
 
-    def _create_cy_node(self, **kwargs) -> NodeCy:
+    def _create_cy_node(self) -> NodeCy:
         if self.CY_NODE_CLASS is None:
             raise NotImplementedError("Must define CY_NODE_CLASS")
-        return self.CY_NODE_CLASS(**kwargs)
+        return self.CY_NODE_CLASS()
 
     # General node properties
     @property
@@ -60,11 +60,7 @@ class Node(ABC):
     @classmethod
     def from_options(cls, node_options: NodeOptions):
         """ From node options """
-        name: str = node_options.name
-        parameters = node_options.parameters
-        if parameters is None:
-            parameters = {}
-        return cls(name, **parameters)
+        return cls(node_options.name)
 
     def to_options(self):
         """ To node options """

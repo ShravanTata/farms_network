@@ -17,6 +17,8 @@ cdef class NetworkDataCy:
         public DoubleArray1D tmp_outputs
         public NetworkConnectivityCy connectivity
         public NetworkNoiseCy noise
+        public NetworkNodeParametersCy parameters
+        public NetworkEdgeParametersCy edge_parameters
 
 
 cdef class NetworkLogCy:
@@ -27,6 +29,18 @@ cdef class NetworkLogCy:
         public DoubleArray2D outputs
         public NetworkConnectivityCy connectivity
         public NetworkNoiseCy noise
+
+
+cdef class NetworkNodeParametersCy(DoubleArray1D):
+    """ Node parameters array """
+    cdef:
+        public UITYPEv1 indices
+
+
+cdef class NetworkEdgeParametersCy(DoubleArray1D):
+    """ Edge parameters array """
+    cdef:
+        public UITYPEv1 indices
 
 
 cdef class NetworkStatesCy(DoubleArray1D):

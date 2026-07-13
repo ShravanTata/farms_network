@@ -11,16 +11,16 @@ class Edge:
 
     CY_EDGE_CLASS: Type[EdgeCy] = None
 
-    def __init__(self, source: str, target: str, edge_type: EdgeTypes, model: str, **kwargs):
+    def __init__(self, source: str, target: str, edge_type: EdgeTypes, model: str):
         self.model: str = model
         self.source: str = source
         self.target: str = target
-        self._edge_cy = self._create_cy_edge(edge_type, **kwargs)
+        self._edge_cy = self._create_cy_edge(edge_type)
 
-    def _create_cy_edge(self, edge_type, **kwargs) -> EdgeCy:
+    def _create_cy_edge(self, edge_type) -> EdgeCy:
         if self.CY_EDGE_CLASS is None:
-            return EdgeCy(edge_type, **kwargs)
-        return self.CY_EDGE_CLASS(edge_type, **kwargs)
+            return EdgeCy(edge_type)
+        return self.CY_EDGE_CLASS(edge_type)
 
     @property
     def edge_type(self):
@@ -33,10 +33,4 @@ class Edge:
     @classmethod
     def from_options(cls, edge_options: EdgeOptions):
         """ From edge options """
-        model = edge_options.model
-        source: str = edge_options.source
-        target: str = edge_options.target
-        edge_type: EdgeTypes = edge_options.type
-        # Need to generate parameters based on the model specified
-        parameter_options: Dict = {} if edge_options.parameters is None else edge_options.parameters
-        return cls(source, target, edge_type, model, **parameter_options)
+        return cls(edge_options.source, edge_options.target, edge_options.type, edge_options.model)

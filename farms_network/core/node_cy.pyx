@@ -14,17 +14,19 @@ from farms_network.models import Models
 # Receives n-inputs and produces one output to be fed into ode/output_tf
 cdef void base_input_tf(
     double time,
+    const double* params,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
-    processed_inputs_t* out
+    processed_inputs_t* out,
 ) noexcept:
     raise NotImplementedError("input_tf must be implemented by node type")
 
 # ODE to compute the neural dynamics based on current state and inputs
 cdef void base_ode(
     double time,
+    const double* params,
     const double* states,
     double* derivatives,
     processed_inputs_t input_vals,
@@ -37,6 +39,7 @@ cdef void base_ode(
 # Output transfer function based on current state
 cdef double base_output_tf(
     double time,
+    const double* params,
     const double* states,
     processed_inputs_t input_vals,
     double noise,
@@ -58,9 +61,6 @@ cdef class NodeCy:
         self._node.input_tf = base_input_tf
         self._node.ode = base_ode
         self._node.output_tf = base_output_tf
-
-        # Setup parameters
-        self._node.params = NULL
 
     def __init__(self, **kwargs):
         ...
@@ -90,12 +90,15 @@ cdef class NodeCy:
     def is_statefull(self):
         return self._node.is_statefull
 
-    def ode(self, time, double[:] states, double[:] derivatives, input_val, noise):
+    def ode(self, time, double[:] states, double[:] derivatives, input_val, noise,
+            double[::1] params=None):
         cdef double* states_ptr = &states[0]
         cdef double* derivatives_ptr = &derivatives[0]
-        self._node.ode(time, states_ptr, derivatives_ptr, input_val, noise, self._node)
+        cdef const double* params_ptr = &params[0] if params is not None else NULL
+        self._node.ode(time, params_ptr, states_ptr, derivatives_ptr, input_val, noise, self._node)
 
-    def output_tf(self, time, double[:] states, input_val, noise):
+    def output_tf(self, time, double[:] states, input_val, noise, double[::1] params=None):
         """ Call C node output """
         cdef double* states_ptr = &states[0]
-        return self._node.output_tf(time, states_ptr, input_val, noise, self._node)
+        cdef const double* params_ptr = &params[0] if params is not None else NULL
+        return self._node.output_tf(time, params_ptr, states_ptr, input_val, noise, self._node)

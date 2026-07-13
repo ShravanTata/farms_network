@@ -5,7 +5,7 @@ Main data structure for the network
 """
 
 from pprint import pprint
-from typing import Dict, Iterable, List, Tuple, Union, overload, Optional
+from typing import Dict, Iterable, List, Optional, Tuple, Union, overload
 
 import numpy as np
 from farms_core import pylog
@@ -16,10 +16,11 @@ from farms_core.array.types import (NDARRAY_V1, NDARRAY_V1_D, NDARRAY_V2_D,
                                     NDARRAY_V3_D)
 from farms_core.io.hdf5 import dict_to_hdf5, hdf5_to_dict
 
-from .data_cy import (NetworkConnectivityCy, NetworkDataCy, NetworkLogCy, NetworkNoiseCy,
-                      NetworkStatesCy, NetworkLogStatesCy)
+from .data_cy import (NetworkConnectivityCy, NetworkDataCy,
+                      NetworkEdgeParametersCy, NetworkLogCy,
+                      NetworkLogStatesCy, NetworkNodeParametersCy,
+                      NetworkNoiseCy, NetworkStatesCy)
 from .options import NetworkOptions, NodeOptions, NodeStateOptions
-
 
 NPDTYPE = np.float64
 NPUITYPE = np.uintc
@@ -176,6 +177,82 @@ class NetworkNoise(NetworkNoiseCy):
             'drift': to_array(self.drift),
             'diffusion': to_array(self.diffusion),
             'outputs': to_array(self.outputs),
+        }
+
+
+class NetworkNodeParameters(NetworkNodeParametersCy):
+    """ Flat numpy array of all node parameters """
+
+    def __init__(self, array, indices, names):
+        super().__init__(array, indices)
+        self.names: List[List[str]] = names  # names_per_node
+
+    @classmethod
+    def from_options(cls, network_options: NetworkOptions):
+        names_per_node: List[List[str]] = []
+        nparams_per_node: List[int] = []
+        for node_opts in network_options.nodes:
+            params = node_opts.parameters
+            if params is None:
+                names_per_node.append([])
+                nparams_per_node.append(0)
+            else:
+                names = list(params.keys())
+                names_per_node.append(names)
+                nparams_per_node.append(len(names))
+        total = sum(nparams_per_node)
+        indices = np.cumsum([0] + nparams_per_node, dtype=NPUITYPE)
+        array = np.zeros(total, dtype=NPDTYPE)
+        for i, node_opts in enumerate(network_options.nodes):
+            if not names_per_node[i]:
+                continue
+            for j, name in enumerate(names_per_node[i]):
+                array[indices[i] + j] = getattr(node_opts.parameters, name)
+        return cls(array=array, indices=indices, names=names_per_node)
+
+    def to_dict(self, iteration: Optional[int] = None) -> Dict:
+        """Convert data to dictionary"""
+        return {
+            'array': to_array(self.array),
+            'indices': to_array(self.indices),
+        }
+
+
+class NetworkEdgeParameters(NetworkEdgeParametersCy):
+    """ Flat numpy array of all edge parameters """
+
+    def __init__(self, array, indices, names):
+        super().__init__(array, indices)
+        self.names: List[List[str]] = names  # names_per_edge
+
+    @classmethod
+    def from_options(cls, network_options: NetworkOptions):
+        names_per_edge: List[List[str]] = []
+        nparams_per_edge: List[int] = []
+        for edge_opts in network_options.edges:
+            params = edge_opts.parameters
+            if params is None:
+                names_per_edge.append([])
+                nparams_per_edge.append(0)
+            else:
+                names = list(params.keys())
+                names_per_edge.append(names)
+                nparams_per_edge.append(len(names))
+        total = sum(nparams_per_edge)
+        indices = np.cumsum([0] + nparams_per_edge, dtype=NPUITYPE)
+        array = np.zeros(total, dtype=NPDTYPE)
+        for i, edge_opts in enumerate(network_options.edges):
+            if not names_per_edge[i]:
+                continue
+            for j, name in enumerate(names_per_edge[i]):
+                array[indices[i] + j] = getattr(edge_opts.parameters, name)
+        return cls(array=array, indices=indices, names=names_per_edge)
+
+    def to_dict(self, iteration: Optional[int] = None) -> Dict:
+        """Convert data to dictionary"""
+        return {
+            'array': to_array(self.array),
+            'indices': to_array(self.indices),
         }
 
 
@@ -441,6 +518,72 @@ class NodeExternalInput:
         raise AttributeError("Cannot assign to values in logging mode.")
 
 
+class NodeParameters:
+    """ Accessor for a single node's slice of the flat parameters array """
+
+    def __init__(
+        self,
+        network_parameters: 'NetworkNodeParameters',
+        node_index: int,
+        node_name: str,
+        names: List[str],
+    ):
+        self._network_parameters = network_parameters
+        self._start: int = int(network_parameters.indices[node_index])
+        self._end: int = int(network_parameters.indices[node_index + 1])
+        self._names: List[str] = names
+        self._name_to_idx: Dict[str, int] = {n: i for i, n in enumerate(names)}
+        self._has_params: bool = self._end > self._start
+
+    @property
+    def values(self) -> np.ndarray:
+        return self._network_parameters.array[self._start:self._end]
+
+    def __getitem__(self, name: str) -> float:
+        return float(self._network_parameters.array[self._start + self._name_to_idx[name]])
+
+    def __setitem__(self, name: str, value: float):
+        self._network_parameters.array[self._start + self._name_to_idx[name]] = value
+
+    def as_dict(self) -> Dict[str, float]:
+        return {
+            n: float(self._network_parameters.array[self._start + i])
+            for i, n in enumerate(self._names)
+        }
+
+
+class EdgeParameters:
+    """ Accessor for a single edge's slice of the flat edge parameters array """
+
+    def __init__(
+        self,
+        network_edge_parameters: 'NetworkEdgeParameters',
+        edge_index: int,
+        names: List[str],
+    ):
+        self._network_edge_parameters = network_edge_parameters
+        self._start: int = int(network_edge_parameters.indices[edge_index])
+        self._end: int = int(network_edge_parameters.indices[edge_index + 1])
+        self._names: List[str] = names
+        self._name_to_idx: Dict[str, int] = {n: i for i, n in enumerate(names)}
+
+    @property
+    def values(self) -> np.ndarray:
+        return self._network_edge_parameters.array[self._start:self._end]
+
+    def __getitem__(self, name: str) -> float:
+        return float(self._network_edge_parameters.array[self._start + self._name_to_idx[name]])
+
+    def __setitem__(self, name: str, value: float):
+        self._network_edge_parameters.array[self._start + self._name_to_idx[name]] = value
+
+    def as_dict(self) -> Dict[str, float]:
+        return {
+            n: float(self._network_edge_parameters.array[self._start + i])
+            for i, n in enumerate(self._names)
+        }
+
+
 class NodeData:
     """ Accesssor for Node Data """
     def __init__(
@@ -449,27 +592,33 @@ class NodeData:
         states: NodeStates,
         output: NodeOutput,
         external_input: NodeExternalInput,
+        parameters: Optional['NodeParameters'] = None,
     ):
         super().__init__()
         self.name: str = name
         self.states: NodeStates = states
         self.output: NodeOutput = output
         self.external_input: NodeExternalInput = external_input
+        self.parameters: Optional[NodeParameters] = parameters
 
 
 class Nodes:
     """ Nodes """
 
-    def __init__(self, names, states, outputs, external_inputs):
+    def __init__(self, names, states, outputs, external_inputs, parameters=None):
         self._nodes = []
         self._name_to_index = {}
 
         for idx, name in enumerate(names):
+            node_params = None
+            if parameters is not None:
+                node_params = NodeParameters(parameters, idx, name, parameters.names[idx])
             node = NodeData(
                 name,
                 NodeStates(states, idx, name),
                 NodeOutput(outputs, idx, name),
                 NodeExternalInput(external_inputs, idx, name),
+                parameters=node_params,
             )
             self._nodes.append(node)
             self._name_to_index[name] = idx
@@ -518,29 +667,35 @@ class EdgeData:
         self,
         source: str,
         target: str,
-        weight: EdgeWeight
+        weight: EdgeWeight,
+        parameters: Optional['EdgeParameters'] = None,
     ):
         super().__init__()
         self.source: str = source
         self.target: str = target
         self.weight: EdgeWeight = weight
+        self.parameters: Optional[EdgeParameters] = parameters
 
 
 class Edges:
     """ Edges """
 
-    def __init__(self, edge_pairs, connectivity):
+    def __init__(self, edge_pairs, connectivity, edge_parameters=None):
         self._edges: List['EdgeData'] = []
         self._name_to_index = {}
 
         for idx, (source, target) in enumerate(edge_pairs):
+            edge_params = None
+            if edge_parameters is not None:
+                edge_params = EdgeParameters(edge_parameters, idx, edge_parameters.names[idx])
             edge = EdgeData(
                 source=source,
                 target=target,
                 weight=EdgeWeight(
                     network_connectivity=connectivity,
                     edge_index=connectivity._orig_to_sorted[idx],
-                )
+                ),
+                parameters=edge_params,
             )
             self._edges.append(edge)
             self._name_to_index[(source, target)] = idx
@@ -575,6 +730,8 @@ class NetworkData(NetworkDataCy):
 
     def __init__(
         self,
+        parameters: 'NetworkNodeParameters',
+        edge_parameters: 'NetworkEdgeParameters',
         states: NetworkStates,
         derivatives: NetworkStates,
         connectivity: NetworkConnectivity,
@@ -589,6 +746,8 @@ class NetworkData(NetworkDataCy):
 
         super().__init__()
 
+        self.parameters: NetworkNodeParameters = parameters
+        self.edge_parameters: NetworkEdgeParameters = edge_parameters
         self.states: NetworkStates = states
         self.derivatives: NetworkStates = derivatives
         self.connectivity: NetworkConnectivity = connectivity
@@ -638,20 +797,26 @@ class NetworkData(NetworkDataCy):
                 dtype=NPDTYPE,
             )
         )
+        parameters = NetworkNodeParameters.from_options(network_options)
+        edge_parameters = NetworkEdgeParameters.from_options(network_options)
         nodes = Nodes(
             [node.name for node in network_options.nodes],
             states,
             outputs,
-            external_inputs
+            external_inputs,
+            parameters=parameters,
         )
         edges = Edges(
             [(edge.source, edge.target) for edge in network_options.edges],
-            connectivity=connectivity
+            connectivity=connectivity,
+            edge_parameters=edge_parameters,
         )
 
         noise = NetworkNoise.from_options(network_options)
 
         return cls(
+            parameters=parameters,
+            edge_parameters=edge_parameters,
             states=states,
             derivatives=derivatives,
             connectivity=connectivity,
@@ -667,6 +832,8 @@ class NetworkData(NetworkDataCy):
         """Convert data to dictionary"""
         return {
             'times': to_array(self.times.array),
+            'parameters': self.parameters.to_dict(),
+            'edge_parameters': self.edge_parameters.to_dict(),
             'states': self.states.to_dict(),
             'derivatives': self.derivatives.to_dict(),
             'connectivity': self.connectivity.to_dict(),

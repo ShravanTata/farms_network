@@ -16,8 +16,8 @@ from ..noise.ornstein_uhlenbeck_cy cimport OrnsteinUhlenbeckCy
 
 from .data import NetworkData, NetworkStates
 
-from .data_cy cimport (NetworkConnectivityCy, NetworkDataCy, NetworkNoiseCy,
-                       NetworkStatesCy)
+from .data_cy cimport (NetworkConnectivityCy, NetworkDataCy, NetworkEdgeParametersCy,
+                       NetworkNoiseCy, NetworkStatesCy)
 from .node_cy cimport processed_inputs_t
 
 from typing import List
@@ -48,6 +48,7 @@ cdef inline void ode(
     cdef unsigned int nnodes = c_network.nnodes
     cdef processed_inputs_t processed_inputs
     cdef node_inputs_t node_inputs
+    cdef const double* node_params
 
     # It is important to use the states passed to the function and not from the data.states
     cdef double* states_ptr = &states[0]
@@ -57,6 +58,10 @@ cdef inline void ode(
     cdef double* noise = c_network.noise.outputs
 
     node_inputs.network_outputs = c_network.outputs
+    node_inputs.network_states   = states_ptr
+    node_inputs.states_indices   = c_network.states_indices
+    node_inputs.edge_params         = c_network.edge_params
+    node_inputs.edge_params_indices = c_network.edge_params_indices
 
     for j in range(nnodes):
         __node = c_nodes[j]
@@ -77,30 +82,39 @@ cdef inline void ode(
         processed_inputs.cholinergic = 0.0
         processed_inputs.phase_coupling = 0.0
 
+        # Per-node params slice from the flat network params array
+        if c_network.params is not NULL:
+            node_params = c_network.params + c_network.params_indices[j]
+        else:
+            node_params = NULL
+
         __node.input_tf(
             time,
+            node_params,
             states_ptr + c_network.states_indices[j],
             <const node_inputs_t> node_inputs,
             <const node_t *> __node,
             <const edge_t **> c_edges,
-            &processed_inputs
+            &processed_inputs,
         )
 
         if __node.is_statefull:
             # Compute the ode
             __node.ode(
                 time,
+                node_params,
                 <const double *> states_ptr + c_network.states_indices[j],
                 derivatives_ptr + c_network.states_indices[j],
                 processed_inputs,
                 noise[j],
-                <const node_t *> __node
+                <const node_t *> __node,
             )
 
         # Compute output (for stateless nodes this is the actual output;
         # for stateful nodes this updates tmp_outputs for the post-evaluate swap)
         c_network.tmp_outputs[j] = __node.output_tf(
             time,
+            node_params,
             <const double *> states_ptr + c_network.states_indices[j],
             processed_inputs,
             noise[j],
@@ -149,6 +163,22 @@ cdef inline void _init_data_pointers(network_t* net, NetworkDataCy data):
     net.noise.diffusion = &data.noise.diffusion[0] if data.noise.diffusion.size > 0 else NULL
     net.noise.indices = &data.noise.indices[0] if data.noise.indices.size > 0 else NULL
     net.noise.outputs = &data.noise.outputs[0] if data.noise.outputs.size > 0 else NULL
+
+    # Parameters (optional — network may have nodes with no params)
+    if data.parameters.array.size > 0:
+        net.params = &data.parameters.array[0]
+        net.params_indices = &data.parameters.indices[0]
+    else:
+        net.params = NULL
+        net.params_indices = NULL
+
+    # Edge parameters (optional — network may have edges with no params)
+    if data.edge_parameters.array.size > 0:
+        net.edge_params = &data.edge_parameters.array[0]
+        net.edge_params_indices = &data.edge_parameters.indices[0]
+    else:
+        net.edge_params = NULL
+        net.edge_params_indices = NULL
 
 
 cdef inline void _free_network(network_t* net) noexcept:

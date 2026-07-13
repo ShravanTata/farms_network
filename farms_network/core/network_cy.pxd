@@ -46,6 +46,14 @@ cdef struct network_t:
     double* weights
     unsigned int* index_offsets
 
+    # Node parameters (flat array, per-node offsets)
+    double* params
+    unsigned int* params_indices
+
+    # Edge parameters (flat array, per-edge offsets, indexed by original edge index)
+    double* edge_params
+    unsigned int* edge_params_indices
+
     # Noise
     noise_t noise
 

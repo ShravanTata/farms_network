@@ -12,5 +12,5 @@ class RelayNode(Node):
 
     CY_NODE_CLASS = RelayNodeCy
 
-    def __init__(self, name: str, **kwargs):
-        super().__init__(name=name, model=Models.RELAY, **kwargs)
+    def __init__(self, name: str):
+        super().__init__(name=name, model=Models.RELAY)

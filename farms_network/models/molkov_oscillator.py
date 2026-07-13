@@ -11,16 +11,15 @@ class MolkovOscillatorNode(Node):
 
     CY_NODE_CLASS = MolkovOscillatorNodeCy
 
-    def __init__(self, name: str, **kwargs):
-        super().__init__(name=name, model=Models.MOLKOV_OSCILLATOR, **kwargs)
+    def __init__(self, name: str):
+        super().__init__(name=name, model=Models.MOLKOV_OSCILLATOR)
 
 
 class MolkovOscillatorEdge(Edge):
 
     CY_EDGE_CLASS = MolkovOscillatorEdgeCy
 
-    def __init__(self, source, target, edge_type, model=Models.MOLKOV_OSCILLATOR, **kwargs):
+    def __init__(self, source, target, edge_type, model=Models.MOLKOV_OSCILLATOR):
         super().__init__(
-            source=source, target=target, edge_type=edge_type,
-            model=Models.MOLKOV_OSCILLATOR, **kwargs
+            source=source, target=target, edge_type=edge_type, model=Models.MOLKOV_OSCILLATOR
         )

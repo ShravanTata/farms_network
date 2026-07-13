@@ -13,14 +13,13 @@ cpdef enum STATE:
 
 cdef void relu_input_tf(
     double time,
+    const double* params,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
-    processed_inputs_t* out
+    processed_inputs_t* out,
 ) noexcept:
-    cdef relu_params_t* params = (<relu_params_t*> node[0].params)
-
     cdef:
         double _sum = 0.0
         unsigned int j, ninputs
@@ -36,6 +35,7 @@ cdef void relu_input_tf(
 
 cdef void relu_ode(
     double time,
+    const double* params,
     const double* states,
     double* derivatives,
     processed_inputs_t input_vals,
@@ -47,14 +47,14 @@ cdef void relu_ode(
 
 cdef double relu_output_tf(
     double time,
+    const double* params,
     const double* states,
     processed_inputs_t input_vals,
     double noise,
     const node_t* node,
 ) noexcept:
-    cdef relu_params_t* params = (<relu_params_t*> node[0].params)
     cdef double input_val = input_vals.generic
-    cdef double res = max(0.0, params.gain*(params.sign*input_val + params.offset))
+    cdef double res = max(0.0, params[<int>PARAM.gain]*(params[<int>PARAM.sign]*input_val + params[<int>PARAM.offset]))
     return res
 
 
@@ -69,34 +69,6 @@ cdef class ReLUNodeCy(NodeCy):
         self._node.is_statefull = False
         self._node.input_tf = relu_input_tf
         self._node.output_tf = relu_output_tf
-        # parameters
-        self.params = relu_params_t()
-        self._node.params = <void*>&self.params
-        if self._node.params is NULL:
-            raise MemoryError("Failed to allocate memory for node parameters")
 
-    def __init__(self, **kwargs):
+    def __init__(self):
         super().__init__()
-
-        # Set node parameters
-        self.params.gain = kwargs.pop("gain")
-        self.params.sign = kwargs.pop("sign")
-        self.params.offset = kwargs.pop("offset")
-        if kwargs:
-            raise Exception(f'Unknown kwargs: {kwargs}')
-
-    @property
-    def gain(self):
-        """ Gain property """
-        return (<relu_params_t*> self._node.params)[0].gain
-
-    @gain.setter
-    def gain(self, value):
-        """ Set gain """
-        (<relu_params_t*> self._node.params)[0].gain = value
-
-    @property
-    def parameters(self):
-        """ Parameters in the network """
-        cdef relu_params_t params = (<relu_params_t*> self._node.params)[0]
-        return params

@@ -10,17 +10,13 @@ class OscillatorNode(Node):
 
     CY_NODE_CLASS = OscillatorNodeCy
 
-    def __init__(self, name: str, **kwargs):
-        super().__init__(name=name, model=Models.OSCILLATOR, **kwargs)
-
-    # Oscillator-specific properties
+    def __init__(self, name: str):
+        super().__init__(name=name, model=Models.OSCILLATOR)
 
 
 class OscillatorEdge(Edge):
 
     CY_EDGE_CLASS = OscillatorEdgeCy
 
-    def __init__(self, source, target, edge_type, model=Models.OSCILLATOR, **kwargs):
-        super().__init__(
-            source=source, target=target, edge_type=edge_type, model=Models.OSCILLATOR, **kwargs
-        )
+    def __init__(self, source, target, edge_type, model=Models.OSCILLATOR):
+        super().__init__(source=source, target=target, edge_type=edge_type, model=Models.OSCILLATOR)

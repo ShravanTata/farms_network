@@ -12,16 +12,18 @@ cdef enum:
 
 cdef void relay_input_tf(
     double time,
+    const double* params,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
-    processed_inputs_t* out
+    processed_inputs_t* out,
 ) noexcept
 
 
 cdef void relay_ode(
     double time,
+    const double* params,
     const double* states,
     double* derivatives,
     processed_inputs_t input_val,
@@ -32,6 +34,7 @@ cdef void relay_ode(
 
 cdef double relay_output_tf(
     double time,
+    const double* params,
     const double* states,
     processed_inputs_t input_val,
     double noise,

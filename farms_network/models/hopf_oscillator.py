@@ -8,7 +8,5 @@ class HopfOscillatorNode(Node):
 
     CY_NODE_CLASS = HopfOscillatorNodeCy
 
-    def __init__(self, name: str, **kwargs):
-        super().__init__(name=name, model=Models.OSCILLATOR, **kwargs)
-
-    # Hopf Oscillator-specific properties
+    def __init__(self, name: str):
+        super().__init__(name=name, model=Models.OSCILLATOR)

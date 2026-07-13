@@ -12,32 +12,34 @@ cdef enum:
     STATE_A = 1
 
 
-cdef packed struct li_danner_params_t:
-
-    double c_m                     # pF
-    double g_leak                  # nS
-    double e_leak                  # mV
-    double v_max                   # mV
-    double v_thr                   # mV
-    double g_syn_e                 # nS
-    double g_syn_i                 # nS
-    double e_syn_e                 # mV
-    double e_syn_i                 # mV
-    double tau_ch                  # ms
+cpdef enum PARAM:
+    nparams = 10
+    c_m = 0
+    g_leak = 1
+    e_leak = 2
+    v_max = 3
+    v_thr = 4
+    g_syn_e = 5
+    g_syn_i = 6
+    e_syn_e = 7
+    e_syn_i = 8
+    tau_ch = 9
 
 
 cdef void li_danner_input_tf(
     double time,
+    const double* params,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
-    processed_inputs_t* out
+    processed_inputs_t* out,
 ) noexcept
 
 
 cdef void li_danner_ode(
     double time,
+    const double* params,
     const double* states,
     double* derivatives,
     processed_inputs_t input_vals,
@@ -48,6 +50,7 @@ cdef void li_danner_ode(
 
 cdef double li_danner_output_tf(
     double time,
+    const double* params,
     const double* states,
     processed_inputs_t input_vals,
     double noise,
@@ -57,6 +60,3 @@ cdef double li_danner_output_tf(
 
 cdef class LIDannerNodeCy(NodeCy):
     """ Python interface to LI Danner Node C-Structure """
-
-    cdef:
-        li_danner_params_t params

@@ -14,41 +14,43 @@ cdef enum:
     STATE_H = 1
 
 
-cdef packed struct li_nap_danner_params_t:
-
-    double c_m                  # pF
-    double g_leak               # nS
-    double e_leak               # mV
-    double g_nap                # nS
-    double e_na                 # mV
-    double v1_2_m               # mV
-    double k_m                  #
-    double v1_2_h               # mV
-    double k_h                  #
-    double v1_2_t               # mV
-    double k_t                  #
-    double tau_0                # mS
-    double tau_max              # mS
-    double v_max                # mV
-    double v_thr                # mV
-    double g_syn_e                 # nS
-    double g_syn_i                 # nS
-    double e_syn_e                 # mV
-    double e_syn_i                 # mV
+cpdef enum PARAM:
+    nparams = 19
+    c_m = 0
+    g_nap = 1
+    e_na = 2
+    v1_2_m = 3
+    k_m = 4
+    v1_2_h = 5
+    k_h = 6
+    v1_2_t = 7
+    k_t = 8
+    g_leak = 9
+    e_leak = 10
+    tau_0 = 11
+    tau_max = 12
+    v_max = 13
+    v_thr = 14
+    g_syn_e = 15
+    g_syn_i = 16
+    e_syn_e = 17
+    e_syn_i = 18
 
 
 cdef void li_nap_danner_input_tf(
     double time,
+    const double* params,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
-    processed_inputs_t* out
+    processed_inputs_t* out,
 ) noexcept
 
 
 cdef void li_nap_danner_ode(
     double time,
+    const double* params,
     const double* states,
     double* derivatives,
     processed_inputs_t input_vals,
@@ -59,6 +61,7 @@ cdef void li_nap_danner_ode(
 
 cdef double li_nap_danner_output_tf(
     double time,
+    const double* params,
     const double* states,
     processed_inputs_t input_vals,
     double noise,
@@ -68,6 +71,3 @@ cdef double li_nap_danner_output_tf(
 
 cdef class LINaPDannerNodeCy(NodeCy):
     """ Python interface to LI Danner NaP Node C-Structure """
-
-    cdef:
-        li_nap_danner_params_t params

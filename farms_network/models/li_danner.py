@@ -8,5 +8,5 @@ class LIDannerNode(Node):
 
     CY_NODE_CLASS = LIDannerNodeCy
 
-    def __init__(self, name: str, **kwargs):
-        super().__init__(name=name, model=Models.LI_DANNER, **kwargs)
+    def __init__(self, name: str):
+        super().__init__(name=name, model=Models.LI_DANNER)

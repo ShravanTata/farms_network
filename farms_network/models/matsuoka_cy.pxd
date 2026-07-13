@@ -12,28 +12,20 @@ cdef enum:
     STATE_W= 1
 
 
-cdef packed struct matsuoka_params_t:
-
-    double c                    #
-    double b                    #
-    double tau                  #
-    double T                    #
-    double theta                #
-    double nu                   #
-
-
 cdef void matsuoka_input_tf(
     double time,
+    const double* params,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
-    processed_inputs_t* out
+    processed_inputs_t* out,
 ) noexcept
 
 
 cdef void matsuoka_ode(
     double time,
+    const double* params,
     const double* states,
     double* derivatives,
     processed_inputs_t input_vals,
@@ -44,6 +36,7 @@ cdef void matsuoka_ode(
 
 cdef double matsuoka_output_tf(
     double time,
+    const double* params,
     const double* states,
     processed_inputs_t input_vals,
     double noise,
@@ -53,6 +46,3 @@ cdef double matsuoka_output_tf(
 
 cdef class MatsuokaNodeCy(NodeCy):
     """ Python interface to Matsuoka Node C-Structure """
-
-    cdef:
-        matsuoka_params_t params

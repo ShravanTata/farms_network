@@ -10,23 +10,26 @@ cdef enum:
     NSTATES = 0
 
 
-cdef packed struct linear_params_t:
-    double slope
-    double bias
+cpdef enum PARAM:
+    nparams = 2
+    slope = 0
+    bias = 1
 
 
 cdef void linear_input_tf(
     double time,
+    const double* params,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
-    processed_inputs_t* out
+    processed_inputs_t* out,
 ) noexcept
 
 
 cdef void linear_ode(
     double time,
+    const double* params,
     const double* states,
     double* derivatives,
     processed_inputs_t input_val,
@@ -37,6 +40,7 @@ cdef void linear_ode(
 
 cdef double linear_output_tf(
     double time,
+    const double* params,
     const double* states,
     processed_inputs_t input_val,
     double noise,
@@ -46,6 +50,3 @@ cdef double linear_output_tf(
 
 cdef class LinearNodeCy(NodeCy):
     """ Python interface to Linear Node C-Structure """
-
-    cdef:
-        linear_params_t params

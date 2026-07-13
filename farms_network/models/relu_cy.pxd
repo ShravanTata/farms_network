@@ -10,24 +10,27 @@ cdef enum:
     NSTATES = 0
 
 
-cdef packed struct relu_params_t:
-    double gain
-    double sign
-    double offset
+cpdef enum PARAM:
+    nparams = 3
+    gain = 0
+    sign = 1
+    offset = 2
 
 
 cdef void relu_input_tf(
     double time,
+    const double* params,
     const double* states,
     const node_inputs_t inputs,
     const node_t* node,
     const edge_t** edges,
-    processed_inputs_t* out
+    processed_inputs_t* out,
 ) noexcept
 
 
 cdef void relu_ode(
     double time,
+    const double* params,
     const double* states,
     double* derivatives,
     processed_inputs_t input_val,
@@ -38,6 +41,7 @@ cdef void relu_ode(
 
 cdef double relu_output_tf(
     double time,
+    const double* params,
     const double* states,
     processed_inputs_t input_val,
     double noise,
@@ -47,6 +51,3 @@ cdef double relu_output_tf(
 
 cdef class ReLUNodeCy(NodeCy):
     """ Python interface to ReLU Node C-Structure """
-
-    cdef:
-        relu_params_t params

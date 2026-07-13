@@ -484,7 +484,7 @@ class OscillatorNodeOptions(NodeOptions):
             noise=kwargs.pop("noise"),
         )
         self._nstates = 3
-        self._nparameters = 3
+        self._nparameters = 9
 
         if kwargs:
             raise Exception(f'Unknown kwargs: {kwargs}')
@@ -515,23 +515,36 @@ class OscillatorNodeParameterOptions(NodeParameterOptions):
 
     def __init__(self, **kwargs):
         super().__init__()
-        self.intrinsic_frequency = kwargs.pop("intrinsic_frequency")  # Hz
-        self.nominal_amplitude = kwargs.pop("nominal_amplitude")      #
-        self.amplitude_rate = kwargs.pop("amplitude_rate")            #
+        self.c_nu1 = kwargs.pop("c_nu1")              # Hz / a.u.
+        self.c_nu0 = kwargs.pop("c_nu0")              # Hz
+        self.nu_sat = kwargs.pop("nu_sat")            # Hz
+        self.c_R1 = kwargs.pop("c_R1")               # rad / a.u.
+        self.c_R0 = kwargs.pop("c_R0")               # rad
+        self.R_sat = kwargs.pop("R_sat")              # rad
+        self.d_low = kwargs.pop("d_low")              # a.u.
+        self.d_high = kwargs.pop("d_high")            # a.u.
+        self.amplitude_rate = kwargs.pop("amplitude_rate")
 
         if kwargs:
             raise Exception(f'Unknown kwargs: {kwargs}')
 
     @classmethod
     def defaults(cls, **kwargs):
-        """ Get the default parameters for Oscillator Node model """
+        """ Get the default parameters for Oscillator Node model.
 
+        Without a drive relay, d=0 always. Set d_low=0, d_high=1e9 so the
+        linear region includes d=0, giving ν=c_nu0 and R=c_R0.
+        """
         options = {}
-
-        options["intrinsic_frequency"] = kwargs.pop("intrinsic_frequency", 1.0)
-        options["nominal_amplitude"] = kwargs.pop("nominal_amplitude", 1.0)
+        options["c_nu1"] = kwargs.pop("c_nu1", 0.0)
+        options["c_nu0"] = kwargs.pop("c_nu0", 1.0)       # Hz
+        options["nu_sat"] = kwargs.pop("nu_sat", 0.0)
+        options["c_R1"] = kwargs.pop("c_R1", 0.0)
+        options["c_R0"] = kwargs.pop("c_R0", 1.0)         # rad
+        options["R_sat"] = kwargs.pop("R_sat", 0.0)
+        options["d_low"] = kwargs.pop("d_low", 0.0)
+        options["d_high"] = kwargs.pop("d_high", 1e9)
         options["amplitude_rate"] = kwargs.pop("amplitude_rate", 1.0)
-
         return cls(**options)
 
 

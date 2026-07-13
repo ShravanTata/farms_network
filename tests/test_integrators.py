@@ -27,8 +27,8 @@ def make_oscillator_pair(timestep, n_iterations, integrator="rk4", **integrator_
             options.OscillatorNodeOptions(
                 name=f"osc_{i}",
                 parameters=options.OscillatorNodeParameterOptions.defaults(
-                    intrinsic_frequency=1.0,
-                    nominal_amplitude=1.0,
+                    c_nu0=1.0,
+                    c_R0=1.0,
                     amplitude_rate=20.0,
                 ),
                 state=options.OscillatorStateOptions(
@@ -363,8 +363,8 @@ def make_noisy_oscillator_pair(timestep, n_iterations, integrator="rk4", **integ
             options.OscillatorNodeOptions(
                 name=f"osc_{i}",
                 parameters=options.OscillatorNodeParameterOptions.defaults(
-                    intrinsic_frequency=1.0,
-                    nominal_amplitude=1.0,
+                    c_nu0=1.0,
+                    c_R0=1.0,
                     amplitude_rate=20.0,
                 ),
                 state=options.OscillatorStateOptions(

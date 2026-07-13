@@ -30,8 +30,8 @@ def oscillator_chain(network_options, n_oscillators, name_prefix, **kwargs):
         for n in range(n_oscillators)
     ]
     # Oscillators
-    intrinsic_frequency = kwargs.get('intrinsic_frequency', 1.0)
-    nominal_amplitude = kwargs.get('nominal_amplitude', 1.0)
+    c_nu0 = kwargs.get('c_nu0', 1.0)
+    c_R0 = kwargs.get('c_R0', 1.0)
     amplitude_rate = kwargs.get('amplitude_rate', 20.0)
 
     origin = kwargs.get('origin', [0, 0])
@@ -40,8 +40,8 @@ def oscillator_chain(network_options, n_oscillators, name_prefix, **kwargs):
             options.OscillatorNodeOptions(
                 name=osc,
                 parameters=options.OscillatorNodeParameterOptions.defaults(
-                    intrinsic_frequency=intrinsic_frequency,
-                    nominal_amplitude=nominal_amplitude,
+                    c_nu0=c_nu0,
+                    c_R0=c_R0,
                     amplitude_rate=amplitude_rate,
                 ),
                 visual=options.NodeVisualOptions(

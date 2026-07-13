@@ -93,7 +93,7 @@ def quadruped_network():
 def oscillator_network():
     """ Oscillator network """
 
-    param_opts = options.OscillatorNodeParameterOptions.defaults(amplitude_rate=10.0, intrinsic_frequency=1)
+    param_opts = options.OscillatorNodeParameterOptions.defaults(amplitude_rate=10.0, c_nu0=1.0)
     state_opts = options.OscillatorStateOptions.from_kwargs(
         phase=0.0, amplitude_0=0.0, amplitude=0.0
     )

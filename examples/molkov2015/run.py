@@ -404,6 +404,172 @@ def plot_network(network_options):
     plt.show()
 
 
+def two_osc_bifurcation(
+    alpha_range: tuple = (0.0, 14.0),
+    n_alpha: int = 200,
+    dt: float = 1e-3,
+    n_settle: int = 5000,
+    k_cpl: float = 1.0,
+    intrinsic_frequency: float = 1.0,
+) -> tuple:
+    """ Bidirectional α sweep for 2 oscillators with LR coupling only.
+
+    Reveals all three regimes of Eq 26 (Molkov 2015):
+      Regime 1  A > 2B        : only alternation stable (φ=π)
+      Regime 2  −2B < A < 2B  : bistability — hysteresis between the branches
+      Regime 3  A < −2B       : only synchrony stable (φ=0)
+
+    Runs two continuation sweeps:
+      forward  — starts near alternation (Δφ≈π), α increasing
+      backward — starts near synchrony  (Δφ≈0),  α decreasing
+    """
+    def _build(initial_phases: list) -> Network:
+        lr = COUPLING["left_right"]
+        net_opts = options.NetworkOptions(
+            directed=True, multigraph=False,
+            graph={"name": "eq26"},
+            integration=options.IntegrationOptions.defaults(
+                n_iterations=n_settle, timestep=dt, integrator="rk4",
+            ),
+            logs=options.NetworkLogOptions(buffer_size=n_settle),
+        )
+        for i, name in enumerate(["osc_0", "osc_1"]):
+            net_opts.add_node(
+                options.MolkovOscillatorNodeOptions(
+                    name=name,
+                    parameters=options.MolkovOscillatorNodeParameterOptions.defaults(
+                        intrinsic_frequency=intrinsic_frequency,
+                    ),
+                    state=options.MolkovOscillatorStateOptions(
+                        initial=[initial_phases[i]],
+                    ),
+                    noise=None,
+                    visual=NodeVisualOptions(),
+                )
+            )
+        for src, tgt in [("osc_0", "osc_1"), ("osc_1", "osc_0")]:
+            net_opts.add_edge(
+                options.MolkovOscillatorEdgeOptions(
+                    source=src, target=tgt, weight=1.0, type="phase_coupling",
+                    parameters=options.MolkovOscillatorEdgeParameterOptions(
+                        a0=lr["a0"], a1=lr["a1"], b=lr["b"],
+                        k0=lr["k0"], k1=lr["k1"], k_cpl=k_cpl,
+                    ),
+                    visual=EdgeVisualOptions(),
+                )
+            )
+        net = Network.from_options(net_opts)
+        net.setup_integrator()
+        return net
+
+    def _measure(net: Network) -> float:
+        phi_0 = float(net.data.states.array[net.data.states.indices[0]])
+        phi_1 = float(net.data.states.array[net.data.states.indices[1]])
+        return compute_phase_difference(phi_0, phi_1)
+
+    def _run(net: Network, alpha: float, delta: float = 0.0) -> None:
+        """ Advance one alpha step.
+
+        delta is a small directional perturbation applied to phi_1 before
+        integration.  It must stay within the correct basin in the bistable
+        region but be large enough to trigger the transition in the unstable
+        regime within n_settle steps.
+
+        Forward sweep  (delta > 0): phi_1 increases → Δφ = phi_0−phi_1 decreases
+                                     from π toward 0, helping the system cross to
+                                     synchrony once π becomes unstable.
+        Backward sweep (delta < 0): phi_1 decreases → Δφ increases from 0 toward
+                                     π, helping the system escape synchrony once 0
+                                     becomes unstable.
+        """
+        net.data.external_inputs.array[:] = alpha
+        net.data.states.array[net.data.states.indices[1]] += delta
+        for i in range(n_settle):
+            net.step(i * dt)
+        net._network_cy.iteration = 0
+
+    alphas = np.linspace(alpha_range[0], alpha_range[1], n_alpha)
+    fwd = np.zeros(n_alpha)
+    bwd = np.zeros(n_alpha)
+
+    # The perturbation magnitude must satisfy two constraints:
+    #   delta << (π − φ*) everywhere in the bistable region  [stay in basin]
+    #   delta large enough that n_settle steps reach the other attractor in
+    #   regime 3 / regime 1.
+    # With COUPLING["left_right"] defaults (a0=24, a1=−2.4, B=1):
+    #   bistable region α ∈ [9.17, 10.83]; φ* ranges from 0 to π.
+    #   At the narrowest point (centre of bistable region α≈10, φ*=π/2),
+    #   distance to separator = |π − π/2| = π/2 ≈ 1.57 rad >> 0.01 rad. ✓
+    #   In regime 3 at α=11 (eigenvalue λ≈0.26), time to escape from 0.01 rad:
+    #   T = ln(π / (2·0.01)) / (2k·λ) ≈ 5.1 / (2·0.8·0.26) ≈ 12 s = 12 000 steps.
+    #   → transition appears near α≈11.5 where λ is large enough for n_settle=5000.
+    delta = 0.01
+
+    # Forward: start near alternation (Δφ ≈ π), sweep α upward
+    eps = 0.05
+    net_fwd = _build([eps, np.pi - eps])
+    for n, alpha in enumerate(tqdm(alphas, desc="Eq26 forward")):
+        _run(net_fwd, alpha, delta=+delta)
+        fwd[n] = _measure(net_fwd)
+
+    # Backward: start near synchrony (Δφ ≈ 0), sweep α downward
+    net_bwd = _build([eps, eps])
+    for n, alpha in enumerate(tqdm(alphas[::-1], desc="Eq26 backward")):
+        _run(net_bwd, alpha, delta=-delta)
+        bwd[n_alpha - 1 - n] = _measure(net_bwd)
+
+    return alphas, fwd, bwd
+
+
+def plot_eq26_regimes(alphas: np.ndarray, fwd: np.ndarray, bwd: np.ndarray) -> None:
+    """ Plot bidirectional bifurcation showing all three Eq 26 regimes.
+
+    Top panel  : phase difference vs α (forward=red, backward=blue).
+    Bottom panel: coupling coefficient A(α) with ±2B thresholds annotated.
+    """
+    lr = COUPLING["left_right"]
+    b = lr["b"]
+    A_vals = lr["a0"] + lr["a1"] * alphas
+
+    # Regime boundary α values: A = ±2B
+    alpha_2b = (lr["a0"] - 2 * b) / (-lr["a1"])   # A crosses +2B
+    alpha_m2b = (lr["a0"] + 2 * b) / (-lr["a1"])  # A crosses −2B
+
+    # Fold: both 0.0 and 1.0 represent synchrony (Δφ=0 and Δφ=2π differ only by 2π)
+    fwd_plot = np.minimum(fwd, 1.0 - fwd)
+    bwd_plot = np.minimum(bwd, 1.0 - bwd)
+
+    fig, axes = plt.subplots(2, 1, figsize=(10, 7), sharex=True)
+
+    ax = axes[0]
+    ax.plot(alphas, fwd_plot, color='tab:red',  lw=1.5, label='forward  (from alternation)')
+    ax.plot(alphas, bwd_plot, color='tab:blue', lw=1.5, label='backward (from synchrony)', linestyle='--')
+    ax.axhline(y=0.5, color='gray', linestyle='--', lw=0.8, label='alternation Δφ=π')
+    ax.axhline(y=0.0, color='gray', linestyle=':',  lw=0.8, label='synchrony  Δφ=0')
+    ax.axvspan(alphas[0],  alpha_2b,  alpha=0.07, color='tab:red',    label='Regime 1: alt only')
+    ax.axvspan(alpha_2b,  alpha_m2b, alpha=0.07, color='tab:purple', label='Regime 2: bistable')
+    ax.axvspan(alpha_m2b, alphas[-1],alpha=0.07, color='tab:blue',   label='Regime 3: sync only')
+    ax.axvline(x=alpha_2b,  color='tab:orange', lw=1.2, linestyle='--')
+    ax.axvline(x=alpha_m2b, color='tab:purple', lw=1.2, linestyle='--')
+    ax.set_ylabel('Phase difference (normalized)')
+    ax.set_ylim(-0.05, 1.05)
+    ax.legend(fontsize=8, ncol=2)
+    ax.set_title('Eq 26 — G(φ) = A·sin φ − B·sin 2φ  [all three regimes]')
+
+    ax = axes[1]
+    ax.plot(alphas, A_vals, 'k-', lw=2, label='A(α)')
+    ax.axhline(y=2 * b,  color='tab:orange', linestyle='--', lw=1.2, label=f'+2B = {2*b}')
+    ax.axhline(y=-2 * b, color='tab:purple', linestyle='--', lw=1.2, label=f'−2B = {-2*b}')
+    ax.axhline(y=0, color='gray', lw=0.6, linestyle=':')
+    ax.set_xlabel(r'Drive parameter α')
+    ax.set_ylabel('A(α)')
+    ax.legend(fontsize=8)
+
+    plt.tight_layout()
+    plt.savefig('eq26_regimes.png', dpi=150)
+    plt.show()
+
+
 def test_two_oscillators():
     """ Minimal 2-oscillator test to verify coupling works.
     Should show transition from anti-phase to synchrony as alpha increases. """
@@ -468,6 +634,18 @@ def test_two_oscillators():
 
 
 if __name__ == "__main__":
+
+    # ---- Eq 26: all three regimes via bidirectional sweep ----
+    print("=== Eq 26 regimes (2-oscillator, bidirectional sweep) ===")
+    alphas_eq26, fwd, bwd = two_osc_bifurcation(
+        alpha_range=(0.0, 14.0),
+        n_alpha=200,
+        dt=1e-3,
+        n_settle=5000,
+        k_cpl=1.0,
+        intrinsic_frequency=1.0,
+    )
+    plot_eq26_regimes(alphas_eq26, fwd, bwd)
 
     # ---- Diagnostic: verify coupling with 2 oscillators ----
     print("=== 2-oscillator diagnostic ===")

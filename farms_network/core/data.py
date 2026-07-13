@@ -289,26 +289,26 @@ class NetworkLog(NetworkLogCy):
 
     def __init__(
         self,
-        times,
-        states,
-        connectivity,
-        outputs,
-        external_inputs,
-        noise,
-        nodes,
-        edges,
+        times: DoubleArray1D,
+        states: NetworkLogStates,
+        connectivity: NetworkConnectivity,
+        outputs: DoubleArray2D,
+        external_inputs: DoubleArray2D,
+        noise: NetworkNoise,
+        nodes: 'Nodes',
+        edges: 'Edges',
         **kwargs,
     ):
         """ Network data structure """
 
         super().__init__()
 
-        self.times = times
-        self.states = states
-        self.connectivity = connectivity
-        self.outputs = outputs
-        self.external_inputs = external_inputs
-        self.noise = noise
+        self.times: DoubleArray1D = times
+        self.states: NetworkLogStates = states
+        self.connectivity: NetworkConnectivity = connectivity
+        self.outputs: DoubleArray2D = outputs
+        self.external_inputs: DoubleArray2D = external_inputs
+        self.noise: NetworkNoise = noise
 
         self.nodes: Nodes = nodes
         self.edges: Edges = edges

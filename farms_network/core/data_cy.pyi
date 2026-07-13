@@ -1,4 +1,4 @@
-""" Network Data """
+"""Network Data"""
 
 from typing import Any
 import numpy as np
@@ -18,17 +18,17 @@ class NetworkEdgeParametersCy(DoubleArray1D):
 
 
 class NetworkStatesCy(DoubleArray1D):
-    """ State array """
+    """State array"""
     indices: npt.NDArray[np.uintc]
 
 
 class NetworkLogStatesCy(DoubleArray2D):
-    """ State array for logging """
+    """State array for logging"""
     indices: npt.NDArray[np.uintc]
 
 
 class NetworkConnectivityCy:
-    """ Network connectivity array """
+    """Network connectivity array"""
     weights: npt.NDArray[np.double]
     node_indices: npt.NDArray[np.uintc]
     edge_indices: npt.NDArray[np.uintc]
@@ -44,7 +44,7 @@ class NetworkConnectivityCy:
 
 
 class NetworkNoiseCy:
-    """ Noise data array """
+    """Noise data array"""
     states: npt.NDArray[np.double]
     indices: npt.NDArray[np.uintc]
     drift: npt.NDArray[np.double]

@@ -57,7 +57,7 @@ cdef inline void ode(
     # Noise
     cdef double* noise = c_network.noise.outputs
 
-    node_inputs.network_outputs = c_network.outputs
+    node_inputs.network_outputs  = c_network.outputs
     node_inputs.network_states   = states_ptr
     node_inputs.states_indices   = c_network.states_indices
     node_inputs.edge_params         = c_network.edge_params

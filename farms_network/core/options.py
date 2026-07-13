@@ -965,7 +965,7 @@ class LIDannerNodeParameterOptions(NodeParameterOptions):
     Class to define the parameters of Leaky Integrator Danner node model.
 
     Attributes:
-        c_m (float): Membrane capacitance (in pF).
+       c_m (float): Membrane capacitance (in pF).
         g_leak (float): Leak conductance (in nS).
         e_leak (float): Leak reversal potential (in mV).
         v_max (float): Maximum voltage (in mV).

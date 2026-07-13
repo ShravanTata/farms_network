@@ -7,14 +7,14 @@ cdef struct node_inputs_t:
     double* network_outputs        # Network level outputs (one per node)
     double* network_states         # Full states array (all nodes concatenated)
     unsigned int* states_indices   # Per-node offset into network_states
-    double* weights              # Network connection weights
-    unsigned int* node_indices   # Which nodes provide input
-    unsigned int* edge_indices   # Which edges provide input
+    double* weights                # Network connection weights
+    unsigned int* node_indices     # Which nodes provide input
+    unsigned int* edge_indices     # Which edges provide input
     double* edge_params            # Flat edge parameters array (network-wide)
     unsigned int* edge_params_indices  # Per-edge offset into edge_params
-    double external_input        # external input
-    int ninputs                  # Number of inputs
-    unsigned int node_index      # This node's index (for self-reference)
+    double external_input          # external input
+    int ninputs                    # Number of inputs
+    unsigned int node_index        # This node's index (for self-reference)
 
 
 cdef struct processed_inputs_t:

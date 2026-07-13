@@ -2,71 +2,77 @@
 
 from typing import Any
 import numpy as np
+import numpy.typing as npt
 
-from farms_core.array.array_cy cimport (DoubleArray1D, DoubleArray2D, IntegerArray1D)
-
-include 'types.pxd'
-
-
-class NetworkDataCy:
-
-    DoubleArray1D times
-    NetworkStatesCy states
-    NetworkStatesCy derivatives
-    DoubleArray1D external_inputs
-    DoubleArray1D outputs
-    DoubleArray1D tmp_outputs
-    NetworkConnectivityCy connectivity
-    NetworkNoiseCy noise
-
-    def __init__(self):
-        pass
+from farms_core.array.array_cy import DoubleArray1D, DoubleArray2D, IntegerArray1D
 
 
-class NetworkLogCy:
-    cdef:
-        public DoubleArray1D times
-        public NetworkLogStatesCy states
-        public DoubleArray2D external_inputs
-        public DoubleArray2D outputs
-        public NetworkConnectivityCy connectivity
-        public NetworkNoiseCy noise
+class NetworkNodeParametersCy(DoubleArray1D):
+    """Node parameters array"""
+    indices: npt.NDArray[np.uintc]
+
+
+class NetworkEdgeParametersCy(DoubleArray1D):
+    """Edge parameters array"""
+    indices: npt.NDArray[np.uintc]
 
 
 class NetworkStatesCy(DoubleArray1D):
     """ State array """
-    cdef:
-        public UITYPEv1 indices
+    indices: npt.NDArray[np.uintc]
 
 
 class NetworkLogStatesCy(DoubleArray2D):
     """ State array for logging """
-    cdef:
-        public UITYPEv1 indices
+    indices: npt.NDArray[np.uintc]
 
 
 class NetworkConnectivityCy:
     """ Network connectivity array """
-    public DTYPEv1 weights
-    public UITYPEv1 node_indices
-    public UITYPEv1 edge_indices
-    public UITYPEv1 index_offsets
+    weights: npt.NDArray[np.double]
+    node_indices: npt.NDArray[np.uintc]
+    edge_indices: npt.NDArray[np.uintc]
+    index_offsets: npt.NDArray[np.uintc]
 
     def __init__(
         self,
-        node_indices: NDArray[(Any,), np.uintc],
-        edge_indices: NDArray[(Any,), np.uintc],
-        weights: NDArray[(Any,), np.double],
-        index_offsets: NDArray[(Any,), np.uintc],
-    ):
-        super().__init__()
+        node_indices: npt.NDArray[np.uintc],
+        edge_indices: npt.NDArray[np.uintc],
+        weights: npt.NDArray[np.double],
+        index_offsets: npt.NDArray[np.uintc],
+    ) -> None: ...
 
 
 class NetworkNoiseCy:
     """ Noise data array """
-    cdef:
-        public DTYPEv1 states
-        public UITYPEv1 indices
-        public DTYPEv1 drift
-        public DTYPEv1 diffusion
-        public DTYPEv1 outputs
+    states: npt.NDArray[np.double]
+    indices: npt.NDArray[np.uintc]
+    drift: npt.NDArray[np.double]
+    diffusion: npt.NDArray[np.double]
+    outputs: npt.NDArray[np.double]
+
+
+class NetworkDataCy:
+    """Network data"""
+    times: DoubleArray1D
+    states: NetworkStatesCy
+    derivatives: NetworkStatesCy
+    external_inputs: DoubleArray1D
+    outputs: DoubleArray1D
+    tmp_outputs: DoubleArray1D
+    connectivity: NetworkConnectivityCy
+    noise: NetworkNoiseCy
+    parameters: NetworkNodeParametersCy
+    edge_parameters: NetworkEdgeParametersCy
+
+    def __init__(self) -> None: ...
+
+
+class NetworkLogCy:
+    """Network log data"""
+    times: DoubleArray1D
+    states: NetworkLogStatesCy
+    external_inputs: DoubleArray2D
+    outputs: DoubleArray2D
+    connectivity: NetworkConnectivityCy
+    noise: NetworkNoiseCy

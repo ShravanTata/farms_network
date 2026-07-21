@@ -1,10 +1,9 @@
 """Network Data"""
 
-from typing import Any
 import numpy as np
 import numpy.typing as npt
 
-from farms_core.array.array_cy import DoubleArray1D, DoubleArray2D, IntegerArray1D
+from farms_core.array.array_cy import DoubleArray1D, DoubleArray2D
 
 
 class NetworkNodeParametersCy(DoubleArray1D):

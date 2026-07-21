@@ -1,7 +1,6 @@
 cimport numpy as cnp
 
-from ..numeric.integrators_cy cimport EulerMaruyamaSolver, RK4Solver
-from ..numeric.system_cy cimport ODESystem, SDESystem
+from ..numeric.system_cy cimport ODESystemCy, SDESystemCy
 from ..noise.ornstein_uhlenbeck_cy cimport OrnsteinUhlenbeckCy
 from .data_cy cimport NetworkDataCy, NetworkLogCy
 from .edge_cy cimport EdgeCy, edge_t
